@@ -214,7 +214,10 @@ window.confirmTransfer=async()=>{
   {amount:transferData.amt,note:"Received from "+username,date}]
  });
 
- alert("Transfer Successful");
+alert("Transfer Successful");
+
+balanceValue -= transferData.amt;
+renderBalance();
  location.reload();
 };
 
@@ -238,7 +241,7 @@ window.toggleFreeze=async()=>{
 
 /* TRANSACTIONS */
 const box=document.getElementById("transactions");
-if(data.transactions){
+if(data.transactions && data.transactions.length){
  data.transactions.slice().reverse().forEach(tx=>{
   const color=tx.amount>0?"green":"red";
   box.innerHTML+=`

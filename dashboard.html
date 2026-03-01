@@ -167,7 +167,15 @@ if(!username) location.href="index.html";
 // LOAD USER
 const userRef = doc(db,"users",username);
 const snap = await getDoc(userRef);
+
 if(!snap.exists()){
+  alert("User data missing in database");
+  throw new Error("No user data");
+}
+
+const data = snap.data();
+
+console.log("Firestore loaded:", data);
  alert("User not found");
  location.href="index.html";
 }
@@ -175,13 +183,21 @@ if(!snap.exists()){
 const data = snap.data();
 
 // DISPLAY INFO
-welcome.innerText="Hello, "+(data.fullName || username);
-name.innerText=data.fullName || "-";
-acc.innerText=data.accountNumber || "-";
-iban.innerText=data.iban || "-";
-swift.innerText=data.swift || "-";
+document.getElementById("welcome").innerText =
+  "Hello, " + (data.fullName ?? username);
 
-let balanceValue = Number(data.balance || 0);
+document.getElementById("name").innerText =
+  data.fullName ?? "Not set";
+
+document.getElementById("acc").innerText =
+  data.accountNumber ?? "Not set";
+
+document.getElementById("iban").innerText =
+  data.iban ?? "Not set";
+
+document.getElementById("swift").innerText =
+  data.swift ?? "Not set";
+let balanceValue = Number(data.balance ?? 0);
 let hidden=false;
 
 function renderBalance(){

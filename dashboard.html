@@ -37,30 +37,23 @@ body{
 .eye{margin-top:6px;font-size:14px;cursor:pointer;}
 
 .grid{
- display:grid;
- grid-template-columns:repeat(3,1fr);
- gap:8px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
 }
 
 button{
- width:100%;
- padding:10px;
- border:none;
- border-radius:10px;
- background:#2d8cff;
- color:white;
- font-weight:600;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#2d8cff;
+  color:white;
+  font-weight:600;
 }
 
-input,select{
- width:100%;
- padding:10px;
- margin-top:6px;
- border-radius:8px;
- border:none;
-}
-
-.tx{margin-top:10px;}
+.green{color:#00ffb2;}
+.red{color:#ff6b6b;}
 .small{font-size:12px;opacity:.7;}
 </style>
 </head>
@@ -70,38 +63,41 @@ input,select{
 
 <h3 id="welcome">Loading...</h3>
 
+<!-- BALANCE -->
 <div class="balance-card">
   <div class="balance" id="balance">€0</div>
-  <div class="eye" id="eyeToggle">👁 Hide balance</div>
+  <div class="eye" id="toggleBalance">👁 Hide balance</div>
 </div>
 
+<!-- ACCOUNT INFO -->
 <div class="card">
 <b>Account Info</b><br>
 Name: <span id="name">-</span><br>
 Account: <span id="acc">-</span><br>
 IBAN: <span id="iban">-</span><br>
 SWIFT: <span id="swift">-</span>
+<div id="freezeNotice"></div>
 </div>
 
+<!-- QUICK ACTIONS -->
 <div class="card">
 <b>Quick Actions</b>
 <div class="grid">
-  <button onclick="showSend()">Send</button>
+  <button onclick="showTransfer()">Send</button>
   <button onclick="showBills()">Pay Bills</button>
   <button onclick="showGift()">Gift Cards</button>
-  <button onclick="alert('Coming soon')">Withdraw</button>
-  <button onclick="alert('Coming soon')">Deposit</button>
+  <button onclick="alert('Withdraw coming')">Withdraw</button>
+  <button onclick="alert('Deposit coming')">Deposit</button>
   <button onclick="location.reload()">Refresh</button>
 </div>
 </div>
 
-<!-- SEND -->
-<div class="card" id="sendBox" style="display:none;">
+<!-- TRANSFER -->
+<div class="card" id="transferBox" style="display:none;">
 <b>Send Money</b>
 <input id="receiver" placeholder="Username or IBAN">
-<input id="sendAmount" type="number" placeholder="Amount">
-<input id="sendNote" placeholder="Note">
-<button onclick="sendMoney()">Send</button>
+<input id="amount" type="number" placeholder="Amount">
+<button onclick="askPin()">Send</button>
 </div>
 
 <!-- PAY BILLS -->
@@ -109,33 +105,45 @@ SWIFT: <span id="swift">-</span>
 <b>Pay Bills</b>
 <select id="billType">
 <option>Electricity</option>
-<option>Internet</option>
 <option>Water</option>
+<option>Internet</option>
 <option>TV Subscription</option>
 </select>
 <input id="billAmount" type="number" placeholder="Amount">
 <button onclick="payBill()">Pay</button>
 </div>
 
-<!-- GIFT CARD -->
+<!-- GIFT CARDS -->
 <div class="card" id="giftBox" style="display:none;">
-<b>Gift Card</b>
-<select id="giftAmount">
-<option value="50">€50</option>
-<option value="100">€100</option>
-<option value="200">€200</option>
-<option value="500">€500</option>
+<b>Buy Gift Card</b>
+<select id="giftType">
+<option>Amazon</option>
+<option>iTunes</option>
+<option>Steam</option>
+<option>Google Play</option>
 </select>
-<button onclick="buyGift()">Buy Gift Card</button>
+<input id="giftAmount" type="number" placeholder="Amount">
+<button onclick="buyGift()">Buy</button>
 </div>
 
+<!-- TRANSACTIONS -->
 <div class="card">
 <b>Transactions</b>
 <div id="transactions"></div>
 </div>
 
-<button onclick="logout()" style="background:#ff4d4d;margin-top:10px;">Logout</button>
+<button onclick="logout()" style="background:#ff4d4d">Logout</button>
 
+</div>
+
+<!-- PIN MODAL -->
+<div id="pinModal" style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;">
+ <div style="background:#0a223d;padding:25px;border-radius:15px;width:85%;max-width:320px;text-align:center;">
+   <h3>Enter PIN</h3>
+   <input id="pinInput" type="password">
+   <button onclick="confirmTransfer()">Confirm</button>
+   <button onclick="closePin()" style="background:#555;margin-top:6px;">Cancel</button>
+ </div>
 </div>
 
 <script type="module">
@@ -151,97 +159,104 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// 🔐 CHECK LOGIN
 const username = localStorage.getItem("user");
 if(!username) location.href="index.html";
 
-let userData;
-let balanceValue=0;
-
-// load user
-async function loadUser(){
- const snap = await getDoc(doc(db,"users",username));
- userData = snap.data();
-
- welcome.innerText="Hello, "+(userData.fullName || username);
- name.innerText=userData.fullName || "-";
- acc.innerText=userData.accountNumber || "-";
- iban.innerText=userData.iban || "-";
- swift.innerText=userData.swift || "-";
-
- balanceValue=Number(userData.balance||0);
- renderBalance();
- renderTransactions();
+// LOAD USER
+const userRef = doc(db,"users",username);
+const snap = await getDoc(userRef);
+if(!snap.exists()){
+ alert("User not found");
+ location.href="index.html";
 }
-loadUser();
 
-// balance toggle
+const data = snap.data();
+
+// DISPLAY INFO
+welcome.innerText="Hello, "+(data.fullName || username);
+name.innerText=data.fullName || "-";
+acc.innerText=data.accountNumber || "-";
+iban.innerText=data.iban || "-";
+swift.innerText=data.swift || "-";
+
+let balanceValue = Number(data.balance || 0);
 let hidden=false;
-function renderBalance(){
- balance.innerText=hidden?"••••••":"€"+balanceValue.toLocaleString();
- eyeToggle.innerText=hidden?"👁 Show balance":"👁 Hide balance";
-}
-eyeToggle.onclick=()=>{hidden=!hidden;renderBalance();}
 
-// show boxes
-window.showSend=()=>sendBox.style.display="block";
+function renderBalance(){
+ balance.innerText = hidden ? "••••••" : "€"+balanceValue.toLocaleString();
+ toggleBalance.innerText = hidden ? "👁 Show balance" : "👁 Hide balance";
+}
+toggleBalance.onclick=()=>{hidden=!hidden;renderBalance();}
+renderBalance();
+
+// TRANSACTIONS
+const box=document.getElementById("transactions");
+if(data.transactions){
+ data.transactions.slice().reverse().forEach(tx=>{
+   const color = tx.amount>0 ? "green":"red";
+   box.innerHTML+=`
+     <div class="${color}">
+     ${tx.note} (€${Math.abs(tx.amount).toLocaleString()})
+     <div class="small">${tx.date||""}</div>
+     </div>`;
+ });
+}
+
+// SHOW SECTIONS
+window.showTransfer=()=>transferBox.style.display="block";
 window.showBills=()=>billBox.style.display="block";
 window.showGift=()=>giftBox.style.display="block";
 
-// transactions display
-function renderTransactions(){
- const box=document.getElementById("transactions");
- box.innerHTML="";
- if(userData.transactions){
-  userData.transactions.slice().reverse().forEach(tx=>{
-   const color=tx.amount>0?"#00ffb2":"#ff6b6b";
-   box.innerHTML+=`
-   <div class="tx" style="color:${color}">
-   ${tx.note} (€${Math.abs(tx.amount)})
-   <div class="small">${tx.date||""}</div>
-   </div>`;
-  });
- }
+// PIN TRANSFER
+let transferData=null;
+
+window.askPin=()=>{
+ transferData={
+  receiver:receiver.value.trim(),
+  amount:parseFloat(amount.value)
+ };
+ if(!transferData.receiver||!transferData.amount) return alert("Fill fields");
+ pinModal.style.display="flex";
 }
 
-// send money
-window.sendMoney=async()=>{
- const receiver=receiver.value.trim();
- const amount=parseFloat(sendAmount.value);
- const note=sendNote.value||"Transfer";
+window.closePin=()=>pinModal.style.display="none";
 
- if(!receiver||!amount) return alert("Enter details");
- if(balanceValue<amount) return alert("Insufficient funds");
+window.confirmTransfer=async()=>{
+ if(pinInput.value!==data.pin) return alert("Wrong PIN");
 
  const users=await getDocs(collection(db,"users"));
- let recName=null,recData=null;
+ let receiverName=null,receiverData=null;
 
  users.forEach(d=>{
-  if(d.id===receiver || d.data().iban===receiver){
-   recName=d.id; recData=d.data();
+  if(d.id===transferData.receiver || d.data().iban===transferData.receiver){
+    receiverName=d.id;
+    receiverData=d.data();
   }
  });
 
- if(!recName) return alert("Receiver not found");
+ if(!receiverName) return alert("Receiver not found");
+ if(balanceValue<transferData.amount) return alert("Insufficient funds");
 
  const date=new Date().toLocaleString();
 
- await updateDoc(doc(db,"users",username),{
-  balance:balanceValue-amount,
-  transactions:[...(userData.transactions||[]),
-   {amount:-amount,note:"Sent to "+recName,date}]
+ await updateDoc(userRef,{
+  balance:balanceValue-transferData.amount,
+  transactions:[...(data.transactions||[]),
+   {amount:-transferData.amount,note:"Sent to "+receiverName,date}]
  });
 
- await updateDoc(doc(db,"users",recName),{
-  balance:Number(recData.balance||0)+amount,
-  transactions:[...(recData.transactions||[]),
-   {amount:amount,note:"Received from "+username,date}]
+ await updateDoc(doc(db,"users",receiverName),{
+  balance:Number(receiverData.balance||0)+transferData.amount,
+  transactions:[...(receiverData.transactions||[]),
+   {amount:transferData.amount,note:"Received from "+username,date}]
  });
 
  alert("Transfer successful");
  location.reload();
 };
 
-// pay bills
+// PAY BILL
 window.payBill=async()=>{
  const type=billType.value;
  const amt=parseFloat(billAmount.value);
@@ -250,32 +265,34 @@ window.payBill=async()=>{
 
  const date=new Date().toLocaleString();
 
- await updateDoc(doc(db,"users",username),{
+ await updateDoc(userRef,{
   balance:balanceValue-amt,
-  transactions:[...(userData.transactions||[]),
-   {amount:-amt,note:type+" bill payment",date}]
+  transactions:[...(data.transactions||[]),
+   {amount:-amt,note:type+" bill paid",date}]
  });
 
- alert("Bill paid");
+ alert(type+" paid successfully");
  location.reload();
-};
+}
 
-// gift card
+// GIFT CARD
 window.buyGift=async()=>{
+ const type=giftType.value;
  const amt=parseFloat(giftAmount.value);
+ if(!amt) return alert("Enter amount");
  if(balanceValue<amt) return alert("Insufficient funds");
 
  const date=new Date().toLocaleString();
 
- await updateDoc(doc(db,"users",username),{
+ await updateDoc(userRef,{
   balance:balanceValue-amt,
-  transactions:[...(userData.transactions||[]),
-   {amount:-amt,note:"Gift card purchase",date}]
+  transactions:[...(data.transactions||[]),
+   {amount:-amt,note:type+" gift card",date}]
  });
 
- alert("Gift card purchased");
+ alert(type+" gift card purchased");
  location.reload();
-};
+}
 
 window.logout=()=>{
  localStorage.removeItem("user");

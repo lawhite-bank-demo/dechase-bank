@@ -38,11 +38,17 @@ const data = snap.data();
 document.getElementById("welcome").innerText =
   "Hello, " + (data.fullName || username);
 
-document.getElementById("name").innerText = data.fullName || "-";
-document.getElementById("acc").innerText = data.accountNumber || "-";
-document.getElementById("iban").innerText = data.iban || "-";
-document.getElementById("swift").innerText = data.swift || "-";
+document.getElementById("name").innerText =
+  data.fullName ? data.fullName : username;
 
+document.getElementById("acc").innerText =
+  data.accountNumber ? data.accountNumber : "N/A";
+
+document.getElementById("iban").innerText =
+  data.iban ? data.iban : "N/A";
+
+document.getElementById("swift").innerText =
+  data.swift ? data.swift : "DEUTDEFF";
 // CALCULATE BALANCE
 let balanceValue = Number(data.balance || 0);
 

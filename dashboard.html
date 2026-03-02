@@ -82,6 +82,39 @@ SWIFT: <span id="swift">-</span>
 
 <div class="card">
 <b>Quick Actions</b>
+  <!-- TRANSFER -->
+<div class="card" id="transferBox" style="display:none;">
+<b>Send Money</b>
+<input id="receiver" placeholder="Username or IBAN">
+<input id="amount" type="number" placeholder="Amount">
+<button onclick="askPin()">Send</button>
+</div>
+
+<!-- PAY BILLS -->
+<div class="card" id="billBox" style="display:none;">
+<b>Pay Bills</b>
+<select id="billType">
+<option>Electricity</option>
+<option>Water</option>
+<option>Internet</option>
+<option>TV Subscription</option>
+</select>
+<input id="billAmount" type="number" placeholder="Amount">
+<button onclick="payBill()">Pay</button>
+</div>
+
+<!-- GIFT CARDS -->
+<div class="card" id="giftBox" style="display:none;">
+<b>Buy Gift Card</b>
+<select id="giftType">
+<option>Amazon</option>
+<option>iTunes</option>
+<option>Steam</option>
+<option>Google Play</option>
+</select>
+<input id="giftAmount" type="number" placeholder="Amount">
+<button onclick="buyGift()">Buy</button>
+</div>
 <div class="grid">
   <button onclick="showTransfer()">Send</button>
   <button onclick="showBills()">Pay Bills</button>

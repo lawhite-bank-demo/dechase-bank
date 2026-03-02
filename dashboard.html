@@ -297,7 +297,7 @@ window.payBill=async()=>{
   balance:balanceValue-amt,
   transactions:[...(data.transactions||[]),
    {amount:-amt,note:billType.value+" bill paid",date}]
- });
+ });k
 
  alert("Bill paid");
  location.reload();
@@ -325,14 +325,25 @@ window.logout=()=>{
  localStorage.removeItem("user");
  location.href="index.html";
 }
+
+</button>
+<script>
+  <!-- SUPPORT BUTTON -->
 <button onclick="contactSupport()" style="background:#25D366;margin-top:10px;">
 💬 Contact Bank Support
 </button>
+
 <script>
+// LOGOUT
+window.logout = () => {
+  localStorage.removeItem("user");
+  location.href = "index.html";
+};
+
 // CONTACT SUPPORT (WhatsApp)
 window.contactSupport = () => {
 
-  const phone = "14237960225";
+  const phone = "14237960225";   // support number
 
   const message = encodeURIComponent(
     "Hello DeChase Bank Support, I need help with my account."
@@ -340,9 +351,7 @@ window.contactSupport = () => {
 
   window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
 };
-</script>
- window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-};
+
 </script>
 </body>
 </html>

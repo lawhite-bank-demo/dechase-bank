@@ -207,16 +207,17 @@ function renderBalance(){
 toggleBalance.onclick=()=>{ hidden=!hidden; renderBalance(); }
 renderBalance();
 
-/// TRANSACTIONS (SHOW LAST 5 ONLY)
+/// TRANSACTIONS (SORT BY DATE + SHOW LAST 5)
 const box = document.getElementById("transactions");
 
 if (Array.isArray(data.transactions) && data.transactions.length) {
 
-  const recentTx = data.transactions
-    .slice(-5)   // get last 5 transactions
-    .reverse();  // newest first
+  // sort by actual date (newest first)
+  const sortedTx = data.transactions
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 5); // only latest 5
 
-  recentTx.forEach(tx => {
+  sortedTx.forEach(tx => {
 
     const color = tx.amount > 0 ? "green" : "red";
 

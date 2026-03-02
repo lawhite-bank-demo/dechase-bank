@@ -325,22 +325,22 @@ window.logout=()=>{
  localStorage.removeItem("user");
  location.href="index.html";
 }
-<button onclick="logout()" style="background:#ff4d4d">Logout</button>
-
-<button onclick="contactSupport()" 
-style="background:#25D366;margin-top:10px;">
-💬 Contact Bank Support
-</button>
 <button onclick="contactSupport()" style="background:#25D366;margin-top:10px;">
 💬 Contact Bank Support
 </button>
-  window.contactSupport = () => {
-  const phone = "2348012345678"; // change to your number
+<script>
+// CONTACT SUPPORT (WhatsApp)
+window.contactSupport = () => {
+
+  const phone = "14237960225";
 
   const message = encodeURIComponent(
     "Hello DeChase Bank Support, I need help with my account."
   );
 
+  window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+};
+</script>
  window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
 };
 </script>

@@ -18,7 +18,15 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
+// ✅ LOGIN PROTECTION
+const username = localStorage.getItem("user");
+
+if (!username) {
+  window.location.replace("index.html");
+}
 // ✅ CHECK LOGIN
 const username = localStorage.getItem("user");
 if (!username) location.href = "index.html";

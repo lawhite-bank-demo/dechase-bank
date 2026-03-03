@@ -29,10 +29,6 @@ if (!username) {
   window.location.replace("index.html");
 }
 
-// ======================================================
-// ✅ LOAD USER DATA
-// ======================================================
-
 const userRef = doc(db, "users", username);
 const snap = await getDoc(userRef);
 
@@ -42,6 +38,16 @@ if (!snap.exists()) {
 }
 
 const data = snap.data();
+
+// ======================================================
+// 🔒 FREEZE BANNER CONTROL
+// ======================================================
+
+const freezeBanner = document.getElementById("freezeBanner");
+
+if (freezeBanner) {
+  freezeBanner.style.display = data.frozen ? "block" : "none";
+}
 
 // ======================================================
 // 👤 DISPLAY USER INFO
@@ -98,9 +104,9 @@ const box = document.getElementById("transactions");
 if (Array.isArray(data.transactions) && data.transactions.length) {
 
   const sorted = (data.transactions || [])
-  .filter(tx => tx.date)
-  .sort((a, b) => new Date(b.date) - new Date(a.date))
-  .slice(0, 20);
+    .filter(tx => tx.date)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 20);
 
   sorted.forEach(tx => {
 
@@ -108,15 +114,15 @@ if (Array.isArray(data.transactions) && data.transactions.length) {
     const color = amount > 0 ? "green" : "red";
 
     const formattedDate = tx.date
-  ? new Date(tx.date).toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false
-    })
-  : "";
+      ? new Date(tx.date).toLocaleString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        })
+      : "";
 
     const details =
       tx.fromName ? "From: " + tx.fromName :
@@ -140,18 +146,13 @@ if (Array.isArray(data.transactions) && data.transactions.length) {
 }
 
 // ======================================================
-// 📂 PANEL CONTROLS
-// ======================================================
-
-window.showTransfer = () => transferBox.style.display = "block";
-window.showBills = () => billBox.style.display = "block";
-window.showGift = () => giftBox.style.display = "block";
-
-// ======================================================
-// 🔐 TRANSFER (ACCOUNT NUMBER OR IBAN)
+// 🔐 TRANSFER
 // ======================================================
 
 window.askPin = async () => {
+
+  if (data.frozen)
+    return alert("Account is frozen. Contact bank support.");
 
   const receiverInput = document.getElementById("receiver").value.trim();
   const amountValue = parseFloat(document.getElementById("amount").value);
@@ -183,7 +184,6 @@ window.askPin = async () => {
 
   const date = new Date().toISOString();
 
-  // sender update
   await updateDoc(userRef,{
     balance: balanceValue - amountValue,
     transactions: [
@@ -197,7 +197,6 @@ window.askPin = async () => {
     ]
   });
 
-  // receiver update
   await updateDoc(doc(db,"users",receiverUsername),{
     balance: Number(receiverData.balance || 0) + amountValue,
     transactions: [
@@ -220,6 +219,9 @@ window.askPin = async () => {
 // ======================================================
 
 window.payBill = async () => {
+
+  if (data.frozen)
+    return alert("Account is frozen. Contact bank support.");
 
   const amt = parseFloat(document.getElementById("billAmount").value);
 
@@ -249,6 +251,9 @@ window.payBill = async () => {
 // ======================================================
 
 window.buyGift = async () => {
+
+  if (data.frozen)
+    return alert("Account is frozen. Contact bank support.");
 
   const amt = parseFloat(document.getElementById("giftAmount").value);
 

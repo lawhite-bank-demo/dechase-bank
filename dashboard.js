@@ -220,7 +220,10 @@ window.askPin = async () => {
     ]
   });
 
-  alert("Transfer successful");
+  showSuccess("Transfer Successful");
+setTimeout(() => {
+  location.reload();
+}, 1200);
   location.reload();
 };
 

@@ -97,9 +97,10 @@ const box = document.getElementById("transactions");
 
 if (Array.isArray(data.transactions) && data.transactions.length) {
 
-  const sorted = data.transactions
-    .sort((a,b)=> new Date(b.date) - new Date(a.date))
-    .slice(0,10);
+  const sorted = (data.transactions || [])
+  .filter(tx => tx.date)
+  .sort((a, b) => new Date(b.date) - new Date(a.date))
+  .slice(0, 20);
 
   sorted.forEach(tx => {
 
@@ -107,14 +108,15 @@ if (Array.isArray(data.transactions) && data.transactions.length) {
     const color = amount > 0 ? "green" : "red";
 
     const formattedDate = tx.date
-      ? new Date(tx.date).toLocaleString("en-GB", {
-          day:"2-digit",
-          month:"short",
-          year:"numeric",
-          hour:"2-digit",
-          minute:"2-digit"
-        })
-      : "";
+  ? new Date(tx.date).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    })
+  : "";
 
     const details =
       tx.fromName ? "From: " + tx.fromName :

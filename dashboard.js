@@ -48,7 +48,17 @@ const freezeBanner = document.getElementById("freezeBanner");
 if (freezeBanner) {
   freezeBanner.style.display = data.frozen ? "block" : "none";
 }
+function showSuccess(message) {
+  const banner = document.getElementById("successBanner");
+  if (!banner) return;
 
+  banner.innerText = "✅ " + message;
+  banner.style.display = "block";
+
+  setTimeout(() => {
+    banner.style.display = "none";
+  }, 3000);
+}
 // ======================================================
 // 👤 DISPLAY USER INFO
 // ======================================================
@@ -242,7 +252,7 @@ window.payBill = async () => {
     ]
   });
 
-  alert("Bill paid");
+  showSuccess("Bill Payment Successful");
   location.reload();
 };
 
@@ -274,7 +284,7 @@ window.buyGift = async () => {
     ]
   });
 
-  alert("Gift card purchased");
+  showSuccess("Gift Card Purchased");
   location.reload();
 };
 

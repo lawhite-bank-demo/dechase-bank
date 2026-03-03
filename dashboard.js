@@ -224,8 +224,6 @@ window.askPin = async () => {
 setTimeout(() => {
   location.reload();
 }, 1200);
-  location.reload();
-};
 
 // ======================================================
 // 💡 PAY BILL

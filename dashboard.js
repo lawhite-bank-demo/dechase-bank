@@ -1,308 +1,394 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DeChase Bank Dashboard</title>
+// 🔥 FIREBASE IMPORTS
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+getFirestore,
+doc,
+getDoc,
+updateDoc,
+collection,
+getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-<style>
-body{
-  margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:#031427;
-  color:white;
+// 🔥 FIREBASE CONFIG
+const firebaseConfig = {
+apiKey: "AIzaSyBDp6wmJMY8WPyKPNE-bvVSiz4AIUbn71U",
+authDomain: "dechase-bank.firebaseapp.com",
+projectId: "dechase-bank"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ======================================================
+// OTP SYSTEM
+// ======================================================
+
+let currentOTP = null;
+let otpExpiry = null;
+
+const ELASTIC_API_KEY = "1EB4C32D1F5E58D70D026AF84037AEA54D1E2C859A1F092998C4A061092E4F7D7B6A7A83873BEC25441CA45E29A470A6";
+
+async function sendOTP(email){
+
+const otp = Math.floor(100000 + Math.random()*900000);
+
+currentOTP = otp;
+otpExpiry = Date.now() + 60000;
+
+const subject = "DeChase Bank Security Code";
+
+const body =
+"DeChase Bank Security Verification\n\n" +
+"Your OTP code is: " + otp + "\n\n" +
+"This code expires in 60 seconds.\n\n" +
+"Do not share this code.";
+
+await fetch("https://api.elasticemail.com/v2/email/send",{
+method:"POST",
+headers:{
+"Content-Type":"application/x-www-form-urlencoded"
+},
+body:
+"apikey="+ELASTIC_API_KEY+
+"&subject="+encodeURIComponent(subject)+
+"&from=dechasebank@gmail.com"+
+"&to="+email+
+"&bodyText="+encodeURIComponent(body)
+});
+
 }
 
-.container{
-  max-width:420px;
-  margin:auto;
-  padding:20px;
+// ======================================================
+// INIT DASHBOARD
+// ======================================================
+
+async function initDashboard(){
+
+const username = localStorage.getItem("user");
+if(!username) return window.location.replace("index.html");
+
+const userRef = doc(db,"users",username);
+const snap = await getDoc(userRef);
+
+if(!snap.exists()){
+alert("User not found");
+return window.location.replace("index.html");
 }
 
-h2{
-  margin-top:0;
+const data = snap.data();
+
+// ======================================================
+// SUCCESS BANNER
+// ======================================================
+
+function showSuccess(message){
+
+const banner = document.getElementById("successBanner");
+if(!banner) return;
+
+banner.innerText = "✅ " + message;
+banner.style.display = "block";
+
+setTimeout(()=>{
+banner.style.display="none";
+},2000);
+
 }
 
-.small{
-  font-size:12px;
-  opacity:.7;
+// ======================================================
+// CARD DISPLAY
+// ======================================================
+
+document.getElementById("cardNumber").innerText =
+data.cardNumber || "0000 0000 0000 0000";
+
+document.getElementById("cardName").innerText =
+data.cardName || "-";
+
+document.getElementById("cardExpiry").innerText =
+data.cardExpiry || "--/--";
+
+document.getElementById("cardCVV").innerText =
+data.cardCVV || "***";
+
+document.getElementById("cardType").innerText =
+data.cardType || "CARD";
+
+// ======================================================
+// CARD FREEZE
+// ======================================================
+
+window.toggleCard = async () => {
+
+const newStatus = !data.cardFrozen;
+
+await updateDoc(userRef,{
+cardFrozen:newStatus
+});
+
+alert(newStatus ? "Card Frozen" : "Card Unfrozen");
+
+location.reload();
+
+};
+
+// ======================================================
+// USER INFO
+// ======================================================
+
+document.getElementById("welcome").innerText =
+"Hello, " + (data.fullName || username);
+
+document.getElementById("name").innerText = data.fullName || "-";
+document.getElementById("acc").innerText = data.accountNumber || "-";
+document.getElementById("iban").innerText = data.iban || "-";
+document.getElementById("swift").innerText = data.swift || "-";
+
+// ======================================================
+// BALANCE
+// ======================================================
+
+let balanceValue = Number(data.balance || 0);
+let hidden = false;
+
+const balanceEl = document.getElementById("balance");
+const toggleEl = document.getElementById("toggleBalance");
+
+function renderBalance(){
+
+balanceEl.innerText =
+hidden ? "••••••" : "€"+balanceValue.toLocaleString();
+
+toggleEl.innerText =
+hidden ? "👁 Show balance" : "👁 Hide balance";
+
 }
 
-.green{color:#00ffb2}
-.red{color:#ff6b6b}
+toggleEl.onclick = ()=>{
+hidden=!hidden;
+renderBalance();
+};
 
-/* SUCCESS BANNER */
+renderBalance();
 
-#successBanner{
-display:none;
-background:#00c46b;
-padding:12px;
-border-radius:8px;
-margin-bottom:15px;
-text-align:center;
-font-weight:bold;
+// ======================================================
+// TRANSACTIONS
+// ======================================================
+
+const box = document.getElementById("transactions");
+box.innerHTML="";
+
+if(Array.isArray(data.transactions) && data.transactions.length){
+
+const validTransactions = data.transactions.filter(tx=>{
+if(!tx.date) return false;
+const t = new Date(tx.date).getTime();
+return !isNaN(t);
+});
+
+validTransactions.sort((a,b)=>{
+return new Date(b.date) - new Date(a.date);
+});
+
+validTransactions.slice(0,20).forEach(tx=>{
+
+const amount = Number(tx.amount || 0);
+const color = amount>0 ? "green" : "red";
+
+const formattedDate = new Date(tx.date).toLocaleString("en-GB");
+
+const div = document.createElement("div");
+div.className=color;
+
+div.innerHTML=`
+<strong>${tx.note || "Transaction"}</strong><br>
+€${Math.abs(amount).toLocaleString()}
+<div class="small">${formattedDate}</div>
+${tx.ref ? `<div class="small">Ref: ${tx.ref}</div>`:""}
+`;
+
+box.appendChild(div);
+
+});
+
+}else{
+box.innerHTML="<div class='small'>No transactions yet</div>";
 }
 
-/* CARD */
+// ======================================================
+// LIVE RECEIVER LOOKUP
+// ======================================================
 
-.bank-card{
-background:linear-gradient(135deg,#0a1f44,#1d4ed8);
-padding:20px;
-border-radius:16px;
-color:white;
-box-shadow:0 10px 30px rgba(0,0,0,.4);
-margin-bottom:20px;
+const receiverInput=document.getElementById("receiver");
+const receiverNameBox=document.getElementById("receiverName");
+
+if(receiverInput && receiverNameBox){
+
+receiverInput.addEventListener("input",async()=>{
+
+const value=receiverInput.value.trim();
+if(!value){
+receiverNameBox.innerText="";
+return;
 }
 
-.card-top{
-display:flex;
-justify-content:flex-end;
-font-weight:bold;
+const users=await getDocs(collection(db,"users"));
+
+let foundName=null;
+
+users.forEach(d=>{
+const u=d.data();
+if(u.accountNumber===value || u.iban===value)
+foundName=u.fullName;
+});
+
+receiverNameBox.innerText=
+foundName ? "Receiver: "+foundName : "Account not found";
+
+});
+
 }
 
-.card-number{
-font-size:22px;
-letter-spacing:3px;
-margin:25px 0;
+// ======================================================
+// TRANSFER WITH OTP
+// ======================================================
+
+window.askPin = async ()=>{
+
+const receiverValue =
+document.getElementById("receiver").value.trim();
+
+const amountValue =
+parseFloat(document.getElementById("amount").value);
+
+if(!receiverValue || !amountValue)
+return alert("Fill all fields");
+
+if(prompt("Enter PIN") !== data.pin)
+return alert("Wrong PIN");
+
+if(balanceValue < amountValue)
+return alert("Insufficient funds");
+
+const DAILY_LIMIT = 100000;
+
+const today = new Date().toDateString();
+
+const totalSentToday = (data.transactions || [])
+.filter(tx =>
+tx.amount < 0 &&
+tx.date &&
+new Date(tx.date).toDateString() === today
+)
+.reduce((sum,tx)=> sum + Math.abs(tx.amount),0);
+
+if(totalSentToday + amountValue > DAILY_LIMIT)
+return alert("Daily transfer limit exceeded (€100,000)");
+
+await sendOTP(data.email);
+
+const enteredOTP = prompt("Enter OTP sent to email");
+
+if(Date.now() > otpExpiry)
+return alert("OTP expired");
+
+if(enteredOTP != currentOTP)
+return alert("Invalid OTP");
+
+const users = await getDocs(collection(db,"users"));
+
+let receiverData=null;
+let receiverUsername=null;
+
+users.forEach(d=>{
+const u=d.data();
+if(u.accountNumber===receiverValue || u.iban===receiverValue){
+receiverData=u;
+receiverUsername=d.id;
+}
+});
+
+if(!receiverData)
+return alert("Receiver not found");
+
+const date = new Date().toISOString();
+const ref = "DCB"+Date.now();
+
+await updateDoc(userRef,{
+balance: balanceValue - amountValue,
+transactions:[
+...(data.transactions || []),
+{
+amount:-amountValue,
+note:"SEPA Transfer",
+toName:receiverData.fullName,
+date,
+ref
+}
+]
+});
+
+await updateDoc(doc(db,"users",receiverUsername),{
+balance:Number(receiverData.balance || 0) + amountValue,
+transactions:[
+...(receiverData.transactions || []),
+{
+amount:amountValue,
+note:"SEPA Credit Transfer",
+fromName:data.fullName,
+date,
+ref
+}
+]
+});
+
+showSuccess("Transfer Successful");
+
+setTimeout(()=>{
+location.reload();
+},1200);
+
+};
+
+// ======================================================
+// PANEL TOGGLE
+// ======================================================
+
+window.showTransfer=()=>{
+document.getElementById("transferBox").style.display="block";
+document.getElementById("billBox").style.display="none";
+document.getElementById("giftBox").style.display="none";
+};
+
+window.showBills=()=>{
+document.getElementById("billBox").style.display="block";
+document.getElementById("transferBox").style.display="none";
+document.getElementById("giftBox").style.display="none";
+};
+
+window.showGift=()=>{
+document.getElementById("giftBox").style.display="block";
+document.getElementById("transferBox").style.display="none";
+document.getElementById("billBox").style.display="none";
+};
+
+// ======================================================
+// PLACEHOLDER FUNCTIONS
+// ======================================================
+
+window.payBill=()=>alert("Bill payment coming soon");
+window.buyGift=()=>alert("Gift card system coming soon");
+
+// ======================================================
+// LOGOUT
+// ======================================================
+
+window.logout = ()=>{
+localStorage.clear();
+sessionStorage.clear();
+window.location.replace("index.html");
+};
+
 }
 
-.card-bottom{
-display:flex;
-justify-content:space-between;
-font-size:14px;
-}
-
-.card-label{
-font-size:10px;
-opacity:.7;
-}
-
-.freezeCard{
-margin-top:10px;
-padding:10px;
-width:100%;
-border:none;
-border-radius:10px;
-background:#ff3b3b;
-color:white;
-font-weight:bold;
-}
-
-/* BALANCE */
-
-.balance-card{
-background:#0d2b4a;
-padding:15px;
-border-radius:10px;
-margin-bottom:15px;
-text-align:center;
-}
-
-.balance{
-font-size:28px;
-font-weight:bold;
-}
-
-.eye{
-font-size:13px;
-margin-top:5px;
-cursor:pointer;
-opacity:.8;
-}
-
-/* ACTION BUTTONS */
-
-.actions{
-display:flex;
-gap:10px;
-margin:15px 0;
-}
-
-.actions button{
-flex:1;
-padding:10px;
-border:none;
-border-radius:8px;
-background:#1d4ed8;
-color:white;
-font-weight:bold;
-}
-
-/* PANELS */
-
-.panel{
-display:none;
-background:#0d2b4a;
-padding:15px;
-border-radius:10px;
-margin-bottom:15px;
-}
-
-.panel input{
-width:100%;
-padding:10px;
-margin:5px 0;
-border:none;
-border-radius:6px;
-}
-
-.panel button{
-width:100%;
-padding:10px;
-border:none;
-border-radius:8px;
-background:#00c46b;
-color:white;
-font-weight:bold;
-margin-top:5px;
-}
-
-/* TRANSACTIONS */
-
-#transactions div{
-background:#0d2b4a;
-padding:10px;
-border-radius:8px;
-margin-bottom:8px;
-}
-
-.logout{
-margin-top:15px;
-width:100%;
-padding:10px;
-border:none;
-border-radius:8px;
-background:#ff3b3b;
-color:white;
-font-weight:bold;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-<div id="successBanner"></div>
-
-<h2 id="welcome">Hello</h2>
-
-<!-- CARD -->
-<div class="bank-card">
-
-<div class="card-top">
-<span id="cardType">VISA</span>
-</div>
-
-<div class="card-number" id="cardNumber">
-0000 0000 0000 0000
-</div>
-
-<div class="card-bottom">
-
-<div>
-<div class="card-label">Card Holder</div>
-<div id="cardName">---</div>
-</div>
-
-<div>
-<div class="card-label">Expiry</div>
-<div id="cardExpiry">--/--</div>
-</div>
-
-<div>
-<div class="card-label">CVV</div>
-<div id="cardCVV">***</div>
-</div>
-
-</div>
-
-</div>
-
-<button onclick="toggleCard()" class="freezeCard">
-Freeze / Unfreeze Card
-</button>
-
-<!-- BALANCE -->
-<div class="balance-card">
-<div class="balance" id="balance">€0</div>
-<div class="eye" id="toggleBalance">👁 Hide balance</div>
-</div>
-
-<!-- ACCOUNT INFO -->
-<div class="panel" style="display:block">
-<div class="small">Name</div>
-<div id="name"></div>
-
-<div class="small">Account Number</div>
-<div id="acc"></div>
-
-<div class="small">IBAN</div>
-<div id="iban"></div>
-
-<div class="small">SWIFT</div>
-<div id="swift"></div>
-</div>
-
-<!-- ACTION BUTTONS -->
-<div class="actions">
-<button onclick="showTransfer()">Transfer</button>
-<button onclick="showBills()">Bills</button>
-<button onclick="showGift()">Gift</button>
-</div>
-
-<!-- TRANSFER PANEL -->
-<div class="panel" id="transferBox">
-
-<input id="receiver" placeholder="IBAN or Account Number">
-<div id="receiverName" class="small"></div>
-
-<input id="amount" placeholder="Amount (€)">
-
-<button onclick="askPin()">Send Transfer</button>
-
-</div>
-
-<!-- BILL PANEL -->
-<div class="panel" id="billBox">
-
-<select id="billType">
-<option>Electricity</option>
-<option>Water</option>
-<option>Internet</option>
-<option>TV Subscription</option>
-<option>Taxes</option>
-<option>Government Fee</option>
-</select>
-
-<input id="billAmount" placeholder="Amount (€)">
-
-<button>Pay Bill</button>
-
-</div>
-
-<!-- GIFT PANEL -->
-<div class="panel" id="giftBox">
-
-<input placeholder="Recipient Email">
-<input placeholder="Amount (€)">
-
-<button>Send Gift</button>
-
-</div>
-
-<h3>Transactions</h3>
-
-<div id="transactions"></div>
-
-<button class="logout" onclick="logout()">
-Logout
-</button>
-
-</div>
-
-<!-- DASHBOARD SCRIPT -->
-<script type="module" src="dashboard.js"></script>
-
-</body>
-</html>
+initDashboard();

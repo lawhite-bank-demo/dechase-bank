@@ -20,18 +20,57 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ======================================================
+// 🔐 OTP SYSTEM
+// ======================================================
+
+let currentOTP = null;
+let otpExpiry = null;
+
+const ELASTIC_API_KEY = "PASTE_YOUR_ELASTIC_API_KEY_HERE";
+
+async function sendOTP(email){
+
+  const otp = Math.floor(100000 + Math.random()*900000);
+
+  currentOTP = otp;
+  otpExpiry = Date.now() + 60000;
+
+  const subject = "DeChase Bank Security Code";
+
+  const body =
+  "DeChase Bank Security Verification\n\n" +
+  "Your OTP code is: " + otp + "\n\n" +
+  "This code expires in 60 seconds.\n\n" +
+  "Do not share this code.";
+
+  await fetch("https://api.elasticemail.com/v2/email/send",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/x-www-form-urlencoded"
+    },
+    body:
+      "apikey="+ELASTIC_API_KEY+
+      "&subject="+encodeURIComponent(subject)+
+      "&from=dechasebank@gmail.com"+
+      "&to="+email+
+      "&bodyText="+encodeURIComponent(body)
+  });
+
+}
+
+// ======================================================
 // 🚀 INIT DASHBOARD
 // ======================================================
 
-async function initDashboard() {
+async function initDashboard(){
 
   const username = localStorage.getItem("user");
-  if (!username) return window.location.replace("index.html");
+  if(!username) return window.location.replace("index.html");
 
-  const userRef = doc(db, "users", username);
+  const userRef = doc(db,"users",username);
   const snap = await getDoc(userRef);
 
-  if (!snap.exists()) {
+  if(!snap.exists()){
     alert("User not found");
     return window.location.replace("index.html");
   }
@@ -39,27 +78,29 @@ async function initDashboard() {
   const data = snap.data();
 
   // ======================================================
-  // 🔔 SUCCESS BANNER
+  // SUCCESS BANNER
   // ======================================================
 
-  function showSuccess(message) {
+  function showSuccess(message){
+
     const banner = document.getElementById("successBanner");
-    if (!banner) return;
+    if(!banner) return;
 
-    banner.innerText = "✅ " + message;
-    banner.style.display = "block";
+    banner.innerText = "✅ "+message;
+    banner.style.display="block";
 
-    setTimeout(() => {
-      banner.style.display = "none";
-    }, 2000);
+    setTimeout(()=>{
+      banner.style.display="none";
+    },2000);
+
   }
 
   // ======================================================
-  // 🔒 FREEZE CHECK
+  // FREEZE CHECK
   // ======================================================
 
-  function checkFreeze() {
-    if (data.frozen) {
+  function checkFreeze(){
+    if(data.frozen){
       alert("Account is frozen. Contact bank support.");
       return true;
     }
@@ -67,11 +108,11 @@ async function initDashboard() {
   }
 
   // ======================================================
-  // 👤 USER INFO
+  // USER INFO
   // ======================================================
 
   document.getElementById("welcome").innerText =
-    "Hello, " + (data.fullName || username);
+  "Hello, "+(data.fullName || username);
 
   document.getElementById("name").innerText = data.fullName || "-";
   document.getElementById("acc").innerText = data.accountNumber || "-";
@@ -79,7 +120,7 @@ async function initDashboard() {
   document.getElementById("swift").innerText = data.swift || "-";
 
   // ======================================================
-  // 💰 BALANCE
+  // BALANCE
   // ======================================================
 
   let balanceValue = Number(data.balance || 0);
@@ -88,17 +129,17 @@ async function initDashboard() {
   const balanceEl = document.getElementById("balance");
   const toggleEl = document.getElementById("toggleBalance");
 
-  function renderBalance() {
-    balanceEl.innerText = hidden
-      ? "••••••"
-      : "€" + balanceValue.toLocaleString();
+  function renderBalance(){
 
-    toggleEl.innerText = hidden
-      ? "👁 Show balance"
-      : "👁 Hide balance";
+    balanceEl.innerText =
+    hidden ? "••••••" : "€"+balanceValue.toLocaleString();
+
+    toggleEl.innerText =
+    hidden ? "👁 Show balance" : "👁 Hide balance";
+
   }
 
-  toggleEl.onclick = () => {
+  toggleEl.onclick = ()=>{
     hidden = !hidden;
     renderBalance();
   };
@@ -106,199 +147,191 @@ async function initDashboard() {
   renderBalance();
 
   // ======================================================
-  // 🧾 TRANSACTIONS (STRICT SORT FIX)
+  // TRANSACTIONS
   // ======================================================
 
   const box = document.getElementById("transactions");
-  box.innerHTML = "";
+  box.innerHTML="";
 
-  if (Array.isArray(data.transactions) && data.transactions.length) {
+  if(Array.isArray(data.transactions) && data.transactions.length){
 
-    // Remove invalid dates
-    const validTransactions = data.transactions.filter(tx => {
-      if (!tx.date) return false;
-      const time = new Date(tx.date).getTime();
-      return !isNaN(time);
+    const validTransactions = data.transactions.filter(tx=>{
+      if(!tx.date) return false;
+      const t = new Date(tx.date).getTime();
+      return !isNaN(t);
     });
 
-    // Sort newest → oldest
-    validTransactions.sort((a, b) => {
+    validTransactions.sort((a,b)=>{
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
 
-    validTransactions.slice(0, 20).forEach(tx => {
+    validTransactions.slice(0,20).forEach(tx=>{
 
       const amount = Number(tx.amount || 0);
-      const color = amount > 0 ? "green" : "red";
+      const color = amount>0 ? "green" : "red";
 
-      const dateObj = new Date(tx.date);
-
-      const formattedDate = dateObj.toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false
+      const formattedDate = new Date(tx.date).toLocaleString("en-GB",{
+        day:"2-digit",
+        month:"short",
+        year:"numeric",
+        hour:"2-digit",
+        minute:"2-digit",
+        hour12:false
       });
 
       const details =
-        tx.fromName ? "From: " + tx.fromName :
-        tx.toName ? "To: " + tx.toName : "";
+      tx.fromName ? "From: "+tx.fromName :
+      tx.toName ? "To: "+tx.toName : "";
 
       const div = document.createElement("div");
       div.className = color;
 
       div.innerHTML = `
-        <strong>${tx.note || "Transaction"}</strong><br>
-        €${Math.abs(amount).toLocaleString()}
-        <div class="small">${details}</div>
-        <div class="small">${formattedDate}</div>
-        ${tx.ref ? `<div class="small">Ref: ${tx.ref}</div>` : ""}
+      <strong>${tx.note || "Transaction"}</strong><br>
+      €${Math.abs(amount).toLocaleString()}
+      <div class="small">${details}</div>
+      <div class="small">${formattedDate}</div>
+      ${tx.ref ? `<div class="small">Ref: ${tx.ref}</div>` : ""}
       `;
 
       box.appendChild(div);
+
     });
 
-  } else {
-    box.innerHTML = "<div class='small'>No transactions yet</div>";
+  }else{
+    box.innerHTML="<div class='small'>No transactions yet</div>";
   }
 
   // ======================================================
-  // 📂 PANEL TOGGLE
-  // ======================================================
-
-  const transferBox = document.getElementById("transferBox");
-  const billBox = document.getElementById("billBox");
-  const giftBox = document.getElementById("giftBox");
-
-  window.showTransfer = () => {
-    transferBox.style.display = "block";
-    billBox.style.display = "none";
-    giftBox.style.display = "none";
-  };
-
-  window.showBills = () => {
-    billBox.style.display = "block";
-    transferBox.style.display = "none";
-    giftBox.style.display = "none";
-  };
-
-  window.showGift = () => {
-    giftBox.style.display = "block";
-    transferBox.style.display = "none";
-    billBox.style.display = "none";
-  };
-
-  // ======================================================
-  // 🔎 LIVE RECEIVER PREVIEW
+  // LIVE RECEIVER LOOKUP
   // ======================================================
 
   const receiverInput = document.getElementById("receiver");
   const receiverNameBox = document.getElementById("receiverName");
 
-  if (receiverInput && receiverNameBox) {
-    receiverInput.addEventListener("input", async () => {
+  if(receiverInput && receiverNameBox){
+
+    receiverInput.addEventListener("input",async()=>{
 
       const value = receiverInput.value.trim();
-      if (!value) {
-        receiverNameBox.innerText = "";
+      if(!value){
+        receiverNameBox.innerText="";
         return;
       }
 
-      const users = await getDocs(collection(db, "users"));
+      const users = await getDocs(collection(db,"users"));
 
-      let foundName = null;
+      let foundName=null;
 
-      users.forEach(d => {
+      users.forEach(d=>{
         const u = d.data();
-        if (u.accountNumber === value || u.iban === value)
+        if(u.accountNumber===value || u.iban===value)
           foundName = u.fullName;
       });
 
       receiverNameBox.innerText =
-        foundName ? "Receiver: " + foundName : "Account not found";
+      foundName ? "Receiver: "+foundName : "Account not found";
 
       receiverNameBox.style.color =
-        foundName ? "#00ffb2" : "#ff6b6b";
+      foundName ? "#00ffb2" : "#ff6b6b";
+
     });
+
   }
 
   // ======================================================
-  // 🔐 TRANSFER (DAILY LIMIT €100,000)
+  // TRANSFER WITH OTP
   // ======================================================
 
-  window.askPin = async () => {
+  window.askPin = async ()=>{
 
-    if (checkFreeze()) return;
+    if(checkFreeze()) return;
 
-    const receiverValue = document.getElementById("receiver").value.trim();
-    const amountValue = parseFloat(document.getElementById("amount").value);
+    const receiverValue =
+    document.getElementById("receiver").value.trim();
 
-    if (!receiverValue || !amountValue)
+    const amountValue =
+    parseFloat(document.getElementById("amount").value);
+
+    if(!receiverValue || !amountValue)
       return alert("Fill all fields");
 
-    if (prompt("Enter PIN") !== data.pin)
+    if(prompt("Enter PIN") !== data.pin)
       return alert("Wrong PIN");
 
-    if (balanceValue < amountValue)
+    if(balanceValue < amountValue)
       return alert("Insufficient funds");
 
     const DAILY_LIMIT = 100000;
+
     const today = new Date().toDateString();
 
     const totalSentToday = (data.transactions || [])
-      .filter(tx =>
-        tx.amount < 0 &&
-        tx.date &&
-        new Date(tx.date).toDateString() === today
-      )
-      .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+    .filter(tx =>
+      tx.amount < 0 &&
+      tx.date &&
+      new Date(tx.date).toDateString() === today
+    )
+    .reduce((sum,tx)=> sum + Math.abs(tx.amount),0);
 
-    if (totalSentToday + amountValue > DAILY_LIMIT)
+    if(totalSentToday + amountValue > DAILY_LIMIT)
       return alert("Daily transfer limit exceeded (€100,000)");
 
-    const users = await getDocs(collection(db, "users"));
+    // SEND OTP
+    await sendOTP(data.email);
 
-    let receiverData = null;
-    let receiverUsername = null;
+    const enteredOTP = prompt("Enter the 6-digit OTP sent to email");
 
-    users.forEach(d => {
+    if(!enteredOTP)
+      return alert("OTP required");
+
+    if(Date.now() > otpExpiry)
+      return alert("OTP expired");
+
+    if(enteredOTP != currentOTP)
+      return alert("Invalid OTP");
+
+    const users = await getDocs(collection(db,"users"));
+
+    let receiverData=null;
+    let receiverUsername=null;
+
+    users.forEach(d=>{
       const u = d.data();
-      if (u.accountNumber === receiverValue || u.iban === receiverValue) {
+      if(u.accountNumber===receiverValue || u.iban===receiverValue){
         receiverData = u;
         receiverUsername = d.id;
       }
     });
 
-    if (!receiverData)
+    if(!receiverData)
       return alert("Receiver not found");
 
     const date = new Date().toISOString();
-    const ref = "DCB" + Date.now();
+    const ref = "DCB"+Date.now();
 
-    await updateDoc(userRef, {
+    await updateDoc(userRef,{
       balance: balanceValue - amountValue,
-      transactions: [
+      transactions:[
         ...(data.transactions || []),
         {
-          amount: -amountValue,
-          note: "SEPA Transfer",
-          toName: receiverData.fullName,
+          amount:-amountValue,
+          note:"SEPA Transfer",
+          toName:receiverData.fullName,
           date,
           ref
         }
       ]
     });
 
-    await updateDoc(doc(db, "users", receiverUsername), {
-      balance: Number(receiverData.balance || 0) + amountValue,
-      transactions: [
+    await updateDoc(doc(db,"users",receiverUsername),{
+      balance:Number(receiverData.balance || 0) + amountValue,
+      transactions:[
         ...(receiverData.transactions || []),
         {
-          amount: amountValue,
-          note: "SEPA Credit Transfer",
-          fromName: data.fullName,
+          amount:amountValue,
+          note:"SEPA Credit Transfer",
+          fromName:data.fullName,
           date,
           ref
         }
@@ -306,18 +339,23 @@ async function initDashboard() {
     });
 
     showSuccess("Transfer Successful");
-    setTimeout(() => location.reload(), 1200);
+
+    setTimeout(()=>{
+      location.reload();
+    },1200);
+
   };
 
   // ======================================================
-  // 🚪 LOGOUT
+  // LOGOUT
   // ======================================================
 
-  window.logout = () => {
+  window.logout = ()=>{
     localStorage.clear();
     sessionStorage.clear();
     window.location.replace("index.html");
   };
+
 }
 
 initDashboard();

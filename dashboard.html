@@ -2,12 +2,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DeChase Bank Dashboard</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"><style>
+<title>DeChase Bank</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"><style>
+
 body{
 margin:0;
 font-family:'Inter',sans-serif;
 background:linear-gradient(160deg,#020617,#031427,#021a35);
 color:white;
+padding-bottom:80px;
 }
 
 .container{
@@ -44,13 +46,6 @@ font-size:14px;
 cursor:pointer;
 }
 
-.grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:8px;
-margin-top:10px;
-}
-
 button,input,select{
 width:100%;
 padding:10px;
@@ -65,8 +60,6 @@ color:white;
 font-weight:600;
 }
 
-.green{color:#00ffb2;}
-.red{color:#ff6b6b;}
 .small{font-size:12px;opacity:.8;}
 
 .bank-card{
@@ -90,7 +83,6 @@ font-size:14px;
 
 .freezeBtn{
 background:#ff3b3b;
-margin-bottom:15px;
 }
 
 #transactions div{
@@ -99,7 +91,39 @@ padding:10px;
 border-radius:8px;
 margin-bottom:8px;
 }
-</style></head><body><div class="container"><h3 id="welcome">Loading...</h3><!-- BANK CARD --><div class="bank-card"><div style="text-align:right;font-weight:bold;" id="cardType">VISA</div><div class="card-number" id="cardNumber">
+
+.bottomNav{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+background:#021a35;
+display:flex;
+justify-content:space-around;
+padding:12px 0;
+border-top:1px solid rgba(255,255,255,0.1);
+}
+
+.bottomNav button{
+background:none;
+border:none;
+color:white;
+font-size:14px;
+}
+
+</style></head><body><div class="container"><h3 id="welcome">Loading...</h3><!-- ================= HOME PAGE ================= --><div id="homePage"><div class="balance-card">
+<div class="balance" id="balance">€0</div>
+<div class="eye" id="toggleBalance">👁 Hide balance</div>
+</div><div class="card">
+<b>Account Info</b><br>
+Name: <span id="name">-</span><br>
+Account: <span id="acc">-</span><br>
+IBAN: <span id="iban">-</span><br>
+SWIFT: <span id="swift">-</span>
+</div><div class="card">
+<b>Transactions</b>
+<div id="transactions"></div>
+</div></div><!-- ================= CARDS PAGE ================= --><div id="cardsPage" style="display:none"><div class="bank-card"><div style="text-align:right;font-weight:bold;" id="cardType">VISA</div><div class="card-number" id="cardNumber">
 0000 0000 0000 0000
 </div><div class="card-bottom"><div>
 <div class="small">Card Holder</div>
@@ -112,56 +136,27 @@ margin-bottom:8px;
 <div id="cardCVV">***</div>
 </div></div></div><button onclick="toggleCard()" class="freezeBtn">
 Freeze / Unfreeze Card
-</button><!-- BALANCE --><div class="balance-card">
-<div class="balance" id="balance">€0</div>
-<div class="eye" id="toggleBalance">👁 Hide balance</div>
-</div><!-- ACCOUNT INFO --><div class="card">
-<b>Account Info</b><br>
-Name: <span id="name">-</span><br>
-Account: <span id="acc">-</span><br>
-IBAN: <span id="iban">-</span><br>
-SWIFT: <span id="swift">-</span>
-</div><!-- QUICK ACTIONS --><div class="card"><b>Quick Actions</b>
+</button></div><!-- ================= PAYMENTS PAGE ================= --><div id="paymentsPage" style="display:none"><div class="card"><input id="receiver" placeholder="Account Number or IBAN">
+<div id="receiverName" class="small"></div><input id="amount" type="number" placeholder="Amount (€)"><button onclick="askPin()">Send Transfer</button>
 
-<div class="grid">
-<button onclick="showTransfer()">Send</button>
-<button onclick="showBills()">Pay Bills</button>
-<button onclick="showGift()">Gift Cards</button>
-<button onclick="alert('Withdraw coming soon')">Withdraw</button>
-<button onclick="alert('Deposit coming soon')">Deposit</button>
-<button onclick="location.reload()">Refresh</button>
-</div><!-- TRANSFER PANEL --><div id="transferBox" style="display:none;">
-<input id="receiver" placeholder="Account Number or IBAN">
-<div id="receiverName" class="small"></div>
-<input id="amount" type="number" placeholder="Amount (€)">
-<button onclick="askPin()">Send Transfer</button>
-</div><!-- BILL PANEL --><div id="billBox" style="display:none;">
-<select id="billType">
-<option>Electricity Utility</option>
-<option>Water Utility</option>
-<option>Internet Service</option>
-<option>Property Tax</option>
-<option>Income Tax</option>
-<option>Vehicle Insurance</option>
+</div><div class="card"><select id="billType">
+<option>Electricity</option>
+<option>Water</option>
+<option>Internet</option>
+<option>TV Subscription</option>
 <option>Government Fee</option>
-</select><input id="billAmount" type="number" placeholder="Amount (€)">
-<button onclick="payBill()">Pay Bill</button>
-</div><!-- GIFT CARD PANEL --><div id="giftBox" style="display:none;">
-<select id="giftType">
-<option>Amazon</option>
-<option>iTunes</option>
-<option>Steam</option>
-<option>Google Play</option>
-</select><input id="giftAmount" type="number" placeholder="Amount (€)">
-<button onclick="buyGift()">Buy Gift Card</button>
-</div></div><!-- TRANSACTIONS --><div class="card">
-<b>Transactions</b>
-<div id="transactions"></div>
-</div><!-- LOGOUT --><button onclick="logout()" style="background:#ff4d4d">Logout</button>
+</select><input id="billAmount" placeholder="Amount (€)"><button onclick="payBill()">Pay Bill</button>
 
-<!-- SUPPORT --><button onclick="contactSupport()" style="background:#25D366;margin-top:10px;">
+</div></div><!-- ================= PROFILE PAGE ================= --><div id="profilePage" style="display:none"><div class="card"><b>User Profile</b><br><br>
+
+Name: <span id="nameProfile">-</span><br>
+Email: <span id="emailProfile">-</span>
+
+</div><button onclick="logout()" style="background:#ff4d4d">
+Logout
+</button><button onclick="contactSupport()" style="background:#25D366;margin-top:10px;">
 💬 Contact Bank Support
-</button></div><!-- SUCCESS BANNER --><div id="successBanner" style="
+</button></div></div><!-- SUCCESS BANNER --><div id="successBanner" style="
 display:none;
 position:fixed;
 top:20px;
@@ -174,12 +169,31 @@ border-radius:8px;
 font-weight:bold;
 box-shadow:0 8px 20px rgba(0,0,0,0.2);
 z-index:9999;">
-✅ Payment Successful
+✅ Transaction Successful
+</div><!-- BOTTOM NAVIGATION --><div class="bottomNav"><button onclick="openPage('homePage')">Home</button>
+<button onclick="openPage('cardsPage')">Cards</button>
+<button onclick="openPage('paymentsPage')">Payments</button>
+<button onclick="openPage('profilePage')">Profile</button>
+
 </div><script type="module" src="dashboard.js"></script><script>
+
+function openPage(page){
+
+document.getElementById("homePage").style.display="none";
+document.getElementById("cardsPage").style.display="none";
+document.getElementById("paymentsPage").style.display="none";
+document.getElementById("profilePage").style.display="none";
+
+document.getElementById(page).style.display="block";
+
+}
+
 function contactSupport(){
 const phone="14237960225";
 const msg=encodeURIComponent("Hello DeChase Bank Support, I need help.");
 window.open(`https://wa.me/${phone}?text=${msg}`,"_blank");
 }
-</script></body>
+
+</script>
+</body>
 </html>

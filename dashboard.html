@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,7 @@
 body{
 margin:0;
 font-family:'Inter',sans-serif;
-background:linear-gradient(160deg,#020617,#031427,#021a35);
+background:linear-gradient(180deg,#020617,#031427,#021a35);
 color:white;
 padding-bottom:80px;
 }
@@ -24,45 +25,53 @@ padding:20px;
 }
 
 .card{
-background:rgba(255,255,255,0.05);
-backdrop-filter:blur(18px);
+background:rgba(255,255,255,0.04);
+backdrop-filter:blur(20px);
 border-radius:18px;
-padding:16px;
-margin-bottom:15px;
-border:1px solid rgba(255,255,255,0.06);
+padding:18px;
+margin-bottom:16px;
+border:1px solid rgba(255,255,255,0.08);
+box-shadow:0 10px 30px rgba(0,0,0,0.35);
 }
 
 .balance-card{
-background:linear-gradient(135deg,#3aa0ff,#6ed0ff);
-border-radius:20px;
-padding:22px;
+background:linear-gradient(135deg,#2f80ed,#56ccf2);
+border-radius:22px;
+padding:24px;
 text-align:center;
-margin-bottom:15px;
+margin-bottom:18px;
+box-shadow:0 20px 40px rgba(0,0,0,0.35);
 }
 
 .balance{
-font-size:34px;
+font-size:36px;
 font-weight:700;
 }
 
 .eye{
-margin-top:6px;
+margin-top:8px;
 font-size:14px;
 cursor:pointer;
 }
 
 button,input,select{
 width:100%;
-padding:10px;
+padding:12px;
 border:none;
-border-radius:10px;
-margin-top:8px;
+border-radius:12px;
+margin-top:10px;
+font-size:14px;
 }
 
 button{
-background:#2d8cff;
+background:linear-gradient(135deg,#2f80ed,#1c5fd4);
 color:white;
 font-weight:600;
+cursor:pointer;
+}
+
+.freezeBtn{
+background:linear-gradient(135deg,#ff4b4b,#e11d48);
 }
 
 .small{
@@ -71,16 +80,16 @@ opacity:.8;
 }
 
 .bank-card{
-background:linear-gradient(135deg,#0a1f44,#1d4ed8);
-border-radius:16px;
-padding:18px;
-margin-bottom:10px;
+background:linear-gradient(135deg,#162d66,#1d4ed8);
+border-radius:18px;
+padding:20px;
+margin-bottom:12px;
 }
 
 .card-number{
-font-size:22px;
-letter-spacing:3px;
-margin:20px 0;
+font-size:24px;
+letter-spacing:4px;
+margin:22px 0;
 }
 
 .card-bottom{
@@ -89,15 +98,18 @@ justify-content:space-between;
 font-size:14px;
 }
 
-.freezeBtn{
-background:#ff3b3b;
+#transactions div{
+background:rgba(255,255,255,0.05);
+padding:12px;
+border-radius:10px;
+margin-bottom:10px;
 }
 
-#transactions div{
-background:#0d2b4a;
-padding:10px;
-border-radius:8px;
-margin-bottom:8px;
+.wallet-chip{
+display:flex;
+justify-content:space-between;
+padding:8px 0;
+border-bottom:1px solid rgba(255,255,255,0.05);
 }
 
 .bottomNav{
@@ -108,8 +120,8 @@ width:100%;
 background:#021a35;
 display:flex;
 justify-content:space-around;
-padding:12px 0;
-border-top:1px solid rgba(255,255,255,0.1);
+padding:14px 0;
+border-top:1px solid rgba(255,255,255,0.08);
 }
 
 .bottomNav button{
@@ -120,6 +132,7 @@ font-size:14px;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -128,7 +141,7 @@ font-size:14px;
 
 <h3 id="welcome">Loading...</h3>
 
-<!-- ================= HOME PAGE ================= -->
+<!-- HOME PAGE -->
 
 <div id="homePage">
 
@@ -138,23 +151,39 @@ font-size:14px;
 </div>
 
 <div class="card">
+
 <b>Account Info</b><br>
+
 Name: <span id="name">-</span><br>
 Account: <span id="acc">-</span><br>
 IBAN: <span id="iban">-</span><br>
 SWIFT: <span id="swift">-</span>
-</div>
 
-<!-- MULTI CURRENCY WALLET -->
+</div>
 
 <div class="card">
 
-<b>Multi Currency Wallet</b><br><br>
+<b>Multi Currency Wallet</b>
 
-EUR Balance: €<span id="eurWallet">0</span><br>
-USD Balance: $<span id="usdWallet">0</span><br>
-GBP Balance: £<span id="gbpWallet">0</span><br>
-AUD Balance: A$<span id="audWallet">0</span>
+<div class="wallet-chip">
+<span>🇪🇺 EUR</span>
+<span>€<span id="eurWallet">0</span></span>
+</div>
+
+<div class="wallet-chip">
+<span>🇺🇸 USD</span>
+<span>$<span id="usdWallet">0</span></span>
+</div>
+
+<div class="wallet-chip">
+<span>🇬🇧 GBP</span>
+<span>£<span id="gbpWallet">0</span></span>
+</div>
+
+<div class="wallet-chip">
+<span>🇦🇺 AUD</span>
+<span>A$<span id="audWallet">0</span></span>
+</div>
 
 </div>
 
@@ -165,7 +194,7 @@ AUD Balance: A$<span id="audWallet">0</span>
 
 </div>
 
-<!-- ================= CARDS PAGE ================= -->
+<!-- CARDS PAGE -->
 
 <div id="cardsPage" style="display:none">
 
@@ -192,9 +221,11 @@ AUD Balance: A$<span id="audWallet">0</span>
 <div>
 <div class="small">CVV</div>
 <div id="cardCVV">***</div>
-<button onclick="revealCVV()" style="margin-top:5px;background:#1e40af;">
+
+<button onclick="revealCVV()" style="margin-top:6px;background:#1e40af;">
 Show CVV
 </button>
+
 </div>
 
 </div>
@@ -207,7 +238,7 @@ Freeze / Unfreeze Card
 
 </div>
 
-<!-- ================= PAYMENTS PAGE ================= -->
+<!-- PAYMENTS PAGE -->
 
 <div id="paymentsPage" style="display:none">
 
@@ -279,7 +310,7 @@ Freeze / Unfreeze Card
 
 </div>
 
-<!-- ================= PROFILE PAGE ================= -->
+<!-- PROFILE PAGE -->
 
 <div id="profilePage" style="display:none">
 
@@ -324,7 +355,7 @@ z-index:9999;">
 
 </div>
 
-<!-- ================= BOTTOM NAV ================= -->
+<!-- NAVIGATION -->
 
 <div class="bottomNav">
 

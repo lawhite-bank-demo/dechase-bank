@@ -20,7 +20,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ======================================================
-// 🚀 INIT DASHBOARD (SAFE WRAPPER)
+// 🚀 INIT DASHBOARD
 // ======================================================
 
 async function initDashboard() {
@@ -78,17 +78,10 @@ async function initDashboard() {
   document.getElementById("welcome").innerText =
     "Hello, " + (data.fullName || username);
 
-  document.getElementById("name").innerText =
-    data.fullName || "-";
-
-  document.getElementById("acc").innerText =
-    data.accountNumber || "-";
-
-  document.getElementById("iban").innerText =
-    data.iban || "-";
-
-  document.getElementById("swift").innerText =
-    data.swift || "DEUTDEFF";
+  document.getElementById("name").innerText = data.fullName || "-";
+  document.getElementById("acc").innerText = data.accountNumber || "-";
+  document.getElementById("iban").innerText = data.iban || "-";
+  document.getElementById("swift").innerText = data.swift || "DEUTDEFF";
 
   // ======================================================
   // 💰 BALANCE
@@ -164,114 +157,87 @@ async function initDashboard() {
   } else {
     box.innerHTML = "<div class='small'>No transactions yet</div>";
   }
-// ======================================================
-// 📂 PANEL TOGGLE
-// ======================================================
 
-const transferBox = document.getElementById("transferBox");
-const billBox = document.getElementById("billBox");
-const giftBox = document.getElementById("giftBox");
-
-window.showTransfer = () => {
-  transferBox.style.display = "block";
-  billBox.style.display = "none";
-  giftBox.style.display = "none";
-};
-
-window.showBills = () => {
-  billBox.style.display = "block";
-  transferBox.style.display = "none";
-  giftBox.style.display = "none";
-};
-
-window.showGift = () => {
-  giftBox.style.display = "block";
-  transferBox.style.display = "none";
-  billBox.style.display = "none";
-};
   // ======================================================
-// 📂 PANEL TOGGLE
-// ======================================================
+  // 📂 PANEL TOGGLE
+  // ======================================================
 
-const transferBox = document.getElementById("transferBox");
-const billBox = document.getElementById("billBox");
-const giftBox = document.getElementById("giftBox");
+  const transferBox = document.getElementById("transferBox");
+  const billBox = document.getElementById("billBox");
+  const giftBox = document.getElementById("giftBox");
 
-window.showTransfer = () => {
-  transferBox.style.display = "block";
-  billBox.style.display = "none";
-  giftBox.style.display = "none";
-};
+  window.showTransfer = () => {
+    transferBox.style.display = "block";
+    billBox.style.display = "none";
+    giftBox.style.display = "none";
+  };
 
-window.showBills = () => {
-  billBox.style.display = "block";
-  transferBox.style.display = "none";
-  giftBox.style.display = "none";
-};
+  window.showBills = () => {
+    billBox.style.display = "block";
+    transferBox.style.display = "none";
+    giftBox.style.display = "none";
+  };
 
-window.showGift = () => {
-  giftBox.style.display = "block";
-  transferBox.style.display = "none";
-  billBox.style.display = "none";
-};
+  window.showGift = () => {
+    giftBox.style.display = "block";
+    transferBox.style.display = "none";
+    billBox.style.display = "none";
+  };
 
-// ======================================================
-// 🔎 LIVE RECEIVER NAME PREVIEW
-// ======================================================
+  // ======================================================
+  // 🔎 LIVE RECEIVER NAME PREVIEW
+  // ======================================================
 
-const receiverInput = document.getElementById("receiver");
-const receiverNameBox = document.getElementById("receiverName");
+  const receiverInput = document.getElementById("receiver");
+  const receiverNameBox = document.getElementById("receiverName");
 
-if (receiverInput && receiverNameBox) {
+  if (receiverInput && receiverNameBox) {
+    receiverInput.addEventListener("input", async () => {
 
-  receiverInput.addEventListener("input", async () => {
+      const value = receiverInput.value.trim();
 
-    const value = receiverInput.value.trim();
-
-    if (!value) {
-      receiverNameBox.innerText = "";
-      return;
-    }
-
-    const users = await getDocs(collection(db, "users"));
-
-    let foundName = null;
-
-    users.forEach(d => {
-      const u = d.data();
-      if (u.accountNumber === value || u.iban === value) {
-        foundName = u.fullName;
+      if (!value) {
+        receiverNameBox.innerText = "";
+        return;
       }
+
+      const users = await getDocs(collection(db, "users"));
+
+      let foundName = null;
+
+      users.forEach(d => {
+        const u = d.data();
+        if (u.accountNumber === value || u.iban === value) {
+          foundName = u.fullName;
+        }
+      });
+
+      if (foundName) {
+        receiverNameBox.innerText = "Receiver: " + foundName;
+        receiverNameBox.style.color = "#00ffb2";
+      } else {
+        receiverNameBox.innerText = "Account not found";
+        receiverNameBox.style.color = "#ff6b6b";
+      }
+
     });
-    if (foundName) {
-      receiverNameBox.innerText = "Receiver: " + foundName;
-      receiverNameBox.style.color = "#00ffb2";
-    } else {
-      receiverNameBox.innerText = "Account not found";
-      receiverNameBox.style.color = "#ff6b6b";
-    }
+  }
 
-  });
-
-}
-// ======================================================
-// 🔐 TRANSFER
-// ======================================================
   // ======================================================
-  // 🔐 TRANSFER
+  // 🔐 TRANSFER WITH DAILY LIMIT (€100,000)
   // ======================================================
 
   window.askPin = async () => {
 
     if (checkFreeze()) return;
 
-    const receiverInput =
+    const receiverValue =
       document.getElementById("receiver").value.trim();
 
     const amountValue =
       parseFloat(document.getElementById("amount").value);
 
-    if (!receiverInput || !amountValue)
+    if (!receiverValue || !amountValue)
       return alert("Fill all fields");
 
     if (!data.pin)
@@ -284,6 +250,29 @@ if (receiverInput && receiverNameBox) {
     if (balanceValue < amountValue)
       return alert("Insufficient funds");
 
+    // 🚫 DAILY LIMIT
+    const DAILY_LIMIT = 100000;
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const todaysTransfers = (data.transactions || []).filter(tx => {
+      if (!tx.date) return false;
+      const txDate = new Date(tx.date).toISOString().split("T")[0];
+      return txDate === today && tx.amount < 0;
+    });
+
+    const totalSentToday = todaysTransfers.reduce((sum, tx) => {
+      return sum + Math.abs(tx.amount);
+    }, 0);
+
+    if (totalSentToday + amountValue > DAILY_LIMIT) {
+      return alert(
+        "Daily limit exceeded.\n\n" +
+        "Limit: €100,000\n" +
+        "Already sent today: €" + totalSentToday.toLocaleString()
+      );
+    }
+
     const users = await getDocs(collection(db, "users"));
 
     let receiverData = null;
@@ -291,7 +280,7 @@ if (receiverInput && receiverNameBox) {
 
     users.forEach(d => {
       const u = d.data();
-      if (u.accountNumber === receiverInput || u.iban === receiverInput) {
+      if (u.accountNumber === receiverValue || u.iban === receiverValue) {
         receiverData = u;
         receiverUsername = d.id;
       }
@@ -302,7 +291,6 @@ if (receiverInput && receiverNameBox) {
 
     const date = new Date().toISOString();
 
-    // Update sender
     await updateDoc(userRef, {
       balance: balanceValue - amountValue,
       transactions: [
@@ -316,7 +304,6 @@ if (receiverInput && receiverNameBox) {
       ]
     });
 
-    // Update receiver
     await updateDoc(doc(db, "users", receiverUsername), {
       balance: Number(receiverData.balance || 0) + amountValue,
       transactions: [

@@ -47,7 +47,7 @@ async function initDashboard() {
   // 🔔 SUCCESS BANNER
   // ======================================================
 
-  window.showSuccess = function (message) {
+  function showSuccess(message) {
     const banner = document.getElementById("successBanner");
     if (!banner) return;
 
@@ -57,7 +57,7 @@ async function initDashboard() {
     setTimeout(() => {
       banner.style.display = "none";
     }, 2000);
-  };
+  }
 
   // ======================================================
   // 🔒 FREEZE CHECK
@@ -115,6 +115,7 @@ async function initDashboard() {
   // ======================================================
 
   const box = document.getElementById("transactions");
+  box.innerHTML = "";
 
   if (Array.isArray(data.transactions) && data.transactions.length) {
 
@@ -185,7 +186,7 @@ async function initDashboard() {
   };
 
   // ======================================================
-  // 🔎 LIVE RECEIVER NAME PREVIEW
+  // 🔎 LIVE RECEIVER PREVIEW
   // ======================================================
 
   const receiverInput = document.getElementById("receiver");
@@ -195,14 +196,12 @@ async function initDashboard() {
     receiverInput.addEventListener("input", async () => {
 
       const value = receiverInput.value.trim();
-
       if (!value) {
         receiverNameBox.innerText = "";
         return;
       }
 
       const users = await getDocs(collection(db, "users"));
-
       let foundName = null;
 
       users.forEach(d => {
@@ -224,7 +223,7 @@ async function initDashboard() {
   }
 
   // ======================================================
-  // 🔐 TRANSFER WITH DAILY LIMIT (€100,000)
+  // 🔐 TRANSFER (DAILY LIMIT €100,000)
   // ======================================================
 
   window.askPin = async () => {
@@ -240,9 +239,6 @@ async function initDashboard() {
     if (!receiverValue || !amountValue)
       return alert("Fill all fields");
 
-    if (!data.pin)
-      return alert("PIN not set for this user");
-
     const pin = prompt("Enter PIN");
     if (pin !== data.pin)
       return alert("Wrong PIN");
@@ -250,28 +246,19 @@ async function initDashboard() {
     if (balanceValue < amountValue)
       return alert("Insufficient funds");
 
-    // 🚫 DAILY LIMIT
     const DAILY_LIMIT = 100000;
+    const today = new Date().toDateString();
 
-    const today = new Date().toISOString().split("T")[0];
+    const totalSentToday = (data.transactions || [])
+      .filter(tx =>
+        tx.amount < 0 &&
+        tx.date &&
+        new Date(tx.date).toDateString() === today
+      )
+      .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
 
-    const todaysTransfers = (data.transactions || []).filter(tx => {
-      if (!tx.date) return false;
-      const txDate = new Date(tx.date).toISOString().split("T")[0];
-      return txDate === today && tx.amount < 0;
-    });
-
-    const totalSentToday = todaysTransfers.reduce((sum, tx) => {
-      return sum + Math.abs(tx.amount);
-    }, 0);
-
-    if (totalSentToday + amountValue > DAILY_LIMIT) {
-      return alert(
-        "Daily limit exceeded.\n\n" +
-        "Limit: €100,000\n" +
-        "Already sent today: €" + totalSentToday.toLocaleString()
-      );
-    }
+    if (totalSentToday + amountValue > DAILY_LIMIT)
+      return alert("Daily transfer limit exceeded (€100,000)");
 
     const users = await getDocs(collection(db, "users"));
 
@@ -318,10 +305,7 @@ async function initDashboard() {
     });
 
     showSuccess("Transfer Successful");
-
-    setTimeout(() => {
-      location.reload();
-    }, 1200);
+    setTimeout(() => location.reload(), 1200);
   };
 
   // ======================================================
@@ -356,10 +340,7 @@ async function initDashboard() {
     });
 
     showSuccess("Bill Payment Successful");
-
-    setTimeout(() => {
-      location.reload();
-    }, 1200);
+    setTimeout(() => location.reload(), 1200);
   };
 
   // ======================================================
@@ -394,10 +375,7 @@ async function initDashboard() {
     });
 
     showSuccess("Gift Card Purchased");
-
-    setTimeout(() => {
-      location.reload();
-    }, 1200);
+    setTimeout(() => location.reload(), 1200);
   };
 
   // ======================================================
@@ -411,5 +389,4 @@ async function initDashboard() {
   };
 }
 
-// START APP
 initDashboard();

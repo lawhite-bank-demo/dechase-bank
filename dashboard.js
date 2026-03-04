@@ -90,6 +90,21 @@ banner.style.display="none";
 }
 
 
+// SAFE DATE FORMATTER
+
+function formatDate(date){
+
+if(!date) return "-";
+
+const d = new Date(date);
+
+if(isNaN(d)) return "-";
+
+return d.toLocaleString();
+
+}
+
+
 // USER INFO
 
 document.getElementById("welcome").innerText =
@@ -205,17 +220,21 @@ if(box){
 
 box.innerHTML="";
 
+let txArray = [];
+
 if(data.transactions){
 
-const txArray = Array.isArray(data.transactions)
+txArray = Array.isArray(data.transactions)
 ? data.transactions
 : Object.values(data.transactions);
+
+}
 
 txArray.sort((a,b)=> new Date(b.date) - new Date(a.date));
 
 txArray.slice(0,20).forEach(tx=>{
 
-const amount = Number(tx.amount);
+const amount = Number(tx.amount || 0);
 
 const div = document.createElement("div");
 
@@ -223,7 +242,7 @@ div.innerHTML = `
 <strong>${tx.note || tx.merchant || "Transaction"}</strong><br>
 €${Math.abs(amount).toLocaleString()}
 <div class="small">Ref: ${tx.reference || "-"}</div>
-<div class="small">${new Date(tx.date).toLocaleString()}</div>
+<div class="small">${formatDate(tx.date)}</div>
 `;
 
 box.appendChild(div);
@@ -232,33 +251,48 @@ box.appendChild(div);
 
 }
 
-}
-
 
 // PENDING TRANSACTIONS
 
 const pendingBox = document.getElementById("pendingTransactions");
 
-if(pendingBox && data.pendingTransactions){
+if(pendingBox){
 
-const pendingArray = Array.isArray(data.pendingTransactions)
+pendingBox.innerHTML="";
+
+let pendingArray = [];
+
+if(data.pendingTransactions){
+
+pendingArray = Array.isArray(data.pendingTransactions)
 ? data.pendingTransactions
 : Object.values(data.pendingTransactions);
+
+}
+
+if(pendingArray.length === 0){
+
+pendingBox.innerHTML =
+"<div class='small'>No pending transactions</div>";
+
+}else{
 
 pendingArray.forEach(tx=>{
 
 const div = document.createElement("div");
 
 div.innerHTML = `
-<strong>${tx.merchant}</strong><br>
-€${Math.abs(tx.amount).toLocaleString()}
+<strong>${tx.merchant || "Pending Payment"}</strong><br>
+€${Math.abs(tx.amount || 0).toLocaleString()}
 <div class="small">Status: Pending</div>
-<div class="small">${new Date(tx.date).toLocaleString()}</div>
+<div class="small">${formatDate(tx.date)}</div>
 `;
 
 pendingBox.appendChild(div);
 
 });
+
+}
 
 }
 
@@ -349,16 +383,13 @@ if(!receiverDoc)
 return alert("Receiver not found");
 
 
-// UPDATE SENDER BALANCE
+// UPDATE BALANCES
 
 const newSenderBalance = balanceValue - amountValue;
 
 await updateDoc(userRef,{
 balance:newSenderBalance
 });
-
-
-// UPDATE RECEIVER BALANCE
 
 const receiverRef = doc(db,"users",receiverDoc);
 
@@ -370,9 +401,10 @@ balance:newReceiverBalance
 });
 
 
-// GENERATE REFERENCE NUMBER
+// GENERATE REFERENCE
 
-const reference = "DCB-" + Math.floor(10000000 + Math.random()*90000000);
+const reference =
+"DCB-" + Math.floor(10000000 + Math.random()*90000000);
 
 
 // SAVE TRANSACTION
@@ -392,7 +424,7 @@ transactions:updatedTx
 });
 
 
-// SUCCESS BANNER
+// SUCCESS MESSAGE
 
 showSuccess("Transaction Successful");
 

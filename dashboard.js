@@ -65,14 +65,19 @@ body:
 async function initDashboard(){
 
 const username = localStorage.getItem("user");
-if(!username) return window.location.replace("index.html");
+
+if(!username){
+window.location.replace("index.html");
+return;
+}
 
 const userRef = doc(db,"users",username);
 const snap = await getDoc(userRef);
 
 if(!snap.exists()){
 alert("User not found");
-return window.location.replace("index.html");
+window.location.replace("index.html");
+return;
 }
 
 const data = snap.data();
@@ -84,10 +89,11 @@ const data = snap.data();
 function showSuccess(message){
 
 const banner = document.getElementById("successBanner");
+
 if(!banner) return;
 
-banner.innerText = "✅ " + message;
-banner.style.display = "block";
+banner.innerText = "✅ "+message;
+banner.style.display="block";
 
 setTimeout(()=>{
 banner.style.display="none";
@@ -96,70 +102,11 @@ banner.style.display="none";
 }
 
 // ======================================================
-// CARD DISPLAY
-// ======================================================
-
-document.getElementById("cardNumber").innerText =
-data.cardNumber || "0000 0000 0000 0000";
-
-document.getElementById("cardName").innerText =
-data.cardName || "-";
-
-document.getElementById("cardExpiry").innerText =
-data.cardExpiry || "--/--";
-
-document.getElementById("cardType").innerText =
-data.cardType || "CARD";
-
-// hide CVV by default
-const cvvElement = document.getElementById("cardCVV");
-cvvElement.innerText = "***";
-
-// ======================================================
-// CARD FLIP + CVV REVEAL
-// ======================================================
-
-window.revealCVV = ()=>{
-
-const card = document.getElementById("cardInner");
-
-cvvElement.innerText = data.cardCVV || "***";
-
-card.classList.add("flip");
-
-setTimeout(()=>{
-
-card.classList.remove("flip");
-cvvElement.innerText="***";
-
-},5000);
-
-};
-
-// ======================================================
-// CARD FREEZE
-// ======================================================
-
-window.toggleCard = async () => {
-
-const newStatus = !data.cardFrozen;
-
-await updateDoc(userRef,{
-cardFrozen:newStatus
-});
-
-alert(newStatus ? "Card Frozen" : "Card Unfrozen");
-
-location.reload();
-
-};
-
-// ======================================================
 // USER INFO
 // ======================================================
 
 document.getElementById("welcome").innerText =
-"Hello, " + (data.fullName || username);
+"Hello, "+(data.fullName || username);
 
 document.getElementById("name").innerText = data.fullName || "-";
 document.getElementById("acc").innerText = data.accountNumber || "-";
@@ -167,10 +114,12 @@ document.getElementById("iban").innerText = data.iban || "-";
 document.getElementById("swift").innerText = data.swift || "-";
 
 if(document.getElementById("nameProfile"))
-document.getElementById("nameProfile").innerText = data.fullName || "-";
+document.getElementById("nameProfile").innerText =
+data.fullName || "-";
 
 if(document.getElementById("emailProfile"))
-document.getElementById("emailProfile").innerText = data.email || "-";
+document.getElementById("emailProfile").innerText =
+data.email || "-";
 
 // ======================================================
 // BALANCE
@@ -193,92 +142,201 @@ hidden ? "👁 Show balance" : "👁 Hide balance";
 }
 
 toggleEl.onclick = ()=>{
-hidden=!hidden;
+hidden = !hidden;
 renderBalance();
 };
 
 renderBalance();
 
 // ======================================================
+// CARD DISPLAY
+// ======================================================
+
+if(document.getElementById("cardNumber")){
+
+document.getElementById("cardNumber").innerText =
+data.cardNumber || "0000 0000 0000 0000";
+
+document.getElementById("cardName").innerText =
+data.cardName || "-";
+
+document.getElementById("cardExpiry").innerText =
+data.cardExpiry || "--/--";
+
+document.getElementById("cardType").innerText =
+data.cardType || "CARD";
+
+const cvvEl = document.getElementById("cardCVV");
+if(cvvEl) cvvEl.innerText="***";
+
+}
+
+// ======================================================
+// CVV REVEAL
+// ======================================================
+
+window.revealCVV = ()=>{
+
+const cvvEl = document.getElementById("cardCVV");
+
+cvvEl.innerText = data.cardCVV || "***";
+
+setTimeout(()=>{
+cvvEl.innerText="***";
+},5000);
+
+};
+
+// ======================================================
+// CARD FREEZE
+// ======================================================
+
+window.toggleCard = async ()=>{
+
+const newStatus = !data.cardFrozen;
+
+await updateDoc(userRef,{
+cardFrozen:newStatus
+});
+
+alert(newStatus ? "Card Frozen":"Card Unfrozen");
+
+location.reload();
+
+};
+
+// ======================================================
+// VIRTUAL CARD GENERATOR
+// ======================================================
+
+window.generateVirtualCard = async ()=>{
+
+function randomBlock(){
+return Math.floor(1000 + Math.random()*9000);
+}
+
+const cardNumber =
+randomBlock()+" "+
+randomBlock()+" "+
+randomBlock()+" "+
+randomBlock();
+
+const month = Math.floor(Math.random()*12)+1;
+const year = new Date().getFullYear()+3;
+
+const expiry =
+(month<10?"0"+month:month)+"/"+String(year).slice(2);
+
+const cvv = Math.floor(100 + Math.random()*900);
+
+await updateDoc(userRef,{
+cardNumber:cardNumber,
+cardExpiry:expiry,
+cardCVV:String(cvv),
+cardType:"MASTERCARD",
+cardFrozen:false
+});
+
+alert("Virtual card generated");
+
+location.reload();
+
+};
+
+// ======================================================
 // TRANSACTIONS
 // ======================================================
 
 const box = document.getElementById("transactions");
+
+if(box){
+
 box.innerHTML="";
 
 if(Array.isArray(data.transactions) && data.transactions.length){
 
-const validTransactions = data.transactions.filter(tx=>{
+const validTx = data.transactions.filter(tx=>{
 if(!tx.date) return false;
 const t = new Date(tx.date).getTime();
 return !isNaN(t);
 });
 
-validTransactions.sort((a,b)=>{
-return new Date(b.date) - new Date(a.date);
-});
+validTx.sort((a,b)=> new Date(b.date)-new Date(a.date));
 
-validTransactions.slice(0,20).forEach(tx=>{
+validTx.slice(0,20).forEach(tx=>{
 
 const amount = Number(tx.amount || 0);
-const color = amount>0 ? "green" : "red";
+const color = amount>0?"green":"red";
 
-const formattedDate = new Date(tx.date).toLocaleString("en-GB");
+const formattedDate =
+new Date(tx.date).toLocaleString("en-GB");
 
 const div = document.createElement("div");
+
 div.className=color;
 
-div.innerHTML=`
+div.innerHTML = `
 <strong>${tx.note || "Transaction"}</strong><br>
 €${Math.abs(amount).toLocaleString()}
+
 <div class="small">${formattedDate}</div>
 ${tx.ref ? `<div class="small">Ref: ${tx.ref}</div>`:""}
-`;
-
-box.appendChild(div);
+`;box.appendChild(div);
 
 });
 
 }else{
+
 box.innerHTML="<div class='small'>No transactions yet</div>";
+
+}
+
 }
 
 // ======================================================
-// LIVE RECEIVER LOOKUP
+// RECEIVER LOOKUP
 // ======================================================
 
-const receiverInput=document.getElementById("receiver");
-const receiverNameBox=document.getElementById("receiverName");
+const receiverInput =
+document.getElementById("receiver");
+
+const receiverNameBox =
+document.getElementById("receiverName");
 
 if(receiverInput && receiverNameBox){
 
 receiverInput.addEventListener("input",async()=>{
 
-const value=receiverInput.value.trim();
+const value = receiverInput.value.trim();
+
 if(!value){
 receiverNameBox.innerText="";
 return;
 }
 
-const users=await getDocs(collection(db,"users"));
+const users = await getDocs(collection(db,"users"));
 
 let foundName=null;
 
 users.forEach(d=>{
+
 const u=d.data();
+
 if(u.accountNumber===value || u.iban===value)
 foundName=u.fullName;
+
 });
 
-receiverNameBox.innerText=
-foundName ? "Receiver: "+foundName : "Account not found";
+receiverNameBox.innerText =
+foundName ? "Receiver: "+foundName :
+"Account not found";
 
 });
 
 }
 
 // ======================================================
-// TRANSFER WITH OTP
+// TRANSFER
 // ======================================================
 
 window.askPin = async ()=>{
@@ -306,12 +364,12 @@ const totalSentToday = (data.transactions || [])
 .filter(tx =>
 tx.amount < 0 &&
 tx.date &&
-new Date(tx.date).toDateString() === today
+new Date(tx.date).toDateString()===today
 )
-.reduce((sum,tx)=> sum + Math.abs(tx.amount),0);
+.reduce((sum,tx)=>sum+Math.abs(tx.amount),0);
 
 if(totalSentToday + amountValue > DAILY_LIMIT)
-return alert("Daily transfer limit exceeded (€100,000)");
+return alert("Daily transfer limit exceeded");
 
 await sendOTP(data.email);
 
@@ -329,11 +387,14 @@ let receiverData=null;
 let receiverUsername=null;
 
 users.forEach(d=>{
+
 const u=d.data();
+
 if(u.accountNumber===receiverValue || u.iban===receiverValue){
 receiverData=u;
 receiverUsername=d.id;
 }
+
 });
 
 if(!receiverData)
@@ -343,7 +404,7 @@ const date = new Date().toISOString();
 const ref = "DCB"+Date.now();
 
 await updateDoc(userRef,{
-balance: balanceValue - amountValue,
+balance:balanceValue-amountValue,
 transactions:[
 ...(data.transactions || []),
 {
@@ -357,7 +418,7 @@ ref
 });
 
 await updateDoc(doc(db,"users",receiverUsername),{
-balance:Number(receiverData.balance || 0) + amountValue,
+balance:Number(receiverData.balance || 0)+amountValue,
 transactions:[
 ...(receiverData.transactions || []),
 {
@@ -372,9 +433,75 @@ ref
 
 showSuccess("Transfer Successful");
 
-setTimeout(()=>{
-location.reload();
-},1200);
+setTimeout(()=>location.reload(),1200);
+
+};
+
+// ======================================================
+// BILL PAYMENT
+// ======================================================
+
+window.payBill = async ()=>{
+
+const amt =
+parseFloat(document.getElementById("billAmount").value);
+
+if(!amt) return alert("Enter amount");
+
+if(balanceValue < amt)
+return alert("Insufficient funds");
+
+const date = new Date().toISOString();
+
+await updateDoc(userRef,{
+balance:balanceValue-amt,
+transactions:[
+...(data.transactions || []),
+{
+amount:-amt,
+note:document.getElementById("billType").value+" Bill",
+date
+}
+]
+});
+
+showSuccess("Bill Payment Successful");
+
+setTimeout(()=>location.reload(),1200);
+
+};
+
+// ======================================================
+// GIFT CARD
+// ======================================================
+
+window.buyGift = async ()=>{
+
+const amt =
+parseFloat(document.getElementById("giftAmount").value);
+
+if(!amt) return alert("Enter amount");
+
+if(balanceValue < amt)
+return alert("Insufficient funds");
+
+const date = new Date().toISOString();
+
+await updateDoc(userRef,{
+balance:balanceValue-amt,
+transactions:[
+...(data.transactions || []),
+{
+amount:-amt,
+note:document.getElementById("giftType").value+" Gift Card",
+date
+}
+]
+});
+
+showSuccess("Gift Card Purchased");
+
+setTimeout(()=>location.reload(),1200);
 
 };
 
@@ -383,9 +510,12 @@ location.reload();
 // ======================================================
 
 window.logout = ()=>{
+
 localStorage.clear();
 sessionStorage.clear();
+
 window.location.replace("index.html");
+
 };
 
 }

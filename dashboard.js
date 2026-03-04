@@ -111,20 +111,27 @@ data.cardExpiry || "--/--";
 document.getElementById("cardType").innerText =
 data.cardType || "CARD";
 
-// CVV hidden by default
+// hide CVV by default
 const cvvElement = document.getElementById("cardCVV");
 cvvElement.innerText = "***";
 
 // ======================================================
-// CVV REVEAL SYSTEM
+// CARD FLIP + CVV REVEAL
 // ======================================================
 
 window.revealCVV = ()=>{
 
+const card = document.getElementById("cardInner");
+
 cvvElement.innerText = data.cardCVV || "***";
 
+card.classList.add("flip");
+
 setTimeout(()=>{
-cvvElement.innerText = "***";
+
+card.classList.remove("flip");
+cvvElement.innerText="***";
+
 },5000);
 
 };

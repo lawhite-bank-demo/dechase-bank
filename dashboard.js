@@ -92,29 +92,18 @@ banner.style.display="none";
 
 // USER INFO
 
-if(document.getElementById("welcome"))
 document.getElementById("welcome").innerText =
 "Hello, " + data.fullName;
 
-if(document.getElementById("name"))
 document.getElementById("name").innerText = data.fullName;
-
-if(document.getElementById("acc"))
 document.getElementById("acc").innerText = data.accountNumber;
-
-if(document.getElementById("iban"))
 document.getElementById("iban").innerText = data.iban;
-
-if(document.getElementById("swift"))
 document.getElementById("swift").innerText = data.swift;
 
 
 // PROFILE
 
-if(document.getElementById("nameProfile"))
 document.getElementById("nameProfile").innerText = data.fullName;
-
-if(document.getElementById("emailProfile"))
 document.getElementById("emailProfile").innerText = data.email;
 
 
@@ -128,75 +117,59 @@ const toggleEl = document.getElementById("toggleBalance");
 
 function renderBalance(){
 
-if(!balanceEl) return;
-
 balanceEl.innerText =
 hidden ? "••••••" : "€"+balanceValue.toLocaleString();
 
-if(toggleEl){
 toggleEl.innerText =
 hidden ? "👁 Show balance" : "👁 Hide balance";
-}
 
 }
 
-if(toggleEl){
 toggleEl.onclick = ()=>{
 hidden = !hidden;
 renderBalance();
 };
-}
 
 renderBalance();
 
 
 // MULTI CURRENCY WALLET
 
-if(document.getElementById("eurWallet"))
 document.getElementById("eurWallet").innerText =
 Number(data.balance || 0).toLocaleString();
 
-if(document.getElementById("usdWallet"))
 document.getElementById("usdWallet").innerText =
 Number(data.usdBalance || 0).toLocaleString();
 
-if(document.getElementById("gbpWallet"))
 document.getElementById("gbpWallet").innerText =
 Number(data.gbpBalance || 0).toLocaleString();
 
-if(document.getElementById("audWallet"))
 document.getElementById("audWallet").innerText =
 Number(data.audBalance || 0).toLocaleString();
 
 
 // CARD DISPLAY
 
-if(document.getElementById("cardNumber"))
 document.getElementById("cardNumber").innerText =
 data.cardNumber || "0000 0000 0000 0000";
 
-if(document.getElementById("cardName"))
 document.getElementById("cardName").innerText =
 data.cardName || "-";
 
-if(document.getElementById("cardExpiry"))
 document.getElementById("cardExpiry").innerText =
 data.cardExpiry || "--/--";
 
-if(document.getElementById("cardType"))
 document.getElementById("cardType").innerText =
 data.cardType || "CARD";
 
 const cvvElement = document.getElementById("cardCVV");
 
-if(cvvElement) cvvElement.innerText="***";
+cvvElement.innerText="***";
 
 
 // REVEAL CVV
 
 window.revealCVV = ()=>{
-
-if(!cvvElement) return;
 
 cvvElement.innerText = data.cardCVV;
 
@@ -294,7 +267,7 @@ pendingBox.appendChild(div);
 const receiverInput=document.getElementById("receiver");
 const receiverNameBox=document.getElementById("receiverName");
 
-if(receiverInput && receiverNameBox){
+if(receiverInput){
 
 receiverInput.addEventListener("input",async()=>{
 
@@ -311,8 +284,10 @@ let foundName=null;
 
 users.forEach(d=>{
 const u=d.data();
+
 if(u.accountNumber===value || u.iban===value)
 foundName=u.fullName;
+
 });
 
 receiverNameBox.innerText =
@@ -323,7 +298,7 @@ foundName ? "Receiver: "+foundName : "Account not found";
 }
 
 
-// TRANSFER
+// TRANSFER SYSTEM
 
 window.askPin = async ()=>{
 
@@ -352,7 +327,71 @@ return alert("OTP expired");
 if(enteredOTP != currentOTP)
 return alert("Invalid OTP");
 
-showSuccess("Transfer Approved");
+
+// FIND RECEIVER
+
+const users = await getDocs(collection(db,"users"));
+
+let receiverDoc = null;
+let receiverData = null;
+
+users.forEach(d=>{
+const u=d.data();
+
+if(u.accountNumber===receiverValue || u.iban===receiverValue){
+receiverDoc = d.id;
+receiverData = u;
+}
+});
+
+if(!receiverDoc)
+return alert("Receiver not found");
+
+
+// UPDATE SENDER BALANCE
+
+const newSenderBalance = balanceValue - amountValue;
+
+await updateDoc(userRef,{
+balance:newSenderBalance
+});
+
+
+// UPDATE RECEIVER BALANCE
+
+const receiverRef = doc(db,"users",receiverDoc);
+
+const newReceiverBalance =
+Number(receiverData.balance || 0) + amountValue;
+
+await updateDoc(receiverRef,{
+balance:newReceiverBalance
+});
+
+
+// SAVE TRANSACTION
+
+const tx = {
+amount:-amountValue,
+date:new Date().toISOString(),
+note:"SEPA Credit Transfer",
+toName:receiverData.fullName
+};
+
+const updatedTx = [...(data.transactions || []), tx];
+
+await updateDoc(userRef,{
+transactions:updatedTx
+});
+
+
+// SUCCESS BANNER
+
+showSuccess("Transaction Successful");
+
+setTimeout(()=>{
+location.reload();
+},1500);
 
 };
 
@@ -365,8 +404,6 @@ const amountInput = document.getElementById("convertAmount");
 const typeInput = document.getElementById("convertType");
 const resultBox = document.getElementById("conversionResult");
 
-if(!amountInput || !typeInput || !resultBox) return;
-
 const amount = parseFloat(amountInput.value);
 const type = typeInput.value;
 
@@ -375,9 +412,11 @@ if(!amount) return alert("Enter amount");
 try{
 
 const res = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
+
 const data = await res.json();
 
 const rate = data.rates[type];
+
 const result = amount * rate;
 
 resultBox.innerText =

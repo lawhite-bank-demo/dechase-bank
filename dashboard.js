@@ -108,11 +108,26 @@ data.cardName || "-";
 document.getElementById("cardExpiry").innerText =
 data.cardExpiry || "--/--";
 
-document.getElementById("cardCVV").innerText =
-data.cardCVV || "***";
-
 document.getElementById("cardType").innerText =
 data.cardType || "CARD";
+
+// CVV hidden by default
+const cvvElement = document.getElementById("cardCVV");
+cvvElement.innerText = "***";
+
+// ======================================================
+// CVV REVEAL SYSTEM
+// ======================================================
+
+window.revealCVV = ()=>{
+
+cvvElement.innerText = data.cardCVV || "***";
+
+setTimeout(()=>{
+cvvElement.innerText = "***";
+},5000);
+
+};
 
 // ======================================================
 // CARD FREEZE
@@ -143,6 +158,12 @@ document.getElementById("name").innerText = data.fullName || "-";
 document.getElementById("acc").innerText = data.accountNumber || "-";
 document.getElementById("iban").innerText = data.iban || "-";
 document.getElementById("swift").innerText = data.swift || "-";
+
+if(document.getElementById("nameProfile"))
+document.getElementById("nameProfile").innerText = data.fullName || "-";
+
+if(document.getElementById("emailProfile"))
+document.getElementById("emailProfile").innerText = data.email || "-";
 
 // ======================================================
 // BALANCE
@@ -349,35 +370,6 @@ location.reload();
 },1200);
 
 };
-
-// ======================================================
-// PANEL TOGGLE
-// ======================================================
-
-window.showTransfer=()=>{
-document.getElementById("transferBox").style.display="block";
-document.getElementById("billBox").style.display="none";
-document.getElementById("giftBox").style.display="none";
-};
-
-window.showBills=()=>{
-document.getElementById("billBox").style.display="block";
-document.getElementById("transferBox").style.display="none";
-document.getElementById("giftBox").style.display="none";
-};
-
-window.showGift=()=>{
-document.getElementById("giftBox").style.display="block";
-document.getElementById("transferBox").style.display="none";
-document.getElementById("billBox").style.display="none";
-};
-
-// ======================================================
-// PLACEHOLDER FUNCTIONS
-// ======================================================
-
-window.payBill=()=>alert("Bill payment coming soon");
-window.buyGift=()=>alert("Gift card system coming soon");
 
 // ======================================================
 // LOGOUT

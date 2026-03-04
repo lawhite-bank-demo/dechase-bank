@@ -106,7 +106,7 @@ async function initDashboard() {
   renderBalance();
 
   // ======================================================
-  // 🧾 TRANSACTIONS (VALID + SORTED)
+  // 🧾 TRANSACTIONS (STRICT SORT FIX)
   // ======================================================
 
   const box = document.getElementById("transactions");
@@ -114,20 +114,26 @@ async function initDashboard() {
 
   if (Array.isArray(data.transactions) && data.transactions.length) {
 
-    const validTx = data.transactions.filter(tx =>
-      tx.date && !isNaN(new Date(tx.date).getTime())
-    );
+    // Remove invalid dates
+    const validTransactions = data.transactions.filter(tx => {
+      if (!tx.date) return false;
+      const time = new Date(tx.date).getTime();
+      return !isNaN(time);
+    });
 
-    const sorted = validTx.sort((a, b) =>
-      new Date(b.date) - new Date(a.date)
-    );
+    // Sort newest → oldest
+    validTransactions.sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
 
-    sorted.slice(0, 20).forEach(tx => {
+    validTransactions.slice(0, 20).forEach(tx => {
 
       const amount = Number(tx.amount || 0);
       const color = amount > 0 ? "green" : "red";
 
-      const formattedDate = new Date(tx.date).toLocaleString("en-GB", {
+      const dateObj = new Date(tx.date);
+
+      const formattedDate = dateObj.toLocaleString("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -195,7 +201,10 @@ async function initDashboard() {
     receiverInput.addEventListener("input", async () => {
 
       const value = receiverInput.value.trim();
-      if (!value) return receiverNameBox.innerText = "";
+      if (!value) {
+        receiverNameBox.innerText = "";
+        return;
+      }
 
       const users = await getDocs(collection(db, "users"));
 

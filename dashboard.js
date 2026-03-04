@@ -222,6 +222,7 @@ const div = document.createElement("div");
 div.innerHTML = `
 <strong>${tx.note || tx.merchant || "Transaction"}</strong><br>
 €${Math.abs(amount).toLocaleString()}
+<div class="small">Ref: ${tx.reference || "-"}</div>
 <div class="small">${new Date(tx.date).toLocaleString()}</div>
 `;
 
@@ -369,13 +370,19 @@ balance:newReceiverBalance
 });
 
 
+// GENERATE REFERENCE NUMBER
+
+const reference = "DCB-" + Math.floor(10000000 + Math.random()*90000000);
+
+
 // SAVE TRANSACTION
 
 const tx = {
 amount:-amountValue,
 date:new Date().toISOString(),
 note:"SEPA Credit Transfer",
-toName:receiverData.fullName
+toName:receiverData.fullName,
+reference:reference
 };
 
 const updatedTx = [...(data.transactions || []), tx];

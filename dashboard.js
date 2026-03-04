@@ -52,10 +52,8 @@ const userRef=doc(db,"users",username);
 const snap=await getDoc(userRef);
 
 if(!snap.exists()){
-
 alert("User not found");
 return;
-
 }
 
 const data=snap.data();
@@ -63,26 +61,23 @@ const data=snap.data();
 
 // SUCCESS BANNER
 
-function showSuccess(msg){
+function showSuccess(message){
 
 const banner=document.getElementById("successBanner");
 
 if(!banner) return;
 
-banner.innerText="✅ "+msg;
-
+banner.innerText="✅ "+message;
 banner.style.display="block";
 
 setTimeout(()=>{
-
 banner.style.display="none";
-
 },2000);
 
 }
 
 
-// FORMAT DATE
+// DATE FORMAT
 
 function formatDate(date){
 
@@ -102,45 +97,35 @@ return d.toLocaleString();
 document.getElementById("welcome").innerText="Hello, "+data.fullName;
 
 document.getElementById("name").innerText=data.fullName;
-
 document.getElementById("acc").innerText=data.accountNumber;
-
 document.getElementById("iban").innerText=data.iban;
-
 document.getElementById("swift").innerText=data.swift;
 
 
 // PROFILE
 
 document.getElementById("nameProfile").innerText=data.fullName;
-
 document.getElementById("emailProfile").innerText=data.email;
 
 
 // BALANCE
 
 let balanceValue=Number(data.balance||0);
-
 let hidden=false;
 
 const balanceEl=document.getElementById("balance");
-
 const toggleEl=document.getElementById("toggleBalance");
 
 function renderBalance(){
 
 balanceEl.innerText=hidden?"••••":"€"+balanceValue.toLocaleString();
-
 toggleEl.innerText=hidden?"👁 Show balance":"👁 Hide balance";
 
 }
 
 toggleEl.onclick=()=>{
-
 hidden=!hidden;
-
 renderBalance();
-
 };
 
 renderBalance();
@@ -148,50 +133,25 @@ renderBalance();
 
 // WALLET
 
-document.getElementById("eurWallet").innerText=
-Number(data.balance||0).toLocaleString();
-
-document.getElementById("usdWallet").innerText=
-Number(data.usdBalance||0).toLocaleString();
-
-document.getElementById("gbpWallet").innerText=
-Number(data.gbpBalance||0).toLocaleString();
-
-document.getElementById("audWallet").innerText=
-Number(data.audBalance||0).toLocaleString();
+document.getElementById("eurWallet").innerText=Number(data.balance||0).toLocaleString();
+document.getElementById("usdWallet").innerText=Number(data.usdBalance||0).toLocaleString();
+document.getElementById("gbpWallet").innerText=Number(data.gbpBalance||0).toLocaleString();
+document.getElementById("audWallet").innerText=Number(data.audBalance||0).toLocaleString();
 
 
 // CARD
 
-document.getElementById("cardNumber").innerText=
-data.cardNumber||"0000 0000 0000 0000";
+document.getElementById("cardNumber").innerText=data.cardNumber||"0000 0000 0000 0000";
+document.getElementById("cardName").innerText=data.cardName||"-";
+document.getElementById("cardExpiry").innerText=data.cardExpiry||"--/--";
+document.getElementById("cardType").innerText=data.cardType||"CARD";
 
-document.getElementById("cardName").innerText=
-data.cardName||"-";
-
-document.getElementById("cardExpiry").innerText=
-data.cardExpiry||"--/--";
-
-document.getElementById("cardType").innerText=
-data.cardType||"CARD";
-
-const cvvEl=document.getElementById("cardCVV");
-
-cvvEl.innerText="***";
-
-
-// REVEAL CVV
+const cvvElement=document.getElementById("cardCVV");
+cvvElement.innerText="***";
 
 window.revealCVV=()=>{
-
-cvvEl.innerText=data.cardCVV;
-
-setTimeout(()=>{
-
-cvvEl.innerText="***";
-
-},5000);
-
+cvvElement.innerText=data.cardCVV;
+setTimeout(()=>{cvvElement.innerText="***";},5000);
 };
 
 
@@ -231,15 +191,33 @@ txArray.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
 txArray.slice(0,20).forEach(tx=>{
 
+const amount=Number(tx.amount||0);
+
+let icon="💳";
+
+if((tx.note||"").includes("SEPA")) icon="🏦";
+if((tx.note||"").includes("ATM")) icon="🏧";
+if((tx.note||"").includes("Gift")) icon="🎁";
+if((tx.note||"").includes("Bill")) icon="💡";
+if((tx.note||"").includes("Crypto")) icon="₿";
+
+const color=amount>=0?"#22c55e":"#ef4444";
+const sign=amount>=0?"+":"-";
+
+const reference=
+tx.reference || "DCB-"+Math.floor(10000000+Math.random()*90000000);
+
 const div=document.createElement("div");
 
 div.innerHTML=`
 
-<strong>${tx.note||"Transaction"}</strong><br>
+<strong>${icon} ${tx.note||"Transaction"}</strong><br>
 
-€${Math.abs(tx.amount||0).toLocaleString()}
+<span style="color:${color};font-weight:600;">
+${sign}€${Math.abs(amount).toLocaleString()}
+</span>
 
-<div class="small">Ref: ${tx.reference||"-"}</div>
+<div class="small">Ref: ${reference}</div>
 
 <div class="small">${formatDate(tx.date)}</div>
 
@@ -255,7 +233,6 @@ box.appendChild(div);
 // RECEIVER LOOKUP
 
 const receiverInput=document.getElementById("receiver");
-
 const receiverNameBox=document.getElementById("receiverName");
 
 if(receiverInput){
@@ -265,10 +242,8 @@ receiverInput.addEventListener("input",async()=>{
 const value=receiverInput.value.trim();
 
 if(!value){
-
 receiverNameBox.innerText="";
 return;
-
 }
 
 const users=await getDocs(collection(db,"users"));
@@ -276,11 +251,9 @@ const users=await getDocs(collection(db,"users"));
 let foundName=null;
 
 users.forEach(d=>{
-
 const u=d.data();
 
 if(u.accountNumber===value||u.iban===value)
-
 foundName=u.fullName;
 
 });
@@ -298,19 +271,15 @@ foundName?"Receiver: "+foundName:"Account not found";
 window.askPin=async()=>{
 
 const receiverValue=document.getElementById("receiver").value.trim();
-
 const amountValue=parseFloat(document.getElementById("amount").value);
 
 if(!receiverValue||!amountValue)
-
 return alert("Fill all fields");
 
 if(prompt("Enter PIN")!==data.pin)
-
 return alert("Wrong PIN");
 
 if(balanceValue<amountValue)
-
 return alert("Insufficient funds");
 
 await sendOTP(data.email);
@@ -318,11 +287,9 @@ await sendOTP(data.email);
 const enteredOTP=prompt("Enter OTP");
 
 if(Date.now()>otpExpiry)
-
 return alert("OTP expired");
 
 if(enteredOTP!=currentOTP)
-
 return alert("Invalid OTP");
 
 
@@ -331,29 +298,22 @@ return alert("Invalid OTP");
 const users=await getDocs(collection(db,"users"));
 
 let receiverDoc=null;
-
 let receiverData=null;
 
 users.forEach(d=>{
-
 const u=d.data();
 
 if(u.accountNumber===receiverValue||u.iban===receiverValue){
-
 receiverDoc=d.id;
-
 receiverData=u;
-
 }
-
 });
 
 if(!receiverDoc)
-
 return alert("Receiver not found");
 
 
-// UPDATE BALANCE
+// UPDATE BALANCES
 
 const newSenderBalance=balanceValue-amountValue;
 
@@ -376,17 +336,11 @@ const reference=
 // SAVE TX
 
 const tx={
-
 amount:-amountValue,
-
 date:new Date().toISOString(),
-
 note:"SEPA Credit Transfer",
-
 toName:receiverData.fullName,
-
 reference:reference
-
 };
 
 const updatedTx=[...(data.transactions||[]),tx];
@@ -400,128 +354,11 @@ initDashboard();
 };
 
 
-// GIFT CARD PURCHASE
-
-window.buyGiftCard=async(type,amount)=>{
-
-if(balanceValue<amount)
-
-return alert("Insufficient balance");
-
-const reference=
-"DCB-"+Math.floor(10000000+Math.random()*90000000);
-
-const tx={
-
-amount:-amount,
-
-date:new Date().toISOString(),
-
-note:type+" Gift Card",
-
-reference:reference
-
-};
-
-const updatedTx=[...(data.transactions||[]),tx];
-
-await updateDoc(userRef,{
-
-balance:balanceValue-amount,
-
-transactions:updatedTx
-
-});
-
-showSuccess(type+" Gift Card Purchased");
-
-initDashboard();
-
-};
-
-
-// PAY BILL
-
-window.payBill=async(type,amount)=>{
-
-if(balanceValue<amount)
-
-return alert("Insufficient balance");
-
-const reference=
-"DCB-"+Math.floor(10000000+Math.random()*90000000);
-
-const tx={
-
-amount:-amount,
-
-date:new Date().toISOString(),
-
-note:type+" Bill Payment",
-
-reference:reference
-
-};
-
-const updatedTx=[...(data.transactions||[]),tx];
-
-await updateDoc(userRef,{
-
-balance:balanceValue-amount,
-
-transactions:updatedTx
-
-});
-
-showSuccess(type+" Bill Paid");
-
-initDashboard();
-
-};
-
-
-// CURRENCY CONVERTER
-
-window.convertCurrency=async()=>{
-
-const amount=parseFloat(document.getElementById("convertAmount").value);
-
-const type=document.getElementById("convertType").value;
-
-const resultBox=document.getElementById("conversionResult");
-
-if(!amount) return alert("Enter amount");
-
-try{
-
-const res=await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
-
-const data=await res.json();
-
-const rate=data.rates[type];
-
-const result=amount*rate;
-
-resultBox.innerText=
-amount+" EUR = "+result.toFixed(2)+" "+type;
-
-}catch{
-
-resultBox.innerText="Conversion failed";
-
-}
-
-};
-
-
 // LOGOUT
 
 window.logout=()=>{
-
 localStorage.clear();
-
 window.location.replace("index.html");
-
 };
 
 }

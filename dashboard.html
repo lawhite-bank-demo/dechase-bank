@@ -108,13 +108,11 @@ opacity:.8;
 
 </head>
 
-
 <body>
 
 <div class="container">
 
 <h3 id="welcome">Loading...</h3>
-
 
 <!-- HOME PAGE -->
 
@@ -128,7 +126,6 @@ opacity:.8;
 
 </div>
 
-
 <div class="card">
 
 <b>Account Info</b><br>
@@ -139,7 +136,6 @@ IBAN: <span id="iban">-</span><br>
 SWIFT: <span id="swift">-</span>
 
 </div>
-
 
 <div class="card">
 
@@ -167,7 +163,6 @@ SWIFT: <span id="swift">-</span>
 
 </div>
 
-
 <div class="card">
 
 <b>Pending Transactions</b>
@@ -175,7 +170,6 @@ SWIFT: <span id="swift">-</span>
 <div id="pendingTransactions"></div>
 
 </div>
-
 
 <div class="card">
 
@@ -186,8 +180,6 @@ SWIFT: <span id="swift">-</span>
 </div>
 
 </div>
-
-
 
 <!-- CARDS -->
 
@@ -213,8 +205,6 @@ SWIFT: <span id="swift">-</span>
 
 </div>
 
-
-
 <!-- PAYMENTS -->
 
 <div id="paymentsPage" style="display:none">
@@ -232,7 +222,6 @@ SWIFT: <span id="swift">-</span>
 <button onclick="askPin()">Send Transfer</button>
 
 </div>
-
 
 <div class="card">
 
@@ -255,8 +244,6 @@ SWIFT: <span id="swift">-</span>
 
 </div>
 
-
-
 <!-- BILLS -->
 
 <div id="billsPage" style="display:none">
@@ -274,8 +261,6 @@ SWIFT: <span id="swift">-</span>
 </div>
 
 </div>
-
-
 
 <!-- GIFT CARDS -->
 
@@ -295,8 +280,6 @@ SWIFT: <span id="swift">-</span>
 
 </div>
 
-
-
 <!-- PROFILE -->
 
 <div id="profilePage" style="display:none">
@@ -308,6 +291,8 @@ Email: <span id="emailProfile">-</span>
 
 </div>
 
+<button onclick="changePin()">Change PIN</button>
+
 <button onclick="logout()">Logout</button>
 
 <button onclick="contactSupport()">Contact Bank Support</button>
@@ -315,8 +300,6 @@ Email: <span id="emailProfile">-</span>
 </div>
 
 </div>
-
-
 
 <div id="successBanner"
 style="
@@ -334,8 +317,6 @@ Success
 
 </div>
 
-
-
 <div class="bottomNav">
 
 <button onclick="openPage('homePage')">Home</button>
@@ -347,22 +328,18 @@ Success
 
 </div>
 
-
 <script type="module" src="dashboard.js"></script>
-
 
 <script>
 
 function openPage(page){
 
 ["homePage","cardsPage","paymentsPage","billsPage","giftPage","profilePage"]
-
 .forEach(p=>document.getElementById(p).style.display="none");
 
 document.getElementById(page).style.display="block";
 
 }
-
 
 function contactSupport(){
 

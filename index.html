@@ -1,12 +1,8 @@
-
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DeChase Bank</title>
-
-<style>
+<title>DeChase Bank</title><style>
 body{
   margin:0;
   font-family:Arial;
@@ -50,97 +46,9 @@ button:disabled{
   font-size:13px;
   color:#666;
 }
-</style>
-</head>
-<body>
+</style></head><body><div class="card">
+<h2>DeChase Bank</h2>
+<p class="small">Secure Online Banking</p><input id="username" placeholder="Username">
+<input id="pin" type="password" placeholder="PIN"><button id="loginBtn" onclick="login()">Login</button>
 
-<div class="card">
-  <h2>DeChase Bank</h2>
-  <p class="small">Secure Online Banking</p>
-
-  <input id="username" placeholder="Username">
-  <input id="pin" type="password" placeholder="PIN">
-
-  <button id="loginBtn" onclick="login()">Login</button>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBDp6wmJMY8WPyKPNE-bvVSiz4AIUbn71U",
-  authDomain: "dechase-bank.firebaseapp.com",
-  projectId: "dechase-bank"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-
-// ✅ Auto redirect if already logged in
-if(localStorage.getItem("user")){
-  location.href="dashboard.html";
-}
-
-
-// ✅ LOGIN FUNCTION
-async function login(){
-
-  const btn = document.getElementById("loginBtn");
-  const usernameInput = document.getElementById("username");
-  const pinInput = document.getElementById("pin");
-
-  const username = usernameInput.value.trim().toLowerCase();
-  const pin = pinInput.value.trim();
-
-  if(!username || !pin){
-    alert("Enter username and PIN");
-    return;
-  }
-
-  btn.disabled = true;
-  btn.innerText = "Checking...";
-
-  try{
-
-    const doc = await db.collection("users").doc(username).get();
-
-    if(!doc.exists){
-      alert("User not found");
-      btn.disabled = false;
-      btn.innerText = "Login";
-      return;
-    }
-
-    if(doc.data().pin !== pin){
-      alert("Incorrect PIN");
-      btn.disabled = false;
-      btn.innerText = "Login";
-      return;
-    }
-
-    // save login session
-localStorage.setItem("user", username);
-localStorage.setItem("session", doc.data().session);
-
-// redirect
-setTimeout(()=>{
-  location.href="dashboard.html";
-},300);
-
-    // small delay prevents blank dashboard load
-    setTimeout(()=>{
-      location.href="dashboard.html";
-    }, 300);
-
-  }catch(error){
-    alert("Network error. Check internet.");
-    btn.disabled = false;
-    btn.innerText = "Login";
-  }
-}
-</script>
-
-</body>
-</html>
+</div><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script

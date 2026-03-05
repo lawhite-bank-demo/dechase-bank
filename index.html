@@ -4,51 +4,140 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DeChase Bank</title><style>
 body{
-  margin:0;
-  font-family:Arial;
-  background:linear-gradient(180deg,#0b1220,#102a54);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
+margin:0;
+font-family:Arial;
+background:linear-gradient(180deg,#0b1220,#102a54);
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
 }
+
 .card{
-  background:#fff;
-  width:90%;
-  max-width:380px;
-  padding:30px 20px;
-  border-radius:20px;
-  text-align:center;
-  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+background:#fff;
+width:90%;
+max-width:380px;
+padding:30px 20px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 10px 30px rgba(0,0,0,0.2);
 }
+
 input{
-  width:100%;
-  padding:15px;
-  margin-bottom:15px;
-  border-radius:12px;
-  border:1px solid #ccc;
-  font-size:16px;
+width:100%;
+padding:15px;
+margin-bottom:15px;
+border-radius:12px;
+border:1px solid #ccc;
+font-size:16px;
 }
+
 button{
-  width:100%;
-  padding:15px;
-  border-radius:12px;
-  border:none;
-  background:#1f3b63;
-  color:white;
-  font-size:18px;
-  cursor:pointer;
+width:100%;
+padding:15px;
+border-radius:12px;
+border:none;
+background:#1f3b63;
+color:white;
+font-size:18px;
+cursor:pointer;
 }
+
 button:disabled{
-  background:#999;
+background:#999;
 }
+
 .small{
-  font-size:13px;
-  color:#666;
+font-size:13px;
+color:#666;
 }
 </style></head><body><div class="card">
 <h2>DeChase Bank</h2>
 <p class="small">Secure Online Banking</p><input id="username" placeholder="Username">
 <input id="pin" type="password" placeholder="PIN"><button id="loginBtn" onclick="login()">Login</button>
 
-</div><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script
+</div><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script><script>
+
+const firebaseConfig = {
+apiKey: "AIzaSyBDp6wmJMY8WPyKPNE-bvVSiz4AIUbn71U",
+authDomain: "dechase-bank.firebaseapp.com",
+projectId: "dechase-bank"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+
+// AUTO REDIRECT IF ALREADY LOGGED IN
+
+if(localStorage.getItem("user")){
+location.href="dashboard.html";
+}
+
+
+// LOGIN FUNCTION
+
+async function login(){
+
+const btn=document.getElementById("loginBtn");
+const usernameInput=document.getElementById("username");
+const pinInput=document.getElementById("pin");
+
+const username=usernameInput.value.trim().toLowerCase();
+const pin=pinInput.value.trim();
+
+if(!username || !pin){
+alert("Enter username and PIN");
+return;
+}
+
+btn.disabled=true;
+btn.innerText="Checking...";
+
+try{
+
+const doc=await db.collection("users").doc(username).get();
+
+if(!doc.exists){
+alert("User not found");
+btn.disabled=false;
+btn.innerText="Login";
+return;
+}
+
+const data=doc.data();
+
+if(data.pin !== pin){
+alert("Incorrect PIN");
+btn.disabled=false;
+btn.innerText="Login";
+return;
+}
+
+
+// SAVE LOGIN SESSION
+
+localStorage.setItem("user",username);
+localStorage.setItem("session",data.session);
+
+
+// REDIRECT TO DASHBOARD
+
+setTimeout(()=>{
+location.href="dashboard.html";
+},300);
+
+
+}catch(error){
+
+alert("Network error. Check internet.");
+btn.disabled=false;
+btn.innerText="Login";
+
+}
+
+}
+
+</script>
+</body>
+</html>

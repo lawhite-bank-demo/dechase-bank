@@ -33,6 +33,11 @@ let otpExpiry = null;
 
 async function sendOTP(email){
 
+if(!window.emailjs){
+alert("Email system not loaded");
+return false;
+}
+
 const otp = Math.floor(100000 + Math.random()*900000);
 
 currentOTP = otp;
@@ -49,12 +54,14 @@ otp: otp
 }
 );
 
-console.log("OTP sent to email");
+console.log("OTP sent to email:", otp);
+return true;
 
 }catch(err){
 
 console.error(err);
 alert("Failed to send OTP email");
+return false;
 
 }
 
@@ -324,7 +331,9 @@ return alert("Wrong PIN");
 if(balanceValue<amountValue)
 return alert("Insufficient funds");
 
-await sendOTP(data.email);
+const sent = await sendOTP(data.email);
+
+if(!sent) return;
 
 const enteredOTP=prompt("Enter OTP");
 

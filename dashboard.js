@@ -36,9 +36,27 @@ async function sendOTP(email){
 const otp=Math.floor(100000+Math.random()*900000);
 
 currentOTP=otp;
-otpExpiry=Date.now()+60000;
+otpExpiry=Date.now()+180000;
 
-console.log("OTP:",otp);
+try{
+
+await emailjs.send(
+"YOUR_SERVICE_ID",
+"YOUR_TEMPLATE_ID",
+{
+to_email:email,
+otp:otp
+}
+);
+
+console.log("OTP sent to email");
+
+}catch(err){
+
+console.error(err);
+alert("Failed to send OTP email");
+
+}
 
 }
 
@@ -255,7 +273,7 @@ box.appendChild(div);
 }
 
 
-// PENDING TRANSFERS DISPLAY
+// PENDING TRANSFERS
 
 const pendingBox=document.getElementById("pendingTransactions");
 
@@ -301,7 +319,7 @@ pendingBox.appendChild(div);
 }
 
 
-// TRANSFER (NOW CREATES PENDING)
+// TRANSFER
 
 window.askPin=async()=>{
 

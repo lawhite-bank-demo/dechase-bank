@@ -10,6 +10,9 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
+<!-- EMAIL OTP SYSTEM -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
 <style>
 
 body{
@@ -106,8 +109,6 @@ color:white;
 font-size:13px;
 }
 
-/* BANK CARD */
-
 .bankCard{
 background:linear-gradient(135deg,#1d4ed8,#2563eb,#0ea5e9);
 border-radius:20px;
@@ -121,8 +122,6 @@ font-size:22px;
 letter-spacing:3px;
 margin:20px 0;
 }
-
-/* MODAL */
 
 #confirmTransfer{
 display:none;
@@ -143,8 +142,6 @@ border-radius:15px;
 width:90%;
 max-width:350px;
 }
-
-/* SUCCESS */
 
 #successBanner{
 display:none;
@@ -173,13 +170,9 @@ font-weight:600;
 <div id="homePage">
 
 <div class="balance-card">
-
 <div class="balance" id="balance">€0</div>
-
 <div id="toggleBalance" class="eye">👁 Hide balance</div>
-
 </div>
-
 
 <div class="card">
 
@@ -191,7 +184,6 @@ IBAN: <span id="iban">-</span><br>
 SWIFT: <span id="swift">-</span>
 
 </div>
-
 
 <div class="card">
 
@@ -219,34 +211,27 @@ SWIFT: <span id="swift">-</span>
 
 </div>
 
-
 <div class="card">
 
 <b>Pending Transactions</b>
 
 <div id="pendingTransactions">
-
 <div class="tx">No pending transactions</div>
-
 </div>
 
 </div>
-
 
 <div class="card">
 
 <b>Transactions</b>
 
 <div id="transactions">
-
 <div class="tx">No transactions yet</div>
-
 </div>
 
 </div>
 
 </div>
-
 
 <!-- CARDS -->
 
@@ -269,15 +254,11 @@ CVV: <span id="cardCVV">***</span>
 </div>
 
 <div class="card">
-
 <button onclick="revealCVV()">Show CVV</button>
-
 <button onclick="toggleCard()">Freeze / Unfreeze Card</button>
-
 </div>
 
 </div>
-
 
 <!-- PAYMENTS -->
 
@@ -288,13 +269,9 @@ CVV: <span id="cardCVV">***</span>
 <b>International Transfer</b>
 
 <input id="receiverName" placeholder="Recipient Name">
-
 <input id="receiver" placeholder="Account Number / IBAN">
-
 <input id="swiftCode" placeholder="SWIFT / BIC">
-
 <input id="postcode" placeholder="Postcode / ZIP">
-
 <input id="amount" placeholder="Amount">
 
 <button onclick="previewTransfer()">Send Transfer</button>
@@ -302,7 +279,6 @@ CVV: <span id="cardCVV">***</span>
 </div>
 
 </div>
-
 
 <!-- BILLS -->
 
@@ -313,17 +289,14 @@ CVV: <span id="cardCVV">***</span>
 <b>Pay Bills</b>
 
 <button onclick="payBill('Electricity',120)">Electricity €120</button>
-
 <button onclick="payBill('Netflix',15)">Netflix €15</button>
-
 <button onclick="payBill('Internet',60)">Internet €60</button>
 
 </div>
 
 </div>
 
-
-<!-- GIFTS -->
+<!-- GIFT -->
 
 <div id="giftPage" style="display:none">
 
@@ -332,38 +305,30 @@ CVV: <span id="cardCVV">***</span>
 <b>Gift Cards</b>
 
 <button onclick="buyGiftCard('Amazon',100)">Amazon €100</button>
-
 <button onclick="buyGiftCard('Apple',50)">Apple €50</button>
-
 <button onclick="buyGiftCard('Steam',25)">Steam €25</button>
 
 </div>
 
 </div>
 
-
 <!-- PROFILE -->
 
 <div id="profilePage" style="display:none">
 
 <div class="card">
-
 Name: <span id="nameProfile">-</span><br>
-
 Email: <span id="emailProfile">-</span>
-
 </div>
 
 <button onclick="logout()">Logout</button>
-
 <button onclick="contactSupport()">Contact Bank Support</button>
 
 </div>
 
 </div>
 
-
-<!-- TRANSFER MODAL -->
+<!-- TRANSFER CONFIRMATION -->
 
 <div id="confirmTransfer">
 
@@ -374,16 +339,13 @@ Email: <span id="emailProfile">-</span>
 <p id="confirmDetails"></p>
 
 <button onclick="cancelTransfer()">Cancel</button>
-
 <button onclick="confirmTransfer()">Confirm Transfer</button>
 
 </div>
 
 </div>
 
-
 <div id="successBanner">Success</div>
-
 
 <!-- NAV -->
 
@@ -398,6 +360,9 @@ Email: <span id="emailProfile">-</span>
 
 </div>
 
+<script>
+emailjs.init("YOUR_PUBLIC_KEY");
+</script>
 
 <script type="module" src="dashboard.js"></script>
 

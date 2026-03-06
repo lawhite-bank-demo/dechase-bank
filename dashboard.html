@@ -119,15 +119,11 @@ opacity:.8;
 <div id="homePage">
 
 <div class="balance-card">
-
 <div class="balance" id="balance">€0</div>
-
 <div class="eye" id="toggleBalance">👁 Hide balance</div>
-
 </div>
 
 <div class="card">
-
 <b>Account Info</b><br>
 
 Name: <span id="name">-</span><br>
@@ -164,19 +160,13 @@ SWIFT: <span id="swift">-</span>
 </div>
 
 <div class="card">
-
 <b>Pending Transactions</b>
-
 <div id="pendingTransactions"></div>
-
 </div>
 
 <div class="card">
-
 <b>Transactions</b>
-
 <div id="transactions"></div>
-
 </div>
 
 </div>
@@ -211,11 +201,15 @@ SWIFT: <span id="swift">-</span>
 
 <div class="card">
 
-<b>Send Transfer</b>
+<b>International Transfer</b>
 
-<input id="receiver" placeholder="Account Number or IBAN">
+<input id="receiverName" placeholder="Recipient Name">
 
-<div id="receiverName" class="small"></div>
+<input id="receiver" placeholder="Account Number / IBAN">
+
+<input id="swiftCode" placeholder="SWIFT / BIC Code">
+
+<input id="postcode" placeholder="Postcode / ZIP">
 
 <input id="amount" placeholder="Amount">
 

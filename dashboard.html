@@ -1,16 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>DeChase Bank</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
-<style>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>DeChase Bank</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"><style>
 
 body{
 margin:0;
@@ -104,198 +93,113 @@ font-size:12px;
 opacity:.8;
 }
 
-</style>
+/* MODERN CARD */
 
-</head>
+.bankCard{
+background:linear-gradient(135deg,#1d4ed8,#2563eb,#0ea5e9);
+border-radius:20px;
+padding:22px;
+box-shadow:0 15px 40px rgba(0,0,0,0.4);
+}
 
-<body>
+.cardTop{
+display:flex;
+justify-content:space-between;
+font-weight:600;
+}
 
-<div class="container">
+.cardNumber{
+font-size:22px;
+letter-spacing:3px;
+margin:20px 0;
+}
 
-<h3 id="welcome">Loading...</h3>
+.cardBottom{
+display:flex;
+justify-content:space-between;
+font-size:13px;
+}
 
-<!-- HOME PAGE -->
+.label{
+opacity:.7;
+font-size:11px;
+}
 
-<div id="homePage">
-
-<div class="balance-card">
+</style></head><body><div class="container"><h3 id="welcome">Loading...</h3><!-- HOME --><div id="homePage"><div class="balance-card">
 <div class="balance" id="balance">€0</div>
 <div class="eye" id="toggleBalance">👁 Hide balance</div>
-</div>
-
-<div class="card">
-<b>Account Info</b><br>
-
-Name: <span id="name">-</span><br>
+</div><div class="card">
+<b>Account Info</b><br>Name: <span id="name">-</span><br>
 Account: <span id="acc">-</span><br>
 IBAN: <span id="iban">-</span><br>
 SWIFT: <span id="swift">-</span>
 
-</div>
-
-<div class="card">
-
-<b>Multi Currency Wallet</b>
+</div><div class="card"><b>Multi Currency Wallet</b>
 
 <div class="wallet-chip">
 <span>🇪🇺 EUR</span>
 <span>€<span id="eurWallet">0</span></span>
-</div>
-
-<div class="wallet-chip">
+</div><div class="wallet-chip">
 <span>🇺🇸 USD</span>
 <span>$<span id="usdWallet">0</span></span>
-</div>
-
-<div class="wallet-chip">
+</div><div class="wallet-chip">
 <span>🇬🇧 GBP</span>
 <span>£<span id="gbpWallet">0</span></span>
-</div>
-
-<div class="wallet-chip">
+</div><div class="wallet-chip">
 <span>🇦🇺 AUD</span>
 <span>A$<span id="audWallet">0</span></span>
-</div>
-
-</div>
-
-<div class="card">
+</div></div><div class="card">
 <b>Pending Transactions</b>
 <div id="pendingTransactions"></div>
-</div>
-
-<div class="card">
+</div><div class="card">
 <b>Transactions</b>
 <div id="transactions"></div>
-</div>
-
-</div>
-
-<!-- CARDS -->
-
-<div id="cardsPage" style="display:none">
-
-<div class="card">
-
-<b id="cardType">CARD</b>
-
-<div id="cardNumber">0000 0000 0000 0000</div>
-
-<div>Holder: <span id="cardName">---</span></div>
-
-<div>Expiry: <span id="cardExpiry">--/--</span></div>
-
-<div>CVV: <span id="cardCVV">***</span></div>
-
-<button onclick="revealCVV()">Show CVV</button>
-
+</div></div><!-- CARDS --><div id="cardsPage" style="display:none"><div class="bankCard"><div class="cardTop">
+<span>DeChase Bank</span>
+<span>VISA</span>
+</div><div class="cardNumber" id="cardNumber">
+4532 7845 9823 4451
+</div><div class="cardBottom"><div>
+<div class="label">CARD HOLDER</div>
+<div id="cardName">---</div>
+</div><div>
+<div class="label">EXPIRES</div>
+<div id="cardExpiry">--/--</div>
+</div><div>
+<div class="label">CVV</div>
+<div id="cardCVV">***</div>
+</div></div></div><div class="card"><button onclick="revealCVV()">Show CVV</button>
 <button onclick="toggleCard()">Freeze / Unfreeze Card</button>
 
-</div>
+</div></div><!-- PAYMENTS --><div id="paymentsPage" style="display:none"><div class="card"><b>International Transfer</b>
 
-</div>
+<input id="receiverName" placeholder="Recipient Name"><input id="receiver" placeholder="Account Number / IBAN"><input id="swiftCode" placeholder="SWIFT / BIC"><input id="postcode" placeholder="Postcode / ZIP"><input id="amount" placeholder="Amount"><button onclick="askPin()">Send Transfer</button>
 
-<!-- PAYMENTS -->
+</div><div class="card"><b>Currency Converter</b>
 
-<div id="paymentsPage" style="display:none">
+<select id="convertType"><option value="USD">EUR → USD</option>
+<option value="GBP">EUR → GBP</option></select><input id="convertAmount" placeholder="Amount"><button onclick="convertCurrency()">Convert</button>
 
-<div class="card">
-
-<b>International Transfer</b>
-
-<input id="receiverName" placeholder="Recipient Name">
-
-<input id="receiver" placeholder="Account Number / IBAN">
-
-<input id="swiftCode" placeholder="SWIFT / BIC Code">
-
-<input id="postcode" placeholder="Postcode / ZIP">
-
-<input id="amount" placeholder="Amount">
-
-<button onclick="askPin()">Send Transfer</button>
-
-</div>
-
-<div class="card">
-
-<b>Currency Converter</b>
-
-<select id="convertType">
-
-<option value="USD">EUR → USD</option>
-<option value="GBP">EUR → GBP</option>
-
-</select>
-
-<input id="convertAmount" placeholder="Amount">
-
-<button onclick="convertCurrency()">Convert</button>
-
-<div id="conversionResult"></div>
-
-</div>
-
-</div>
-
-<!-- BILLS -->
-
-<div id="billsPage" style="display:none">
-
-<div class="card">
-
-<b>Pay Bills</b>
+<div id="conversionResult"></div></div></div><!-- BILLS --><div id="billsPage" style="display:none"><div class="card"><b>Pay Bills</b>
 
 <button onclick="payBill('Electricity',120)">Electricity €120</button>
-
 <button onclick="payBill('Netflix',15)">Netflix €15</button>
-
 <button onclick="payBill('Internet',60)">Internet €60</button>
 
-</div>
-
-</div>
-
-<!-- GIFT CARDS -->
-
-<div id="giftPage" style="display:none">
-
-<div class="card">
-
-<b>Gift Cards</b>
+</div></div><!-- GIFT --><div id="giftPage" style="display:none"><div class="card"><b>Gift Cards</b>
 
 <button onclick="buyGiftCard('Amazon',100)">Amazon €100</button>
-
 <button onclick="buyGiftCard('Apple',50)">Apple €50</button>
-
 <button onclick="buyGiftCard('Steam',25)">Steam €25</button>
 
-</div>
-
-</div>
-
-<!-- PROFILE -->
-
-<div id="profilePage" style="display:none">
-
-<div class="card">
-
-Name: <span id="nameProfile">-</span><br>
+</div></div><!-- PROFILE --><div id="profilePage" style="display:none"><div class="card">Name: <span id="nameProfile">-</span><br>
 Email: <span id="emailProfile">-</span>
 
-</div>
-
-<button onclick="changePin()">Change PIN</button>
-
+</div><button onclick="changePin()">Change PIN</button>
 <button onclick="logout()">Logout</button>
-
 <button onclick="contactSupport()">Contact Bank Support</button>
 
-</div>
-
-</div>
-
-<div id="successBanner"
+</div></div><div id="successBanner"
 style="
 display:none;
 position:fixed;
@@ -305,26 +209,16 @@ transform:translateX(-50%);
 background:#22c55e;
 padding:14px 22px;
 border-radius:8px;
-">
+">Success
 
-Success
-
-</div>
-
-<div class="bottomNav">
-
-<button onclick="openPage('homePage')">Home</button>
+</div><div class="bottomNav"><button onclick="openPage('homePage')">Home</button>
 <button onclick="openPage('cardsPage')">Cards</button>
 <button onclick="openPage('paymentsPage')">Payments</button>
 <button onclick="openPage('billsPage')">Bills</button>
 <button onclick="openPage('giftPage')">Gift</button>
 <button onclick="openPage('profilePage')">Profile</button>
 
-</div>
-
-<script type="module" src="dashboard.js"></script>
-
-<script>
+</div><script type="module" src="dashboard.js"></script><script>
 
 function openPage(page){
 
@@ -346,6 +240,5 @@ window.open(`https://wa.me/${phone}?text=${msg}`);
 }
 
 </script>
-
 </body>
 </html>

@@ -28,24 +28,24 @@ const db = getFirestore(app);
 
 // OTP SYSTEM
 
-let currentOTP=null;
-let otpExpiry=null;
+let currentOTP = null;
+let otpExpiry = null;
 
 async function sendOTP(email){
 
-const otp=Math.floor(100000+Math.random()*900000);
+const otp = Math.floor(100000 + Math.random()*900000);
 
-currentOTP=otp;
-otpExpiry=Date.now()+180000;
+currentOTP = otp;
+otpExpiry = Date.now() + 180000;
 
 try{
 
 await emailjs.send(
-service_ab123cd
-template_x9k21a
+"service_ab123cd",
+"template_x9k21a",
 {
-to_email:email,
-otp:otp
+to_email: email,
+otp: otp
 }
 );
 
@@ -65,29 +65,29 @@ alert("Failed to send OTP email");
 
 async function initDashboard(){
 
-const username=localStorage.getItem("user");
+const username = localStorage.getItem("user");
 
 if(!username){
 window.location.replace("index.html");
 return;
 }
 
-const userRef=doc(db,"users",username);
-const snap=await getDoc(userRef);
+const userRef = doc(db,"users",username);
+const snap = await getDoc(userRef);
 
 if(!snap.exists()){
 alert("User not found");
 return;
 }
 
-const data=snap.data();
+const data = snap.data();
 
 
 // SESSION SECURITY
 
-const savedSession=localStorage.getItem("session");
+const savedSession = localStorage.getItem("session");
 
-if(savedSession!=data.session){
+if(savedSession != data.session){
 localStorage.clear();
 window.location.replace("index.html");
 return;
@@ -98,15 +98,15 @@ return;
 
 function showSuccess(message){
 
-const banner=document.getElementById("successBanner");
+const banner = document.getElementById("successBanner");
 
 if(!banner) return;
 
-banner.innerText="✅ "+message;
-banner.style.display="block";
+banner.innerText = "✅ " + message;
+banner.style.display = "block";
 
 setTimeout(()=>{
-banner.style.display="none";
+banner.style.display = "none";
 },2000);
 
 }
@@ -118,7 +118,7 @@ function formatDate(date){
 
 if(!date) return "-";
 
-const d=new Date(date);
+const d = new Date(date);
 
 if(isNaN(d)) return "-";
 
@@ -145,11 +145,11 @@ document.getElementById("emailProfile").innerText=data.email;
 
 // BALANCE
 
-let balanceValue=Number(data.balance||0);
-let hidden=false;
+let balanceValue = Number(data.balance||0);
+let hidden = false;
 
-const balanceEl=document.getElementById("balance");
-const toggleEl=document.getElementById("toggleBalance");
+const balanceEl = document.getElementById("balance");
+const toggleEl = document.getElementById("toggleBalance");
 
 function renderBalance(){
 
@@ -227,11 +227,9 @@ box.innerHTML="";
 let txArray=[];
 
 if(data.transactions){
-
 txArray=Array.isArray(data.transactions)
 ?data.transactions
 :Object.values(data.transactions);
-
 }
 
 if(txArray.length===0){
@@ -253,15 +251,11 @@ const div=document.createElement("div");
 div.className="tx";
 
 div.innerHTML=`
-
 <strong>${tx.note||"Transaction"}</strong><br>
-
 <span style="color:${color};font-weight:600;">
 ${sign}€${Math.abs(amount).toLocaleString()}
 </span>
-
 <div class="small">${formatDate(tx.date)}</div>
-
 `;
 
 box.appendChild(div);
@@ -299,15 +293,10 @@ const div=document.createElement("div");
 div.className="tx";
 
 div.innerHTML=`
-
 <strong>🏦 Transfer Pending</strong><br>
-
 €${Number(p.amount).toLocaleString()} → ${p.iban}
-
 <div class="small">Status: Waiting for approval</div>
-
 <div class="small">${formatDate(p.date)}</div>
-
 `;
 
 pendingBox.appendChild(div);

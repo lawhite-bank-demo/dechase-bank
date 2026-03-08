@@ -1,8 +1,14 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DeChase Bank</title><style>
+
+<title>DeChase Bank</title>
+
+<style>
+
 body{
 margin:0;
 font-family:Arial;
@@ -51,12 +57,34 @@ background:#999;
 font-size:13px;
 color:#666;
 }
-</style></head><body><div class="card">
-<h2>DeChase Bank</h2>
-<p class="small">Secure Online Banking</p><input id="username" placeholder="Username">
-<input id="pin" type="password" placeholder="PIN"><button id="loginBtn" onclick="login()">Login</button>
 
-</div><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script><script>
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>DeChase Bank</h2>
+<p class="small">Secure Online Banking</p>
+
+<input id="username" placeholder="Username">
+
+<input id="pin" type="password" placeholder="PIN">
+
+<button id="loginBtn" onclick="login()">Login</button>
+
+</div>
+
+
+<!-- FIREBASE -->
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+
+<script>
 
 const firebaseConfig = {
 apiKey: "AIzaSyBDp6wmJMY8WPyKPNE-bvVSiz4AIUbn71U",
@@ -68,7 +96,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 
-// AUTO REDIRECT IF ALREADY LOGGED IN
+// AUTO REDIRECT IF USER ALREADY LOGGED IN
 
 if(localStorage.getItem("user")){
 location.href="dashboard.html";
@@ -99,23 +127,48 @@ try{
 const doc=await db.collection("users").doc(username).get();
 
 if(!doc.exists){
+
 alert("User not found");
+
 btn.disabled=false;
 btn.innerText="Login";
+
 return;
+
 }
 
 const data=doc.data();
 
+
+// CHECK PIN
+
 if(data.pin !== pin){
+
 alert("Incorrect PIN");
+
 btn.disabled=false;
 btn.innerText="Login";
+
 return;
+
 }
 
 
-// SAVE LOGIN SESSION
+// CHECK IF ACCOUNT IS FROZEN
+
+if(data.frozen === true){
+
+alert("Account is frozen. Contact bank support.");
+
+btn.disabled=false;
+btn.innerText="Login";
+
+return;
+
+}
+
+
+// SAVE SESSION
 
 localStorage.setItem("user",username);
 localStorage.setItem("session",data.session);
@@ -124,13 +177,18 @@ localStorage.setItem("session",data.session);
 // REDIRECT TO DASHBOARD
 
 setTimeout(()=>{
+
 location.href="dashboard.html";
+
 },300);
 
 
 }catch(error){
 
-alert("Network error. Check internet.");
+console.error(error);
+
+alert("Network error. Check internet connection.");
+
 btn.disabled=false;
 btn.innerText="Login";
 
@@ -139,5 +197,6 @@ btn.innerText="Login";
 }
 
 </script>
+
 </body>
 </html>

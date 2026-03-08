@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
@@ -70,7 +71,6 @@ color:#666;
 <p class="small">Secure Online Banking</p>
 
 <input id="username" placeholder="Username">
-
 <input id="pin" type="password" placeholder="PIN">
 
 <button id="loginBtn" onclick="login()">Login</button>
@@ -78,11 +78,8 @@ color:#666;
 </div>
 
 
-<!-- FIREBASE -->
-
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
 
 <script>
 
@@ -96,23 +93,14 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 
-// AUTO REDIRECT IF USER ALREADY LOGGED IN
-
-if(localStorage.getItem("user")){
-location.href="dashboard.html";
-}
-
-
 // LOGIN FUNCTION
 
 async function login(){
 
 const btn=document.getElementById("loginBtn");
-const usernameInput=document.getElementById("username");
-const pinInput=document.getElementById("pin");
 
-const username=usernameInput.value.trim().toLowerCase();
-const pin=pinInput.value.trim();
+const username=document.getElementById("username").value.trim().toLowerCase();
+const pin=document.getElementById("pin").value.trim();
 
 if(!username || !pin){
 alert("Enter username and PIN");
@@ -127,67 +115,34 @@ try{
 const doc=await db.collection("users").doc(username).get();
 
 if(!doc.exists){
-
 alert("User not found");
-
 btn.disabled=false;
 btn.innerText="Login";
-
 return;
-
 }
 
 const data=doc.data();
 
-
-// CHECK PIN
-
-if(data.pin !== pin){
-
+if(String(data.pin) !== String(pin)){
 alert("Incorrect PIN");
-
 btn.disabled=false;
 btn.innerText="Login";
-
 return;
-
 }
 
 
-// CHECK IF ACCOUNT IS FROZEN
-
-if(data.frozen === true){
-
-alert("Account is frozen. Contact bank support.");
-
-btn.disabled=false;
-btn.innerText="Login";
-
-return;
-
-}
-
-
-// SAVE SESSION
+// SAVE USER
 
 localStorage.setItem("user",username);
-localStorage.setItem("session",data.session);
 
 
-// REDIRECT TO DASHBOARD
+// GO DASHBOARD
 
-setTimeout(()=>{
+window.location.href="dashboard.html";
 
-location.href="dashboard.html";
+}catch(err){
 
-},300);
-
-
-}catch(error){
-
-console.error(error);
-
-alert("Network error. Check internet connection.");
+alert("Connection error");
 
 btn.disabled=false;
 btn.innerText="Login";

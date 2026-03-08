@@ -10,7 +10,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-<!-- EmailJS library -->
+<!-- EMAILJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <style>
@@ -56,7 +56,7 @@ margin-top:6px;
 cursor:pointer;
 }
 
-button,input,select{
+button,input{
 width:100%;
 padding:12px;
 border:none;
@@ -183,6 +183,7 @@ SWIFT: <span id="swift">-</span>
 </div>
 
 <div class="card">
+
 <b>Multi Currency Wallet</b>
 
 <div class="wallet-chip">
@@ -228,6 +229,7 @@ SWIFT: <span id="swift">-</span>
 <div id="cardsPage" style="display:none">
 
 <div class="bankCard">
+
 <div>DeChase Bank</div>
 
 <div class="cardNumber" id="cardNumber">
@@ -239,6 +241,7 @@ Holder: <span id="cardName">---</span><br>
 Expiry: <span id="cardExpiry">--/--</span><br>
 CVV: <span id="cardCVV">***</span>
 </div>
+
 </div>
 
 <div class="card">
@@ -284,7 +287,7 @@ CVV: <span id="cardCVV">***</span>
 
 </div>
 
-<!-- GIFT -->
+<!-- GIFTS -->
 
 <div id="giftPage" style="display:none">
 
@@ -319,6 +322,7 @@ Email: <span id="emailProfile">-</span>
 <!-- CONFIRM TRANSFER -->
 
 <div id="confirmTransfer">
+
 <div class="modalBox">
 
 <h3>Confirm Transfer</h3>
@@ -329,6 +333,7 @@ Email: <span id="emailProfile">-</span>
 <button onclick="confirmTransfer()">Confirm Transfer</button>
 
 </div>
+
 </div>
 
 <div id="successBanner">Success</div>
@@ -346,14 +351,21 @@ Email: <span id="emailProfile">-</span>
 
 </div>
 
-<!-- Initialize EmailJS -->
+<!-- EMAILJS INIT (SAFE) -->
+
 <script>
-(function(){
+window.addEventListener("load", function(){
+
+if(window.emailjs){
 emailjs.init("Rk2d8F7sX9Q1");
-})();
+console.log("EmailJS Ready");
+}
+
+});
 </script>
 
-<!-- Your banking logic -->
+<!-- BANK LOGIC -->
+
 <script type="module" src="dashboard.js"></script>
 
 <script>
@@ -386,7 +398,7 @@ const amount=document.getElementById("amount").value;
 
 transferData={name,iban,amount};
 
-document.getElementById("confirmDetails").innerHTML =
+document.getElementById("confirmDetails").innerHTML=
 `Recipient: ${name}<br>IBAN: ${iban}<br>Amount: €${amount}`;
 
 document.getElementById("confirmTransfer").style.display="flex";

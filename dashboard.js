@@ -89,17 +89,14 @@ return;
 
 const data = snap.data();
 
+// LOGIN CHECK
 
-// SESSION SECURITY
+const savedUser = localStorage.getItem("user");
 
-const savedSession = localStorage.getItem("session");
-
-if(savedSession != data.session){
-localStorage.clear();
+if(!savedUser){
 window.location.replace("index.html");
 return;
 }
-
 
 // SUCCESS BANNER
 

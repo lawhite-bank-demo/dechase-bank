@@ -1,148 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>DeChase Bank</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
-
 <style>
+
 body{
-  margin:0;
-  height:100vh;
-  font-family:'Poppins',sans-serif;
-  background:linear-gradient(160deg,#021224,#052a4f,#031427);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:white;
+margin:0;
+font-family:Arial;
+background:linear-gradient(180deg,#0b1220,#102a54);
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
 }
-body::before{
-  content:"";
-  position:absolute;
-  width:500px;
-  height:500px;
-  background:radial-gradient(circle,#1e88e5,transparent 70%);
-  filter:blur(120px);
-  opacity:.35;
-  top:-120px;
-  left:-120px;
-}
-.container{width:350px;text-align:center;}
-.logo-circle{
-  width:70px;height:70px;border-radius:50%;
-  background:linear-gradient(135deg,#1e88e5,#42a5f5);
-  display:flex;align-items:center;justify-content:center;
-  font-size:34px;font-weight:700;margin:auto;
-  box-shadow:0 8px 25px rgba(0,0,0,0.4);
-}
-.bank-name{font-size:22px;font-weight:600;margin-top:10px;}
-.tagline{font-size:13px;opacity:.7;margin-bottom:25px;}
+
 .card{
-  background:rgba(255,255,255,0.05);
-  backdrop-filter:blur(14px);
-  padding:28px;border-radius:18px;
-  box-shadow:0 15px 35px rgba(0,0,0,0.35);
+background:#fff;
+width:90%;
+max-width:380px;
+padding:30px 20px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 10px 30px rgba(0,0,0,0.2);
 }
+
 input{
-  width:100%;padding:14px;margin-top:12px;
-  border:none;border-radius:10px;font-size:15px;
+width:100%;
+padding:15px;
+margin-bottom:15px;
+border-radius:12px;
+border:1px solid #ccc;
+font-size:16px;
 }
+
 button{
-  width:100%;padding:14px;margin-top:18px;
-  border:none;border-radius:10px;
-  font-size:16px;font-weight:600;
-  background:linear-gradient(135deg,#00c853,#00e676);
-  color:white;cursor:pointer;
+width:100%;
+padding:15px;
+border-radius:12px;
+border:none;
+background:#1f3b63;
+color:white;
+font-size:18px;
+cursor:pointer;
 }
-button:disabled{opacity:.6;}
-.footer{margin-top:15px;font-size:12px;opacity:.6;}
+
+button:disabled{
+background:#999;
+}
+
+.small{
+font-size:13px;
+color:#666;
+}
+
 </style>
+
 </head>
+
 <body>
 
-<div class="container">
+<div class="card">
 
-  <div class="logo-circle">D</div>
-  <div class="bank-name">DeChase</div>
-  <div class="tagline">Secure Digital Banking</div>
+<h2>DeChase Bank</h2>
+<p class="small">Secure Online Banking</p>
 
-  <div class="card">
-      <h2>Login</h2>
-      <input id="username" placeholder="Username">
-      <input id="pin" type="password" placeholder="PIN">
-      <button id="loginBtn" onclick="login()">Login</button>
-  </div>
+<input id="username" placeholder="Username">
 
-  <div class="footer">© 2026 DeChase Bank</div>
+<input id="pin" type="password" placeholder="PIN">
+
+<button id="loginBtn" onclick="login()">Login</button>
 
 </div>
+
+
+<!-- FIREBASE -->
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
+
 const firebaseConfig = {
-  apiKey: "AIzaSyBDp6wmJMY8WPyKPNE-bvVSiz4AIUbn71U",
-  authDomain: "dechase-bank.firebaseapp.com",
-  projectId: "dechase-bank"
+apiKey: "AIzaSyBDp6wmJMY8WPyKPNE-bvVSiz4AIUbn71U",
+authDomain: "dechase-bank.firebaseapp.com",
+projectId: "dechase-bank"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ✅ AUTO LOGIN if session exists
+
+// AUTO REDIRECT IF ALREADY LOGGED IN
+
 if(localStorage.getItem("user")){
-  location.href="dashboard.html";
+location.href="dashboard.html";
 }
+
+
+// LOGIN FUNCTION
 
 async function login(){
 
- const btn = document.getElementById("loginBtn");
- const user = document.getElementById("username").value.trim().toLowerCase();
- const pinValue = document.getElementById("pin").value.trim();
+const btn=document.getElementById("loginBtn");
+const usernameInput=document.getElementById("username");
+const pinInput=document.getElementById("pin");
 
- if(!user || !pinValue){
-   alert("Enter username and PIN");
-   return;
- }
+const username=usernameInput.value.trim().toLowerCase();
+const pin=pinInput.value.trim();
 
- btn.disabled = true;
- btn.innerText = "Checking...";
-
- try{
-
-   const doc = await db.collection("users").doc(user).get();
-
-   if(!doc.exists){
-     alert("User not found");
-     btn.disabled=false;
-     btn.innerText="Login";
-     return;
-   }
-
-   if(doc.data().pin !== pinValue){
-     alert("Incorrect PIN");
-     btn.disabled=false;
-     btn.innerText="Login";
-     return;
-   }
-
-   // ✅ SESSION (dashboard uses this)
-   localStorage.setItem("user", user);
-
-   // small delay prevents blank dashboard
-   setTimeout(()=>{
-     location.href="dashboard.html";
-   },300);
-
- }catch(err){
-   alert("Network error. Check internet.");
-   btn.disabled=false;
-   btn.innerText="Login";
- }
+if(!username || !pin){
+alert("Enter username and PIN");
+return;
 }
+
+btn.disabled=true;
+btn.innerText="Checking...";
+
+try{
+
+const doc=await db.collection("users").doc(username).get();
+
+if(!doc.exists){
+alert("User not found");
+btn.disabled=false;
+btn.innerText="Login";
+return;
+}
+
+const data=doc.data();
+
+
+// SAFE PIN CHECK (works with number or string)
+
+if(String(data.pin) !== String(pin)){
+alert("Incorrect PIN");
+btn.disabled=false;
+btn.innerText="Login";
+return;
+}
+
+
+// GENERATE NEW SESSION EACH LOGIN
+
+const newSession=Math.floor(Math.random()*999999999);
+
+await db.collection("users").doc(username).update({
+session:newSession
+});
+
+
+// SAVE LOGIN SESSION
+
+localStorage.setItem("user",username);
+localStorage.setItem("session",newSession);
+
+
+// REDIRECT TO DASHBOARD
+
+setTimeout(()=>{
+location.href="dashboard.html";
+},300);
+
+
+}catch(error){
+
+console.error(error);
+alert("Network error. Check internet.");
+
+btn.disabled=false;
+btn.innerText="Login";
+
+}
+
+}
+
 </script>
 
 </body>

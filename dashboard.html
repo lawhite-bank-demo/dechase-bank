@@ -10,7 +10,6 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-<!-- EMAILJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <style>
@@ -155,6 +154,33 @@ border-radius:8px;
 font-weight:600;
 }
 
+/* RECEIPT MODAL */
+
+#receiptModal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+align-items:center;
+justify-content:center;
+}
+
+.receiptBox{
+background:#031427;
+padding:25px;
+border-radius:16px;
+width:90%;
+max-width:360px;
+text-align:center;
+}
+
+.receiptBox h3{
+margin-top:0;
+}
+
 </style>
 
 </head>
@@ -164,8 +190,6 @@ font-weight:600;
 <div class="container">
 
 <h3 id="welcome">Loading...</h3>
-
-<!-- HOME -->
 
 <div id="homePage">
 
@@ -227,8 +251,6 @@ Bank Address: <span id="bankAddress">-</span>
 
 </div>
 
-<!-- CARDS -->
-
 <div id="cardsPage" style="display:none">
 
 <div class="bankCard">
@@ -254,8 +276,6 @@ CVV: <span id="cardCVV">***</span>
 
 </div>
 
-<!-- PAYMENTS -->
-
 <div id="paymentsPage" style="display:none">
 
 <div class="card">
@@ -274,8 +294,6 @@ CVV: <span id="cardCVV">***</span>
 
 </div>
 
-<!-- BILLS -->
-
 <div id="billsPage" style="display:none">
 
 <div class="card">
@@ -290,8 +308,6 @@ CVV: <span id="cardCVV">***</span>
 
 </div>
 
-<!-- GIFTS -->
-
 <div id="giftPage" style="display:none">
 
 <div class="card">
@@ -305,8 +321,6 @@ CVV: <span id="cardCVV">***</span>
 </div>
 
 </div>
-
-<!-- PROFILE -->
 
 <div id="profilePage" style="display:none">
 
@@ -339,9 +353,23 @@ Email: <span id="emailProfile">-</span>
 
 </div>
 
-<div id="successBanner">Success</div>
+<!-- RECEIPT MODAL -->
 
-<!-- NAVIGATION -->
+<div id="receiptModal">
+
+<div class="receiptBox">
+
+<h3>Transfer Receipt</h3>
+
+<p id="receiptContent"></p>
+
+<button onclick="closeReceipt()">Close</button>
+
+</div>
+
+</div>
+
+<div id="successBanner">Success</div>
 
 <div class="bottomNav">
 
@@ -354,16 +382,11 @@ Email: <span id="emailProfile">-</span>
 
 </div>
 
-<!-- EMAILJS INIT -->
-
 <script>
-window.addEventListener("load", function(){
-
+window.addEventListener("load",function(){
 if(window.emailjs){
 emailjs.init("Rk2d8F7sX9Q1");
-console.log("EmailJS Ready");
 }
-
 });
 </script>
 
@@ -413,6 +436,20 @@ document.getElementById("confirmTransfer").style.display="none";
 function confirmTransfer(){
 document.getElementById("confirmTransfer").style.display="none";
 askPin();
+}
+
+function showReceipt(text){
+
+document.getElementById("receiptContent").innerHTML=text;
+
+document.getElementById("receiptModal").style.display="flex";
+
+}
+
+function closeReceipt(){
+
+document.getElementById("receiptModal").style.display="none";
+
 }
 
 </script>

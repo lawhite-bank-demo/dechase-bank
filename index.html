@@ -71,12 +71,15 @@ color:#666;
 <p class="small">Secure Online Banking</p>
 
 <input id="username" placeholder="Username">
+
 <input id="pin" type="password" placeholder="PIN">
 
 <button id="loginBtn" onclick="login()">Login</button>
 
 </div>
 
+
+<!-- FIREBASE -->
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -98,9 +101,11 @@ const db = firebase.firestore();
 async function login(){
 
 const btn=document.getElementById("loginBtn");
+const usernameInput=document.getElementById("username");
+const pinInput=document.getElementById("pin");
 
-const username=document.getElementById("username").value.trim().toLowerCase();
-const pin=document.getElementById("pin").value.trim();
+const username=usernameInput.value.trim();   // FIXED
+const pin=pinInput.value.trim();
 
 if(!username || !pin){
 alert("Enter username and PIN");
@@ -131,18 +136,30 @@ return;
 }
 
 
-// SAVE USER
+// CREATE NEW SESSION
+
+const newSession=Math.floor(Math.random()*999999999);
+
+await db.collection("users").doc(username).update({
+session:newSession
+});
+
+
+// SAVE LOGIN
 
 localStorage.setItem("user",username);
+localStorage.setItem("session",newSession);
 
 
-// GO DASHBOARD
+// REDIRECT
 
-window.location.href="dashboard.html";
+location.href="dashboard.html";
 
-}catch(err){
 
-alert("Connection error");
+}catch(error){
+
+console.error(error);
+alert("Network error");
 
 btn.disabled=false;
 btn.innerText="Login";

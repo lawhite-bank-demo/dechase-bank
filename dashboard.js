@@ -54,7 +54,6 @@ otp: otp
 }
 );
 
-console.log("OTP sent to email:", otp);
 return true;
 
 }catch(err){
@@ -84,18 +83,21 @@ const snap = await getDoc(userRef);
 
 if(!snap.exists()){
 alert("User not found");
+window.location.replace("index.html");
 return;
 }
 
 const data = snap.data();
 
 
-// SESSION SECURITY
+// FIXED SESSION CHECK
 
-const savedSession = localStorage.getItem("session");
+const savedSession = Number(localStorage.getItem("session"));
+const firebaseSession = Number(data.session);
 
-if(savedSession != data.session){
-localStorage.clear();
+if(savedSession !== firebaseSession){
+localStorage.removeItem("user");
+localStorage.removeItem("session");
 window.location.replace("index.html");
 return;
 }
@@ -149,7 +151,13 @@ document.getElementById("swift").innerText=data.swift;
 const bankAddressElement = document.getElementById("bankAddress");
 
 if(bankAddressElement){
-bankAddressElement.innerText = data.bankAddress ? data.bankAddress : "-";
+bankAddressElement.innerText = data.bankAddress || "-";
+}
+
+const bankAddressSupport = document.getElementById("bankAddressSupport");
+
+if(bankAddressSupport){
+bankAddressSupport.innerText = data.bankAddress || "-";
 }
 
 
@@ -159,7 +167,7 @@ document.getElementById("nameProfile").innerText=data.fullName;
 document.getElementById("emailProfile").innerText=data.email;
 
 
-// BALANCE SYSTEM
+// BALANCE
 
 let balanceValue = Number(data.balance||0);
 let hidden = false;
@@ -171,35 +179,28 @@ function renderBalance(){
 
 if(hidden){
 balanceEl.innerText="••••••";
-if(toggleEl) toggleEl.innerText="👁 Show balance";
+toggleEl.innerText="👁 Show balance";
 }else{
 balanceEl.innerText="€"+balanceValue.toLocaleString();
-if(toggleEl) toggleEl.innerText="👁 Hide balance";
+toggleEl.innerText="👁 Hide balance";
 }
 
 }
 
-if(toggleEl){
 toggleEl.onclick=()=>{
 hidden=!hidden;
 renderBalance();
 };
-}
 
 renderBalance();
 
 
 // WALLET
 
-const eur=document.getElementById("eurWallet");
-const usd=document.getElementById("usdWallet");
-const gbp=document.getElementById("gbpWallet");
-const aud=document.getElementById("audWallet");
-
-if(eur) eur.innerText=Number(data.balance||0).toLocaleString();
-if(usd) usd.innerText=Number(data.usdBalance||0).toLocaleString();
-if(gbp) gbp.innerText=Number(data.gbpBalance||0).toLocaleString();
-if(aud) aud.innerText=Number(data.audBalance||0).toLocaleString();
+document.getElementById("eurWallet").innerText=Number(data.balance||0).toLocaleString();
+document.getElementById("usdWallet").innerText=Number(data.usdBalance||0).toLocaleString();
+document.getElementById("gbpWallet").innerText=Number(data.gbpBalance||0).toLocaleString();
+document.getElementById("audWallet").innerText=Number(data.audBalance||0).toLocaleString();
 
 
 // CARD
@@ -232,11 +233,9 @@ location.reload();
 };
 
 
-// TRANSACTION HISTORY
+// TRANSACTIONS
 
 const box=document.getElementById("transactions");
-
-if(box){
 
 box.innerHTML="";
 
@@ -269,17 +268,12 @@ const div=document.createElement("div");
 div.className="tx";
 
 div.innerHTML=`
-
 <strong>${tx.note||"Transaction"}</strong><br>
-
 <span style="color:${color};font-weight:600;">
 ${sign}€${Math.abs(amount).toLocaleString()}
 </span>
-
 <div class="small">Ref: ${reference}</div>
-
 <div class="small">${formatDate(tx.date)}</div>
-
 `;
 
 box.appendChild(div);
@@ -288,14 +282,10 @@ box.appendChild(div);
 
 }
 
-}
-
 
 // PENDING TRANSFERS
 
 const pendingBox=document.getElementById("pendingTransactions");
-
-if(pendingBox){
 
 pendingBox.innerHTML="";
 
@@ -317,47 +307,15 @@ const div=document.createElement("div");
 div.className="tx";
 
 div.innerHTML=`
-
 <strong>🏦 Transfer Pending</strong><br>
-
 €${Number(p.amount).toLocaleString()} → ${p.iban}
-
 <div class="small">Status: Waiting for approval</div>
-
 <div class="small">${formatDate(p.date)}</div>
-
 `;
 
 pendingBox.appendChild(div);
 
 });
-
-}
-
-}
-
-
-// RECEIPT FUNCTION
-
-window.showReceipt=function(ref,amount,iban){
-
-alert(`
-
-DeChase Bank
-
-Transfer Receipt
-
-Reference: ${ref}
-
-Amount: €${amount}
-
-Recipient: ${iban}
-
-Date: ${new Date().toLocaleString()}
-
-Status: Pending Approval
-
-`);
 
 }
 
@@ -390,11 +348,7 @@ return alert("OTP expired");
 if(enteredOTP!=currentOTP)
 return alert("Invalid OTP");
 
-
-// GENERATE REFERENCE
-
 const reference="DCB-"+Math.floor(10000000+Math.random()*90000000);
-
 
 await addDoc(collection(db,"pendingTransfers"),{
 
@@ -409,8 +363,6 @@ status:"pending"
 
 showSuccess("Transfer submitted for approval");
 
-showReceipt(reference,amountValue,receiverValue);
-
 location.reload();
 
 };
@@ -419,7 +371,8 @@ location.reload();
 // LOGOUT
 
 window.logout=()=>{
-localStorage.clear();
+localStorage.removeItem("user");
+localStorage.removeItem("session");
 window.location.replace("index.html");
 };
 

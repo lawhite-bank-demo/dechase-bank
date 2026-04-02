@@ -38,40 +38,26 @@ let clean = (num || "").replace(/\s/g,'');
 return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
 }
 
-// ===== 🔥 AUTO FIX ALL USERS (FINAL FIXED) =====
+// ===== AUTO FIX USERS =====
 async function fixAllUsers(){
-
 const usersSnap = await getDocs(collection(db,"users"));
 
 usersSnap.forEach(async (u)=>{
 let d = u.data();
 
-// ✅ FIX ZERO BALANCE BUG
-let usd = (d.usdBalance && d.usdBalance > 0)
+let balance = (d.usdBalance && d.usdBalance > 0)
   ? d.usdBalance
   : (d.balance ?? 0);
 
-// sync other currencies
-let eur = d.balance ?? usd * 0.92;
-let gbp = d.gbpBalance ?? usd * 0.78;
-
-// fix bank info
-let routing = d.routingNumber || "021069021";
-let swift = d.swift || "BOFAUS3NXXX";
-let address = d.bankAddress || "DeChase Bank, United States";
-
 await updateDoc(doc(db,"users",u.id),{
-usdBalance: usd,
-balance: eur,
-gbpBalance: gbp,
-routingNumber: routing,
-swift: swift,
-bankAddress: address
+usdBalance: balance,
+balance: balance,
+gbpBalance: balance * 0.78,
+routingNumber: d.routingNumber || "021069021",
+swift: d.swift || "BOFAUS3NXXX",
+bankAddress: d.bankAddress || "DeChase Bank, United States"
 });
-
 });
-
-console.log("✅ All users fixed correctly");
 }
 
 // ===== RENDER =====
@@ -92,7 +78,7 @@ box.innerHTML += `
 <small>Ref: ${t.reference || genRef()}</small><br>
 <small>${new Date(t.date).toLocaleString()}</small><br>
 <b style="color:${amt>=0?"#22c55e":"#ef4444"}">
-${amt>=0?"+":"-"}$${Math.abs(amt).toLocaleString()}
+${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
 </b>
 </div>`;
 });
@@ -106,7 +92,6 @@ const savedPassword = localStorage.getItem("password");
 
 if(!username) return location.replace("index.html");
 
-// 🔥 RUN AUTO FIX
 if(username === "admin"){
 await fixAllUsers();
 }
@@ -117,7 +102,6 @@ if(!snap.exists()) return location.replace("index.html");
 
 let data = snap.data();
 
-// ===== PASSWORD CHECK =====
 if(savedPassword && data.password !== savedPassword){
 alert("Session expired. Login again.");
 localStorage.clear();
@@ -125,8 +109,7 @@ location.replace("index.html");
 return;
 }
 
-// ===== SAFE BALANCE (FIXED) =====
-let usdBalance = Number(
+let balance = Number(
 (data.usdBalance && data.usdBalance > 0)
 ? data.usdBalance
 : (data.balance ?? 0)
@@ -134,88 +117,64 @@ let usdBalance = Number(
 
 let tx = getTx(data);
 
-// ===== BANK INFO =====
-const routing = data.routingNumber || "021069021";
-const swift = data.swift || "BOFAUS3NXXX";
-const address = data.bankAddress || "DeChase Bank, United States";
-
 // ===== UI =====
 setText("welcome","Hello, " + (data.fullName || "User"));
-setText("routingDisplay", routing);
-setText("swift", swift);
-setText("bankAddress", address);
+setText("routingDisplay",data.routingNumber || "021069021");
+setText("swift",data.swift || "BOFAUS3NXXX");
+setText("bankAddress",data.bankAddress || "DeChase Bank, United States");
 
-// ===== CARD =====
+// CARD
 setText("cardNumber", maskCard(data.cardNumber));
 setText("cardName", (data.fullName || "USER").toUpperCase());
 setText("cardExpiry", data.cardExpiry || "12/28");
 setText("cardCVV", data.cvv || "123");
 
-// ===== CARD FREEZE =====
+// FREEZE
 let frozen = data.cardFrozen || false;
-
-function updateCardBtn(){
-if(el("cardBtn")){
-el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
-}
-}
-
-updateCardBtn();
 
 window.toggleCard = async ()=>{
 frozen = !frozen;
 await updateDoc(userRef,{ cardFrozen: frozen });
-updateCardBtn();
-alert(frozen ? "Card Frozen" : "Card Unfrozen");
+el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 };
 
-// ===== BALANCE =====
+// BALANCE
 let hidden = false;
 
 function renderBalance(){
-setText("balance", hidden ? "••••••" : "$" + usdBalance.toLocaleString());
+setText("balance", hidden ? "••••••" : "€" + balance.toLocaleString());
 }
 
-if(el("toggleBalance")){
 el("toggleBalance").onclick = ()=>{
 hidden = !hidden;
 renderBalance();
 };
-}
 
 renderBalance();
 
-// ===== WALLET =====
-let eurBal = Number(data.balance ?? usdBalance * 0.92);
-let gbpBal = Number(data.gbpBalance ?? usdBalance * 0.78);
+// WALLET
+setText("usdWallet","€" + balance.toLocaleString());
+setText("eurWallet","€" + balance.toLocaleString());
+setText("gbpWallet","£" + (balance * 0.78).toLocaleString());
 
-setText("usdWallet","$" + usdBalance.toLocaleString());
-setText("eurWallet","€" + eurBal.toLocaleString());
-setText("gbpWallet","£" + gbpBal.toLocaleString());
+// CONVERTER
+setText("convertedEUR","€" + balance.toLocaleString());
+setText("convertedGBP","£" + (balance * 0.78).toLocaleString());
 
-// ===== CONVERTER =====
-setText("convertedEUR","€" + (usdBalance * 0.92).toLocaleString());
-setText("convertedGBP","£" + (usdBalance * 0.78).toLocaleString());
-
-// ===== TRANSACTIONS =====
+// TX
 renderTransactions(tx);
 
-// ===== REALTIME USER SYNC =====
-onSnapshot(userRef, (snap)=>{
-if(!snap.exists()) return;
-
+// REALTIME
+onSnapshot(userRef,(snap)=>{
 let d = snap.data();
 
-// logout if password changed
 if(savedPassword && d.password !== savedPassword){
-alert("Password changed. Login again.");
 localStorage.clear();
 location.replace("index.html");
 return;
 }
 
-// 🔥 SAME FIX HERE
-usdBalance = Number(
+balance = Number(
 (d.usdBalance && d.usdBalance > 0)
 ? d.usdBalance
 : (d.balance ?? 0)
@@ -226,81 +185,44 @@ tx = getTx(d);
 renderBalance();
 renderTransactions(tx);
 
-setText("usdWallet","$" + usdBalance.toLocaleString());
-setText("eurWallet","€" + (d.balance ?? usdBalance * 0.92).toLocaleString());
+setText("usdWallet","€" + balance.toLocaleString());
+setText("eurWallet","€" + balance.toLocaleString());
 });
 
-// ===== PENDING =====
+// PENDING
 const q = query(collection(db,"pendingTransfers"));
 
-onSnapshot(q, async (snapshot)=>{
-
+onSnapshot(q,(snapshot)=>{
 const box = el("pendingTransactions");
 if(box) box.innerHTML = "";
 
-snapshot.forEach(async d=>{
+snapshot.forEach(d=>{
 const p = d.data();
 
 if(p.sender === username && p.status === "pending"){
 box.innerHTML += `
 <div class="tx">
 ⏳ Pending<br>
-$${Number(p.amount).toLocaleString()}
+€${Number(p.amount).toLocaleString()}
 </div>`;
 }
-
-// AUTO CREDIT
-if(p.status === "completed" && !p.processed){
-
-const ref = doc(db,"users",p.sender);
-const s = await getDoc(ref);
-
-if(s.exists()){
-let dta = s.data();
-let bal = Number(dta.usdBalance ?? 0);
-let txx = getTx(dta);
-
-bal += Number(p.amount);
-
-txx.unshift({
-amount: Number(p.amount),
-note: "Transfer Received",
-reference: genRef(),
-date: new Date().toISOString()
+});
 });
 
-await updateDoc(ref,{ usdBalance: bal, transactions: txx });
-}
-
-await updateDoc(doc(db,"pendingTransfers",d.id),{ processed:true });
-}
-
-});
-
-});
-
-// ===== TRANSFER =====
+// TRANSFER
 let pending = null;
 
 window.openPinModal = ()=>{
-if(frozen) return alert("Card is frozen");
+if(frozen) return alert("Card frozen");
 
-const acc = el("accountNumber").value.trim();
-const routing = el("routingNumber").value.trim();
-const desc = el("description").value.trim();
 const amount = parseFloat(el("amount").value);
 
-if(!acc || routing.length !== 9 || isNaN(amount)){
-alert("Invalid input");
+if(isNaN(amount) || amount > balance){
+alert("Invalid amount");
 return;
 }
 
-if(amount > usdBalance){
-alert("Insufficient funds");
-return;
-}
-
-pending = {acc,routing,desc,amount};
+pending = {amount};
 el("pinModal").classList.remove("hidden");
 };
 
@@ -309,13 +231,10 @@ el("pinModal").classList.add("hidden");
 };
 
 window.confirmPin = async ()=>{
-
-if(frozen) return alert("Card is frozen");
-
 const pin = el("pinInput").value;
 if(pin !== data.pin) return alert("Wrong PIN");
 
-usdBalance -= pending.amount;
+balance -= pending.amount;
 
 tx.unshift({
 amount:-pending.amount,
@@ -324,17 +243,12 @@ reference:genRef(),
 date:new Date().toISOString()
 });
 
-await updateDoc(userRef,{ usdBalance, transactions: tx });
+await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
 
 await addDoc(collection(db,"pendingTransfers"),{
 sender: username,
 amount: pending.amount,
-accountNumber: pending.acc,
-routingNumber: pending.routing,
-description: pending.desc,
-date: new Date().toISOString(),
-status:"pending",
-processed:false
+status:"pending"
 });
 
 el("pinModal").classList.add("hidden");
@@ -342,7 +256,7 @@ el("pinModal").classList.add("hidden");
 renderBalance();
 renderTransactions(tx);
 
-alert("Transfer Pending Approval");
+alert("Transfer Pending");
 };
 
 }

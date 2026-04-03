@@ -96,8 +96,8 @@ button{width:100%;padding:12px;margin-top:10px;border:none;border-radius:10px;ba
 
 <div class="card">
 <b>Multi Currency Wallet</b><br>
-USD: <span id="usdWallet"></span><br>
-EUR: <span id="eurWallet"></span><br>
+EUR: <span id="usdWallet"></span><br>
+EUR (Converted): <span id="eurWallet"></span><br>
 GBP: <span id="gbpWallet"></span>
 </div>
 
@@ -137,36 +137,39 @@ Address: <span id="bankAddress"></span>
 
 </div>
 
-<!-- OTHER PAGES (UNCHANGED) -->
+<!-- PAYMENTS -->
 <div id="paymentsPage" class="hidden">
 <div class="card">
 <b>Send Money</b>
 <input id="accountNumber" placeholder="Account Number">
 <input id="routingNumber" placeholder="Routing Number">
-<input id="amount" placeholder="Amount">
+<input id="amount" placeholder="Amount (€)">
 <input id="description" placeholder="Description">
 <button onclick="openPinModal()">Send</button>
 </div>
 </div>
 
+<!-- BILLS -->
 <div id="billsPage" class="hidden">
 <div class="card">
 <b>Pay Bills</b>
-<button onclick="payBill('Electricity',120)">Electricity $120</button>
-<button onclick="payBill('Netflix',15)">Netflix $15</button>
-<button onclick="payBill('Internet',60)">Internet $60</button>
+<button onclick="payBill('Electricity',120)">Electricity €120</button>
+<button onclick="payBill('Netflix',15)">Netflix €15</button>
+<button onclick="payBill('Internet',60)">Internet €60</button>
 </div>
 </div>
 
+<!-- GIFT -->
 <div id="giftPage" class="hidden">
 <div class="card">
 <b>Gift Cards</b>
-<button onclick="buyGiftCard('Amazon',100)">Amazon $100</button>
-<button onclick="buyGiftCard('Apple',50)">Apple $50</button>
-<button onclick="buyGiftCard('Steam',25)">Steam $25</button>
+<button onclick="buyGiftCard('Amazon',100)">Amazon €100</button>
+<button onclick="buyGiftCard('Apple',50)">Apple €50</button>
+<button onclick="buyGiftCard('Steam',25)">Steam €25</button>
 </div>
 </div>
 
+<!-- PROFILE -->
 <div id="profilePage" class="hidden">
 <div class="card">
 Name: <span id="nameProfile"></span><br>
@@ -181,6 +184,7 @@ Email: <span id="emailProfile"></span>
 
 </div>
 
+<!-- PIN -->
 <div id="pinModal" class="hidden" style="position:fixed;top:0;width:100%;height:100%;background:#0008;display:flex;justify-content:center;align-items:center;">
 <div class="card">
 <input id="pinInput" placeholder="Enter PIN">
@@ -189,6 +193,7 @@ Email: <span id="emailProfile"></span>
 </div>
 </div>
 
+<!-- NAV -->
 <div class="bottomNav">
 <button onclick="openPage('homePage')">Home</button>
 <button onclick="openPage('paymentsPage')">Payments</button>
@@ -198,31 +203,26 @@ Email: <span id="emailProfile"></span>
 </div>
 
 <script>
-// NAV
 function openPage(page){
 ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
 .forEach(p=>document.getElementById(p).classList.add("hidden"));
 document.getElementById(page).classList.remove("hidden");
 }
 
-// LOGOUT
 function logout(){
 localStorage.clear();
 location.replace("index.html");
 }
 
-// SUPPORT
 function contactSupport(){
 window.open("https://wa.me/13312016202");
 }
 
-// 🔥 CARD FLIP
 function flipCard(){
 const card = document.getElementById("cardInner");
 if(card) card.classList.toggle("flipped");
 }
 
-// 🔥 CVV TOGGLE
 let cvvVisible = false;
 function revealCVV(){
 const cvv = document.getElementById("cardCVV");
@@ -233,8 +233,7 @@ cvv.innerText = cvvVisible ? cvv.innerText : "***";
 }
 </script>
 
-<!-- 🔥 VERSION UPDATED -->
-<script type="module" src="dashboard.js?v=99"></script>
+<script type="module" src="dashboard.js?v=200"></script>
 
 </body>
 </html>

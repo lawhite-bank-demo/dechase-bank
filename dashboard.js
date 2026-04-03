@@ -109,6 +109,7 @@ location.replace("index.html");
 return;
 }
 
+// ===== SAFE BALANCE =====
 let balance = Number(
 (data.usdBalance && data.usdBalance > 0)
 ? data.usdBalance
@@ -123,51 +124,60 @@ setText("routingDisplay",data.routingNumber || "021069021");
 setText("swift",data.swift || "BOFAUS3NXXX");
 setText("bankAddress",data.bankAddress || "DeChase Bank, United States");
 
-// CARD
+// ✅ PROFILE FIX (IMPORTANT)
+setText("nameProfile", data.fullName || "User");
+setText("emailProfile", data.email || "dechasebank@gmail.com");
+
+// ===== CARD =====
 setText("cardNumber", maskCard(data.cardNumber));
 setText("cardName", (data.fullName || "USER").toUpperCase());
 setText("cardExpiry", data.cardExpiry || "12/28");
 setText("cardCVV", data.cvv || "123");
 
-// FREEZE
+// ===== FREEZE =====
 let frozen = data.cardFrozen || false;
 
 window.toggleCard = async ()=>{
 frozen = !frozen;
 await updateDoc(userRef,{ cardFrozen: frozen });
+if(el("cardBtn")){
 el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
+}
 };
 
-// BALANCE
+// ===== BALANCE =====
 let hidden = false;
 
 function renderBalance(){
 setText("balance", hidden ? "••••••" : "€" + balance.toLocaleString());
 }
 
+if(el("toggleBalance")){
 el("toggleBalance").onclick = ()=>{
 hidden = !hidden;
 renderBalance();
 };
+}
 
 renderBalance();
 
-// WALLET
+// ===== WALLET =====
 setText("usdWallet","€" + balance.toLocaleString());
 setText("eurWallet","€" + balance.toLocaleString());
 setText("gbpWallet","£" + (balance * 0.78).toLocaleString());
 
-// CONVERTER
+// ===== CONVERTER =====
 setText("convertedEUR","€" + balance.toLocaleString());
 setText("convertedGBP","£" + (balance * 0.78).toLocaleString());
 
-// TX
+// ===== TRANSACTIONS =====
 renderTransactions(tx);
 
-// REALTIME
+// ===== REALTIME =====
 onSnapshot(userRef,(snap)=>{
 let d = snap.data();
 
+// logout if password changed
 if(savedPassword && d.password !== savedPassword){
 localStorage.clear();
 location.replace("index.html");
@@ -185,11 +195,16 @@ tx = getTx(d);
 renderBalance();
 renderTransactions(tx);
 
+// update wallet
 setText("usdWallet","€" + balance.toLocaleString());
 setText("eurWallet","€" + balance.toLocaleString());
+
+// 🔥 KEEP PROFILE UPDATED REALTIME
+setText("nameProfile", d.fullName || "User");
+setText("emailProfile", d.email || "dechasebank@gmail.com");
 });
 
-// PENDING
+// ===== PENDING =====
 const q = query(collection(db,"pendingTransfers"));
 
 onSnapshot(q,(snapshot)=>{
@@ -209,7 +224,7 @@ box.innerHTML += `
 });
 });
 
-// TRANSFER
+// ===== TRANSFER =====
 let pending = null;
 
 window.openPinModal = ()=>{

@@ -14,11 +14,12 @@ projectId: "dechase-bank"
 
 const db = getFirestore(app);
 
-// ===== GLOBAL STATE (🔥 FIX) =====
+// ===== GLOBAL STATE =====
 let balance = 0;
 let tx = [];
 let frozen = false;
 let userRef = null;
+let hidden = false; // 👁 FIX
 
 // ===== HELPERS =====
 function el(id){ return document.getElementById(id); }
@@ -90,14 +91,23 @@ ${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
 });
 }
 
+// ===== BALANCE RENDER (👁 FIXED) =====
+function renderBalance(){
+setText(
+  "balance",
+  hidden ? "••••••" : "€" + balance.toLocaleString()
+);
+
+// optional text change
+if(el("toggleBalance")){
+el("toggleBalance").innerText = hidden ? "👁 Show" : "🙈 Hide";
+}
+}
+
 // ===== BILL =====
 window.payBill = async (name, amount)=>{
 if(frozen) return alert("Card is frozen");
-
-if(amount > balance){
-alert("Insufficient funds");
-return;
-}
+if(amount > balance) return alert("Insufficient funds");
 
 balance -= amount;
 
@@ -119,11 +129,7 @@ alert(name + " paid successfully");
 // ===== GIFT =====
 window.buyGiftCard = async (name, amount)=>{
 if(frozen) return alert("Card is frozen");
-
-if(amount > balance){
-alert("Insufficient funds");
-return;
-}
+if(amount > balance) return alert("Insufficient funds");
 
 balance -= amount;
 
@@ -141,11 +147,6 @@ renderTransactions(tx);
 
 alert(name + " gift card purchased");
 };
-
-// ===== BALANCE RENDER =====
-function renderBalance(){
-setText("balance", "€" + balance.toLocaleString());
-}
 
 // ===== INIT =====
 async function initDashboard(){
@@ -198,7 +199,7 @@ setText("cardName", (data.fullName || "USER").toUpperCase());
 setText("cardExpiry", data.cardExpiry || "12/28");
 setText("cardCVV", data.cvv || "123");
 
-// FREEZE
+// FREEZE BTN
 if(el("cardBtn")){
 el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 }
@@ -208,6 +209,14 @@ frozen = !frozen;
 await updateDoc(userRef,{ cardFrozen: frozen });
 el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 };
+
+// 👁 CLICK FIX
+if(el("toggleBalance")){
+el("toggleBalance").onclick = ()=>{
+hidden = !hidden;
+renderBalance();
+};
+}
 
 // BALANCE
 renderBalance();
@@ -252,7 +261,7 @@ setText("nameProfile", d.fullName || "User");
 setText("emailProfile", d.email || "dechasebank@gmail.com");
 });
 
-// PENDING
+// ===== PENDING =====
 const q = query(collection(db,"pendingTransfers"));
 
 onSnapshot(q,(snapshot)=>{
@@ -272,7 +281,7 @@ box.innerHTML += `
 });
 });
 
-// TRANSFER
+// ===== TRANSFER =====
 let pending = null;
 
 window.openPinModal = ()=>{

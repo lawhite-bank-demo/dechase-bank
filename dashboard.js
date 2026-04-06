@@ -23,7 +23,7 @@ let userRef = null;
 let hidden = false;
 
 // 🔥 LIVE RATE
-let eurToGbp = 0.86; // fallback
+let eurToGbp = 0.86;
 
 // ===== HELPERS =====
 function el(id){ return document.getElementById(id); }
@@ -59,32 +59,24 @@ try{
 const res = await fetch("https://api.exchangerate.host/latest?base=EUR&symbols=GBP");
 const data = await res.json();
 
-if(data && data.rates && data.rates.GBP){
+if(data?.rates?.GBP){
 eurToGbp = data.rates.GBP;
 updateWalletUI();
 }
 }catch(e){
-console.log("Rate fetch failed, using fallback");
+console.log("Rate fetch failed");
 }
 }
-
-// update every 30s
 setInterval(fetchRate,30000);
 
-// ===== 🔥 UPDATE WALLET UI =====
+// ===== WALLET UI =====
 function updateWalletUI(){
-
-// EUR (main)
 setText("usdWallet","€" + balance.toLocaleString());
-
-// Converted EUR (same)
 setText("eurWallet","€" + balance.toLocaleString());
 
-// GBP live
 const gbp = balance * eurToGbp;
 setText("gbpWallet","£" + gbp.toLocaleString());
 
-// Converted section
 setText("convertedEUR","€" + balance.toLocaleString());
 setText("convertedGBP","£" + gbp.toLocaleString());
 }
@@ -109,7 +101,6 @@ el("receiptModal").classList.add("hidden");
 
 // ===== BALANCE ANIMATION =====
 function animateBalance(oldVal, newVal){
-
 const balEl = el("balance");
 if(!balEl) return;
 
@@ -256,27 +247,29 @@ location.replace("index.html");
 return;
 }
 
-// STATE
+// ===== STATE =====
 balance = Number(data.usdBalance ?? data.balance ?? 0);
 lastBalance = balance;
 tx = getTx(data);
 frozen = data.cardFrozen || false;
 
-// UI
+// ===== UI (FIXED WITH FALLBACKS) =====
 setText("welcome","Hi, Welcome " + (data.fullName || "User"));
 
-setText("routingDisplay",data.routingNumber);
-setText("swift",data.swift);
-setText("bankAddress",data.bankAddress);
+setText("routingDisplay", data.routingNumber || "021069021");
+setText("swift", data.swift || "DEUTDEFF");
+setText("bankAddress", data.bankAddress || "DeChase Bank, Austria");
+setText("iban", data.iban || "GB29NWBK60161331926819");
+
 setText("accountNumberDisplay", formatAccountNumber(data.accountNumber));
 
-setText("nameProfile", data.fullName);
-setText("emailProfile", data.email);
+setText("nameProfile", data.fullName || "User");
+setText("emailProfile", data.email || "dechasebank@gmail.com");
 
 setText("cardNumber", maskCard(data.cardNumber));
 setText("cardName", (data.fullName || "").toUpperCase());
-setText("cardExpiry", data.cardExpiry);
-setText("cardCVV", data.cvv);
+setText("cardExpiry", data.cardExpiry || "07/27");
+setText("cardCVV", data.cvv || "123");
 
 // toggle
 if(el("toggleBalance")){
@@ -300,9 +293,9 @@ renderBalance();
 renderTransactions(tx);
 updateWalletUI();
 updateTime();
-fetchRate(); // 🔥 first fetch
+fetchRate();
 
-// realtime
+// ===== REALTIME (FIXED TOO) =====
 onSnapshot(userRef,(snap)=>{
 let d = snap.data();
 
@@ -314,8 +307,14 @@ renderTransactions(tx);
 updateWalletUI();
 
 setText("accountNumberDisplay", formatAccountNumber(d.accountNumber));
-setText("nameProfile", d.fullName);
-setText("emailProfile", d.email);
+
+setText("routingDisplay", d.routingNumber || "021069021");
+setText("swift", d.swift || "DEUTDEFF");
+setText("bankAddress", d.bankAddress || "DeChase Bank, Austria");
+setText("iban", d.iban || "GB29NWBK60161331926819");
+
+setText("nameProfile", d.fullName || "User");
+setText("emailProfile", d.email || "dechasebank@gmail.com");
 });
 
 }

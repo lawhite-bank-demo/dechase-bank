@@ -12,6 +12,7 @@ body{margin:0;font-family:Arial;background:#020617;color:white;padding-bottom:80
 .container{max-width:420px;margin:auto;padding:20px;}
 
 .card{background:#111827;padding:15px;border-radius:15px;margin-bottom:15px;}
+
 .balance-card{
 background:linear-gradient(135deg,#2563eb,#0ea5e9);
 padding:25px;border-radius:20px;text-align:center;margin-bottom:15px;
@@ -36,7 +37,6 @@ background:#021a35;padding:10px;
 
 .hidden{display:none !important;}
 
-/* 🔥 PREMIUM ACCOUNT */
 .account-box{
 background:#0f172a;
 padding:12px;
@@ -48,7 +48,7 @@ color:#38bdf8;
 font-weight:bold;
 }
 
-/* 🔥 RECEIPT MODAL */
+/* RECEIPT */
 #receiptModal{
 position:fixed;
 top:0;left:0;width:100%;height:100%;
@@ -74,7 +74,7 @@ text-align:center;
 
 <div class="container">
 
-<!-- TIME + GREETING -->
+<!-- TIME -->
 <div style="margin-bottom:10px;">
   <div id="greeting" style="font-size:13px;color:#9ca3af;"></div>
   <div id="time" style="font-size:20px;font-weight:bold;"></div>
@@ -112,17 +112,45 @@ CVV: <span id="cardCVV"></span>
 <button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
 </div>
 
+<!-- 🔥 NEW MULTI CURRENCY UI -->
 <div class="card">
-<b>Multi Currency Wallet</b><br>
-EUR: <span id="usdWallet"></span><br>
-EUR (Converted): <span id="eurWallet"></span><br>
-GBP: <span id="gbpWallet"></span>
+<b style="font-size:16px;">🌍 Multi Currency Wallet</b>
+
+<div style="margin-top:12px;display:flex;flex-direction:column;gap:10px;">
+
+<div style="background:linear-gradient(135deg,#1e40af,#2563eb);padding:12px;border-radius:12px;">
+<div style="font-size:12px;opacity:0.8;">🇪🇺 Euro Balance</div>
+<div id="usdWallet" style="font-size:18px;font-weight:bold;"></div>
 </div>
 
+<div style="background:#1f2937;padding:12px;border-radius:12px;">
+<div style="font-size:12px;opacity:0.7;">Converted EUR</div>
+<div id="eurWallet" style="font-size:16px;font-weight:bold;"></div>
+</div>
+
+<div style="background:linear-gradient(135deg,#0ea5e9,#06b6d4);padding:12px;border-radius:12px;">
+<div style="font-size:12px;opacity:0.8;">🇬🇧 Pound Balance</div>
+<div id="gbpWallet" style="font-size:18px;font-weight:bold;"></div>
+</div>
+
+</div>
+</div>
+
+<!-- 🔥 NEW CONVERTED UI -->
 <div class="card">
-<b>Converted Balance</b><br>
-EUR: <span id="convertedEUR"></span><br>
-GBP: <span id="convertedGBP"></span>
+<b style="font-size:16px;">💱 Converted Balance</b>
+
+<div style="display:flex;justify-content:space-between;margin-top:10px;">
+<div>
+<div style="font-size:12px;opacity:0.7;">EUR</div>
+<div id="convertedEUR" style="font-weight:bold;"></div>
+</div>
+
+<div>
+<div style="font-size:12px;opacity:0.7;">GBP</div>
+<div id="convertedGBP" style="font-weight:bold;"></div>
+</div>
+</div>
 </div>
 
 <div class="card">
@@ -131,12 +159,9 @@ GBP: <span id="convertedGBP"></span>
 <button onclick="openPage('giftPage')">🎁 Gift Cards</button>
 </div>
 
-<!-- ACCOUNT DETAILS -->
 <div class="card">
 <b>Account Details</b><br>
-
 <div class="account-box" id="accountNumberDisplay"></div>
-
 IBAN: <span id="iban"></span><br>
 Routing: <span id="routingDisplay"></span><br>
 SWIFT: <span id="swift"></span><br>
@@ -148,11 +173,6 @@ Address: <span id="bankAddress"></span>
 <div id="pendingTransactions"></div>
 </div>
 
-<div class="card hidden" id="adminPanel">
-<b>🛠 Admin Control Panel</b>
-<div id="adminTransfers"></div>
-</div>
-
 <div class="card">
 <b>Transactions</b>
 <div id="transactions"></div>
@@ -160,77 +180,20 @@ Address: <span id="bankAddress"></span>
 
 </div>
 
-<!-- PAGES -->
-<div id="paymentsPage" class="hidden">
-<div class="card">
-<b>Send Money</b>
-<input id="accountNumber" placeholder="Account Number">
-<input id="routingNumber" placeholder="Routing Number">
-<input id="amount" placeholder="Amount (€)">
-<input id="description" placeholder="Description">
-<button onclick="openPinModal()">Send</button>
-</div>
-</div>
-
-<div id="billsPage" class="hidden">
-<div class="card">
-<b>Pay Bills</b>
-<button onclick="payBill('Electricity',120)">Electricity €120</button>
-<button onclick="payBill('Netflix',15)">Netflix €15</button>
-<button onclick="payBill('Internet',60)">Internet €60</button>
-</div>
-</div>
-
-<div id="giftPage" class="hidden">
-<div class="card">
-<b>Gift Cards</b>
-<button onclick="buyGiftCard('Amazon',100)">Amazon €100</button>
-<button onclick="buyGiftCard('Apple',50)">Apple €50</button>
-<button onclick="buyGiftCard('Steam',25)">Steam €25</button>
-</div>
-</div>
-
-<div id="profilePage" class="hidden">
-<div class="card">
-Name: <span id="nameProfile"></span><br>
-Email: <span id="emailProfile"></span>
-</div>
-
-<div class="card">
-<button onclick="contactSupport()">📞 Contact Support</button>
-<button onclick="logout()">🚪 Logout</button>
-</div>
-</div>
-
-</div>
-
-<!-- PIN -->
-<div id="pinModal" class="hidden" style="position:fixed;top:0;width:100%;height:100%;background:#0008;display:flex;justify-content:center;align-items:center;">
-<div class="card">
-<input id="pinInput" placeholder="Enter PIN">
-<button onclick="confirmPin()">Confirm</button>
-<button onclick="closePin()">Cancel</button>
-</div>
-</div>
-
-<!-- 🔥 RECEIPT MODAL (CORRECT PLACE) -->
+<!-- RECEIPT -->
 <div id="receiptModal" class="hidden">
 <div class="receipt-box">
 <h3>Transaction Receipt</h3>
-
 <p id="rType"></p>
 <p id="rAmount"></p>
 <p id="rAccount"></p>
 <p id="rRef"></p>
 <p id="rDate"></p>
-
 <p style="color:#22c55e;">Status: Successful</p>
-
 <button onclick="closeReceipt()">Done</button>
 </div>
 </div>
 
-<!-- NAV -->
 <div class="bottomNav">
 <button onclick="openPage('homePage')">Home</button>
 <button onclick="openPage('paymentsPage')">Payments</button>
@@ -264,13 +227,12 @@ let cvvVisible = false;
 function revealCVV(){
 const cvv = document.getElementById("cardCVV");
 if(!cvv) return;
-
 cvvVisible = !cvvVisible;
 cvv.innerText = cvvVisible ? cvv.innerText : "***";
 }
 </script>
 
-<script type="module" src="dashboard.js?v=400"></script>
+<script type="module" src="dashboard.js?v=500"></script>
 
 </body>
 </html>

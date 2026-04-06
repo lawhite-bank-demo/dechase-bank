@@ -45,7 +45,7 @@ let clean = (num || "").replace(/\s/g,'');
 return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
 }
 
-// ===== 🔥 TIME + GREETING =====
+// ===== TIME + GREETING (SAFE) =====
 function updateTime(){
 const now = new Date();
 const hours = now.getHours();
@@ -78,7 +78,7 @@ gbpBalance: bal * 0.78,
 routingNumber: d.routingNumber || "021069021",
 swift: d.swift || "BOFAUS3NXXX",
 bankAddress: d.bankAddress || "DeChase Bank, United States",
-iban: d.iban || "GB29NWBK60161331926819" // 🔥 NEW
+iban: d.iban || "GB29NWBK60161331926819"
 });
 });
 }
@@ -109,10 +109,7 @@ ${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
 
 // ===== BALANCE =====
 function renderBalance(){
-setText(
-  "balance",
-  hidden ? "••••••" : "€" + balance.toLocaleString()
-);
+setText("balance", hidden ? "••••••" : "€" + balance.toLocaleString());
 
 if(el("toggleBalance")){
 el("toggleBalance").innerText = hidden ? "👁 Show" : "🙈 Hide";
@@ -197,12 +194,12 @@ tx = getTx(data);
 frozen = data.cardFrozen || false;
 
 // ===== UI =====
-setText("welcome","Hello, " + (data.fullName || "User"));
+setText("welcome","Hi, Welcome " + (data.fullName || "User")); // ✅ FIXED
 setText("routingDisplay",data.routingNumber || "021069021");
 setText("swift",data.swift || "BOFAUS3NXXX");
 setText("bankAddress",data.bankAddress || "DeChase Bank, United States");
 
-// 🔥 IBAN
+// IBAN
 setText("iban", data.iban || "GB29NWBK60161331926819");
 
 // PROFILE
@@ -223,7 +220,9 @@ el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 window.toggleCard = async ()=>{
 frozen = !frozen;
 await updateDoc(userRef,{ cardFrozen: frozen });
+if(el("cardBtn")){
 el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
+}
 };
 
 // 👁 TOGGLE
@@ -249,7 +248,7 @@ setText("convertedGBP","£" + (balance * 0.78).toLocaleString());
 // TX
 renderTransactions(tx);
 
-// 🔥 START TIME
+// START TIME
 updateTime();
 
 // REALTIME

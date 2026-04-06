@@ -19,21 +19,8 @@ body{margin:0;font-family:Arial;background:#020617;color:white;padding-bottom:80
 .card-inner.flipped{transform:rotateY(180deg);}
 .card-front,.card-back{position:absolute;width:100%;height:100%;border-radius:16px;padding:18px;backface-visibility:hidden;}
 
-.card-front{background:linear-gradient(135deg,#1e40af,#0284c7);display:flex;flex-direction:column;justify-content:space-between;}
+.card-front{background:linear-gradient(135deg,#1e40af,#0284c7);}
 .card-back{transform:rotateY(180deg);background:#0f172a;}
-
-.chip{width:38px;height:26px;background:gold;border-radius:6px;}
-.card-number{font-size:17px;letter-spacing:2px;}
-.card-row{display:flex;justify-content:space-between;}
-.card-name{font-size:12px;}
-.card-exp{font-size:11px;}
-.visa{font-size:14px;font-weight:bold;}
-
-.stripe{height:35px;background:black;margin-bottom:15px;}
-.cvv-box{background:white;color:black;padding:8px;width:70px;text-align:center;border-radius:5px;}
-
-input{width:100%;padding:12px;margin-top:10px;border:none;border-radius:10px;background:#1f2937;color:white;}
-button{width:100%;padding:12px;margin-top:10px;border:none;border-radius:10px;background:#2563eb;color:white;font-weight:bold;}
 
 .tx{background:#1f2937;padding:10px;border-radius:10px;margin-top:10px;}
 
@@ -41,18 +28,19 @@ button{width:100%;padding:12px;margin-top:10px;border:none;border-radius:10px;ba
 .bottomNav button{background:none;color:white;font-size:12px;}
 
 .hidden{display:none !important;}
-
-.admin-box{background:#0f172a;border:1px solid #334155;padding:10px;border-radius:12px;margin-top:10px;}
-.admin-actions{display:flex;gap:10px;margin-top:10px;}
-.admin-actions button{flex:1;}
-.approve{background:#16a34a;}
-.reject{background:#dc2626;}
 </style>
 </head>
 
 <body>
 
 <div class="container">
+
+<!-- 🔥 TIME + GREETING -->
+<div style="margin-bottom:10px;">
+  <div id="greeting" style="font-size:13px;color:#9ca3af;"></div>
+  <div id="time" style="font-size:20px;font-weight:bold;"></div>
+  <div id="date" style="font-size:12px;color:#9ca3af;"></div>
+</div>
 
 <h3 id="welcome"></h3>
 
@@ -69,22 +57,13 @@ button{width:100%;padding:12px;margin-top:10px;border:none;border-radius:10px;ba
 <div class="card-inner" id="cardInner">
 
 <div class="card-front">
-<div class="card-row">
-<div class="chip"></div>
-<div class="visa">VISA</div>
-</div>
-<div class="card-number" id="cardNumber"></div>
-<div class="card-row">
-<div class="card-name" id="cardName"></div>
-<div class="card-exp">EXP: <span id="cardExpiry"></span></div>
-</div>
+<div id="cardNumber"></div>
+<div id="cardName"></div>
+<div>EXP: <span id="cardExpiry"></span></div>
 </div>
 
 <div class="card-back">
-<div class="stripe"></div>
-<div style="display:flex;justify-content:flex-end;">
-<div class="cvv-box">CVV: <span id="cardCVV"></span></div>
-</div>
+CVV: <span id="cardCVV"></span>
 </div>
 
 </div>
@@ -113,8 +92,11 @@ GBP: <span id="convertedGBP"></span>
 <button onclick="openPage('giftPage')">🎁 Gift Cards</button>
 </div>
 
+<!-- 🔥 ACCOUNT DETAILS (FIXED) -->
 <div class="card">
 <b>Account Details</b><br>
+Account No: <span id="accountNumberDisplay"></span><br>
+IBAN: <span id="iban"></span><br>
 Routing: <span id="routingDisplay"></span><br>
 SWIFT: <span id="swift"></span><br>
 Address: <span id="bankAddress"></span>
@@ -137,7 +119,7 @@ Address: <span id="bankAddress"></span>
 
 </div>
 
-<!-- PAYMENTS -->
+<!-- OTHER PAGES SAME -->
 <div id="paymentsPage" class="hidden">
 <div class="card">
 <b>Send Money</b>
@@ -149,7 +131,6 @@ Address: <span id="bankAddress"></span>
 </div>
 </div>
 
-<!-- BILLS -->
 <div id="billsPage" class="hidden">
 <div class="card">
 <b>Pay Bills</b>
@@ -159,7 +140,6 @@ Address: <span id="bankAddress"></span>
 </div>
 </div>
 
-<!-- GIFT -->
 <div id="giftPage" class="hidden">
 <div class="card">
 <b>Gift Cards</b>
@@ -169,7 +149,6 @@ Address: <span id="bankAddress"></span>
 </div>
 </div>
 
-<!-- PROFILE -->
 <div id="profilePage" class="hidden">
 <div class="card">
 Name: <span id="nameProfile"></span><br>
@@ -184,7 +163,6 @@ Email: <span id="emailProfile"></span>
 
 </div>
 
-<!-- PIN -->
 <div id="pinModal" class="hidden" style="position:fixed;top:0;width:100%;height:100%;background:#0008;display:flex;justify-content:center;align-items:center;">
 <div class="card">
 <input id="pinInput" placeholder="Enter PIN">
@@ -193,7 +171,6 @@ Email: <span id="emailProfile"></span>
 </div>
 </div>
 
-<!-- NAV -->
 <div class="bottomNav">
 <button onclick="openPage('homePage')">Home</button>
 <button onclick="openPage('paymentsPage')">Payments</button>
@@ -233,7 +210,7 @@ cvv.innerText = cvvVisible ? cvv.innerText : "***";
 }
 </script>
 
-<script type="module" src="dashboard.js?v=200"></script>
+<script type="module" src="dashboard.js?v=300"></script>
 
 </body>
 </html>

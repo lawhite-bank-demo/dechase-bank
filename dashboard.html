@@ -8,32 +8,131 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 
 <style>
-body{margin:0;font-family:Arial;background:#020617;color:white;padding-bottom:80px;}
-.container{max-width:420px;margin:auto;padding:20px;}
+body{
+margin:0;
+font-family:Arial;
+background:#020617;
+color:white;
+padding-bottom:80px;
+}
 
-.card{background:#111827;padding:15px;border-radius:15px;margin-bottom:15px;}
+.container{
+max-width:420px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:#111827;
+padding:15px;
+border-radius:15px;
+margin-bottom:15px;
+}
 
 .balance-card{
 background:linear-gradient(135deg,#2563eb,#0ea5e9);
-padding:25px;border-radius:20px;text-align:center;margin-bottom:15px;
+padding:25px;
+border-radius:20px;
+text-align:center;
+margin-bottom:15px;
 }
-.balance{font-size:28px;font-weight:bold;transition:0.3s;}
 
+.balance{
+font-size:28px;
+font-weight:bold;
+transition:0.3s;
+}
+
+/* 🔥 PREMIUM CARD */
 .bank-card{perspective:1000px;margin-top:10px;}
-.card-inner{width:100%;height:180px;position:relative;transition:.6s;transform-style:preserve-3d;}
-.card-inner.flipped{transform:rotateY(180deg);}
-.card-front,.card-back{position:absolute;width:100%;height:100%;border-radius:16px;padding:18px;backface-visibility:hidden;}
-.card-front{background:linear-gradient(135deg,#1e40af,#0284c7);}
-.card-back{transform:rotateY(180deg);background:#0f172a;}
 
-.tx{background:#1f2937;padding:10px;border-radius:10px;margin-top:10px;}
+.card-inner{
+width:100%;
+height:180px;
+position:relative;
+transition:.6s;
+transform-style:preserve-3d;
+}
+
+.card-inner.flipped{transform:rotateY(180deg);}
+
+.card-front,.card-back{
+position:absolute;
+width:100%;
+height:100%;
+border-radius:16px;
+padding:18px;
+backface-visibility:hidden;
+}
+
+.card-front{
+background:linear-gradient(135deg,#1e3a8a,#2563eb,#0ea5e9);
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+}
+
+.card-back{
+transform:rotateY(180deg);
+background:#0f172a;
+}
+
+/* CARD DETAILS */
+.card-top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.chip{
+width:40px;
+height:28px;
+background:linear-gradient(135deg,#d4af37,#facc15);
+border-radius:6px;
+}
+
+.visa{
+font-weight:bold;
+letter-spacing:2px;
+}
+
+.card-number{
+font-size:18px;
+letter-spacing:3px;
+}
+
+.card-bottom{
+display:flex;
+justify-content:space-between;
+}
+
+.label{
+font-size:10px;
+opacity:0.7;
+}
+
+.tx{
+background:#1f2937;
+padding:10px;
+border-radius:10px;
+margin-top:10px;
+}
 
 .bottomNav{
-position:fixed;bottom:0;width:100%;
-display:flex;justify-content:space-around;
-background:#021a35;padding:10px;
+position:fixed;
+bottom:0;
+width:100%;
+display:flex;
+justify-content:space-around;
+background:#021a35;
+padding:10px;
 }
-.bottomNav button{background:none;color:white;font-size:12px;}
+
+.bottomNav button{
+background:none;
+color:white;
+font-size:12px;
+}
 
 .hidden{display:none !important;}
 
@@ -51,7 +150,10 @@ font-weight:bold;
 /* RECEIPT */
 #receiptModal{
 position:fixed;
-top:0;left:0;width:100%;height:100%;
+top:0;
+left:0;
+width:100%;
+height:100%;
 background:#0009;
 display:flex;
 justify-content:center;
@@ -76,9 +178,9 @@ text-align:center;
 
 <!-- TIME -->
 <div style="margin-bottom:10px;">
-  <div id="greeting" style="font-size:13px;color:#9ca3af;"></div>
-  <div id="time" style="font-size:20px;font-weight:bold;"></div>
-  <div id="date" style="font-size:12px;color:#9ca3af;"></div>
+<div id="greeting" style="font-size:13px;color:#9ca3af;"></div>
+<div id="time" style="font-size:20px;font-weight:bold;"></div>
+<div id="date" style="font-size:12px;color:#9ca3af;"></div>
 </div>
 
 <h3 id="welcome"></h3>
@@ -96,14 +198,35 @@ text-align:center;
 <div class="bank-card" onclick="flipCard()">
 <div class="card-inner" id="cardInner">
 
+<!-- FRONT -->
 <div class="card-front">
-<div id="cardNumber"></div>
-<div id="cardName"></div>
-<div>EXP: <span id="cardExpiry"></span></div>
+
+<div class="card-top">
+<div class="chip"></div>
+<div class="visa">VISA</div>
 </div>
 
+<div id="cardNumber" class="card-number"></div>
+
+<div class="card-bottom">
+<div>
+<div class="label">CARD HOLDER</div>
+<div id="cardName"></div>
+</div>
+
+<div>
+<div class="label">EXPIRES</div>
+<div id="cardExpiry"></div>
+</div>
+</div>
+
+</div>
+
+<!-- BACK -->
 <div class="card-back">
+<div style="margin-top:40px;text-align:right;">
 CVV: <span id="cardCVV"></span>
+</div>
 </div>
 
 </div>
@@ -156,7 +279,7 @@ Address: <span id="bankAddress"></span>
 
 </div>
 
-<!-- PAYMENTS -->
+<!-- OTHER PAGES (UNCHANGED FUNCTIONALITY) -->
 <div id="paymentsPage" class="hidden">
 <div class="card">
 <b>Send Money</b>
@@ -168,7 +291,6 @@ Address: <span id="bankAddress"></span>
 </div>
 </div>
 
-<!-- BILLS -->
 <div id="billsPage" class="hidden">
 <div class="card">
 <b>Pay Bills</b>
@@ -178,7 +300,6 @@ Address: <span id="bankAddress"></span>
 </div>
 </div>
 
-<!-- GIFT -->
 <div id="giftPage" class="hidden">
 <div class="card">
 <b>Gift Cards</b>
@@ -188,7 +309,6 @@ Address: <span id="bankAddress"></span>
 </div>
 </div>
 
-<!-- PROFILE -->
 <div id="profilePage" class="hidden">
 <div class="card">
 Name: <span id="nameProfile"></span><br>
@@ -201,7 +321,7 @@ Email: <span id="emailProfile"></span>
 </div>
 </div>
 
-<!-- PIN MODAL -->
+<!-- PIN -->
 <div id="pinModal" class="hidden" style="position:fixed;top:0;width:100%;height:100%;background:#0008;display:flex;justify-content:center;align-items:center;">
 <div class="card">
 <input id="pinInput" placeholder="Enter PIN">
@@ -263,7 +383,7 @@ cvv.innerText = cvvVisible ? cvv.innerText : "***";
 }
 </script>
 
-<script type="module" src="dashboard.js?v=600"></script>
+<script type="module" src="dashboard.js?v=700"></script>
 
 </body>
 </html>

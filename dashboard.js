@@ -45,7 +45,13 @@ let clean = (num || "").replace(/\s/g,'');
 return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
 }
 
-// ===== TIME + GREETING (SAFE) =====
+// 🔥 PREMIUM ACCOUNT FORMAT
+function formatAccountNumber(acc){
+if(!acc) return "DCB-0000000";
+return acc.toUpperCase(); // keeps your DCB-3810058 style
+}
+
+// ===== TIME + GREETING =====
 function updateTime(){
 const now = new Date();
 const hours = now.getHours();
@@ -57,7 +63,6 @@ if(hours >= 18) greet = "Good Evening";
 setText("greeting", greet);
 setText("time", now.toLocaleTimeString());
 }
-
 setInterval(updateTime,1000);
 
 // ===== AUTO FIX USERS =====
@@ -78,7 +83,8 @@ gbpBalance: bal * 0.78,
 routingNumber: d.routingNumber || "021069021",
 swift: d.swift || "BOFAUS3NXXX",
 bankAddress: d.bankAddress || "DeChase Bank, United States",
-iban: d.iban || "GB29NWBK60161331926819"
+iban: d.iban || "GB29NWBK60161331926819",
+accountNumber: d.accountNumber || "DCB-" + Math.floor(1000000 + Math.random()*9000000)
 });
 });
 }
@@ -194,10 +200,14 @@ tx = getTx(data);
 frozen = data.cardFrozen || false;
 
 // ===== UI =====
-setText("welcome","Hi, Welcome " + (data.fullName || "User")); // ✅ FIXED
+setText("welcome","Hi, Welcome " + (data.fullName || "User"));
+
 setText("routingDisplay",data.routingNumber || "021069021");
 setText("swift",data.swift || "BOFAUS3NXXX");
 setText("bankAddress",data.bankAddress || "DeChase Bank, United States");
+
+// 🔥 ACCOUNT NUMBER (FIXED)
+setText("accountNumberDisplay", formatAccountNumber(data.accountNumber));
 
 // IBAN
 setText("iban", data.iban || "GB29NWBK60161331926819");
@@ -274,6 +284,9 @@ renderTransactions(tx);
 
 setText("usdWallet","€" + balance.toLocaleString());
 setText("eurWallet","€" + balance.toLocaleString());
+
+// 🔥 KEEP ACCOUNT UPDATED
+setText("accountNumberDisplay", formatAccountNumber(d.accountNumber));
 
 setText("nameProfile", d.fullName || "User");
 setText("emailProfile", d.email || "dechasebank@gmail.com");

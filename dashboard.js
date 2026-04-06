@@ -19,7 +19,7 @@ let balance = 0;
 let tx = [];
 let frozen = false;
 let userRef = null;
-let hidden = false; // 👁 FIX
+let hidden = false;
 
 // ===== HELPERS =====
 function el(id){ return document.getElementById(id); }
@@ -45,6 +45,21 @@ let clean = (num || "").replace(/\s/g,'');
 return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
 }
 
+// ===== 🔥 TIME + GREETING =====
+function updateTime(){
+const now = new Date();
+const hours = now.getHours();
+
+let greet = "Good Morning";
+if(hours >= 12) greet = "Good Afternoon";
+if(hours >= 18) greet = "Good Evening";
+
+setText("greeting", greet);
+setText("time", now.toLocaleTimeString());
+}
+
+setInterval(updateTime,1000);
+
 // ===== AUTO FIX USERS =====
 async function fixAllUsers(){
 const usersSnap = await getDocs(collection(db,"users"));
@@ -62,7 +77,8 @@ balance: bal,
 gbpBalance: bal * 0.78,
 routingNumber: d.routingNumber || "021069021",
 swift: d.swift || "BOFAUS3NXXX",
-bankAddress: d.bankAddress || "DeChase Bank, United States"
+bankAddress: d.bankAddress || "DeChase Bank, United States",
+iban: d.iban || "GB29NWBK60161331926819" // 🔥 NEW
 });
 });
 }
@@ -91,14 +107,13 @@ ${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
 });
 }
 
-// ===== BALANCE RENDER (👁 FIXED) =====
+// ===== BALANCE =====
 function renderBalance(){
 setText(
   "balance",
   hidden ? "••••••" : "€" + balance.toLocaleString()
 );
 
-// optional text change
 if(el("toggleBalance")){
 el("toggleBalance").innerText = hidden ? "👁 Show" : "🙈 Hide";
 }
@@ -122,7 +137,6 @@ await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
 
 renderBalance();
 renderTransactions(tx);
-
 alert(name + " paid successfully");
 };
 
@@ -144,7 +158,6 @@ await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
 
 renderBalance();
 renderTransactions(tx);
-
 alert(name + " gift card purchased");
 };
 
@@ -189,6 +202,9 @@ setText("routingDisplay",data.routingNumber || "021069021");
 setText("swift",data.swift || "BOFAUS3NXXX");
 setText("bankAddress",data.bankAddress || "DeChase Bank, United States");
 
+// 🔥 IBAN
+setText("iban", data.iban || "GB29NWBK60161331926819");
+
 // PROFILE
 setText("nameProfile", data.fullName || "User");
 setText("emailProfile", data.email || "dechasebank@gmail.com");
@@ -199,7 +215,7 @@ setText("cardName", (data.fullName || "USER").toUpperCase());
 setText("cardExpiry", data.cardExpiry || "12/28");
 setText("cardCVV", data.cvv || "123");
 
-// FREEZE BTN
+// FREEZE
 if(el("cardBtn")){
 el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 }
@@ -210,7 +226,7 @@ await updateDoc(userRef,{ cardFrozen: frozen });
 el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 };
 
-// 👁 CLICK FIX
+// 👁 TOGGLE
 if(el("toggleBalance")){
 el("toggleBalance").onclick = ()=>{
 hidden = !hidden;
@@ -232,6 +248,9 @@ setText("convertedGBP","£" + (balance * 0.78).toLocaleString());
 
 // TX
 renderTransactions(tx);
+
+// 🔥 START TIME
+updateTime();
 
 // REALTIME
 onSnapshot(userRef,(snap)=>{

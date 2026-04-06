@@ -22,6 +22,9 @@ let frozen = false;
 let userRef = null;
 let hidden = false;
 
+// 🔥 LIVE RATE
+let eurToGbp = 0.86; // fallback
+
 // ===== HELPERS =====
 function el(id){ return document.getElementById(id); }
 
@@ -50,7 +53,43 @@ function formatAccountNumber(acc){
 return acc ? acc.toUpperCase() : "DCB-0000000";
 }
 
-// ===== 🔥 RECEIPT =====
+// ===== 🔥 EXCHANGE RATE =====
+async function fetchRate(){
+try{
+const res = await fetch("https://api.exchangerate.host/latest?base=EUR&symbols=GBP");
+const data = await res.json();
+
+if(data && data.rates && data.rates.GBP){
+eurToGbp = data.rates.GBP;
+updateWalletUI();
+}
+}catch(e){
+console.log("Rate fetch failed, using fallback");
+}
+}
+
+// update every 30s
+setInterval(fetchRate,30000);
+
+// ===== 🔥 UPDATE WALLET UI =====
+function updateWalletUI(){
+
+// EUR (main)
+setText("usdWallet","€" + balance.toLocaleString());
+
+// Converted EUR (same)
+setText("eurWallet","€" + balance.toLocaleString());
+
+// GBP live
+const gbp = balance * eurToGbp;
+setText("gbpWallet","£" + gbp.toLocaleString());
+
+// Converted section
+setText("convertedEUR","€" + balance.toLocaleString());
+setText("convertedGBP","£" + gbp.toLocaleString());
+}
+
+// ===== RECEIPT =====
 function showReceipt(type, amount, ref){
 if(!el("receiptModal")) return;
 
@@ -68,7 +107,7 @@ el("receiptModal").classList.add("hidden");
 }
 };
 
-// ===== 🔥 BALANCE ANIMATION =====
+// ===== BALANCE ANIMATION =====
 function animateBalance(oldVal, newVal){
 
 const balEl = el("balance");
@@ -97,7 +136,6 @@ balEl.innerText = "€" + newVal.toLocaleString();
 
 requestAnimationFrame(frame);
 
-// color flash
 balEl.style.color = newVal > oldVal ? "#22c55e" : "#ef4444";
 setTimeout(()=> balEl.style.color = "white", 500);
 }
@@ -112,7 +150,7 @@ el("toggleBalance").innerText = hidden ? "👁 Show" : "🙈 Hide";
 }
 }
 
-// ===== TIME + DATE =====
+// ===== TIME =====
 function updateTime(){
 const now = new Date();
 
@@ -156,7 +194,6 @@ if(frozen) return alert("Card is frozen");
 if(amount > balance) return alert("Insufficient funds");
 
 balance -= amount;
-
 const ref = genRef();
 
 tx.unshift({
@@ -170,6 +207,7 @@ await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
 
 renderBalance();
 renderTransactions(tx);
+updateWalletUI();
 
 showReceipt(name + " Bill", amount, ref);
 };
@@ -180,7 +218,6 @@ if(frozen) return alert("Card is frozen");
 if(amount > balance) return alert("Insufficient funds");
 
 balance -= amount;
-
 const ref = genRef();
 
 tx.unshift({
@@ -194,6 +231,7 @@ await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
 
 renderBalance();
 renderTransactions(tx);
+updateWalletUI();
 
 showReceipt(name + " Gift Card", amount, ref);
 };
@@ -260,7 +298,9 @@ el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 // render
 renderBalance();
 renderTransactions(tx);
+updateWalletUI();
 updateTime();
+fetchRate(); // 🔥 first fetch
 
 // realtime
 onSnapshot(userRef,(snap)=>{
@@ -271,6 +311,7 @@ tx = getTx(d);
 
 renderBalance();
 renderTransactions(tx);
+updateWalletUI();
 
 setText("accountNumberDisplay", formatAccountNumber(d.accountNumber));
 setText("nameProfile", d.fullName);

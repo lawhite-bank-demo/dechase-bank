@@ -83,6 +83,7 @@ text-align:center;
 
 <h3 id="welcome"></h3>
 
+<!-- HOME -->
 <div id="homePage">
 
 <div class="balance-card">
@@ -112,45 +113,20 @@ CVV: <span id="cardCVV"></span>
 <button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
 </div>
 
-<!-- 🔥 NEW MULTI CURRENCY UI -->
+<!-- WALLET -->
 <div class="card">
-<b style="font-size:16px;">🌍 Multi Currency Wallet</b>
-
-<div style="margin-top:12px;display:flex;flex-direction:column;gap:10px;">
-
-<div style="background:linear-gradient(135deg,#1e40af,#2563eb);padding:12px;border-radius:12px;">
-<div style="font-size:12px;opacity:0.8;">🇪🇺 Euro Balance</div>
-<div id="usdWallet" style="font-size:18px;font-weight:bold;"></div>
-</div>
-
-<div style="background:#1f2937;padding:12px;border-radius:12px;">
-<div style="font-size:12px;opacity:0.7;">Converted EUR</div>
-<div id="eurWallet" style="font-size:16px;font-weight:bold;"></div>
-</div>
-
-<div style="background:linear-gradient(135deg,#0ea5e9,#06b6d4);padding:12px;border-radius:12px;">
-<div style="font-size:12px;opacity:0.8;">🇬🇧 Pound Balance</div>
-<div id="gbpWallet" style="font-size:18px;font-weight:bold;"></div>
-</div>
-
+<b>🌍 Multi Currency Wallet</b>
+<div style="margin-top:10px;">
+<div>EUR: <span id="usdWallet"></span></div>
+<div>Converted EUR: <span id="eurWallet"></span></div>
+<div>GBP: <span id="gbpWallet"></span></div>
 </div>
 </div>
 
-<!-- 🔥 NEW CONVERTED UI -->
 <div class="card">
-<b style="font-size:16px;">💱 Converted Balance</b>
-
-<div style="display:flex;justify-content:space-between;margin-top:10px;">
-<div>
-<div style="font-size:12px;opacity:0.7;">EUR</div>
-<div id="convertedEUR" style="font-weight:bold;"></div>
-</div>
-
-<div>
-<div style="font-size:12px;opacity:0.7;">GBP</div>
-<div id="convertedGBP" style="font-weight:bold;"></div>
-</div>
-</div>
+<b>💱 Converted Balance</b><br>
+EUR: <span id="convertedEUR"></span><br>
+GBP: <span id="convertedGBP"></span>
 </div>
 
 <div class="card">
@@ -180,6 +156,60 @@ Address: <span id="bankAddress"></span>
 
 </div>
 
+<!-- PAYMENTS -->
+<div id="paymentsPage" class="hidden">
+<div class="card">
+<b>Send Money</b>
+<input id="accountNumber" placeholder="Account Number">
+<input id="routingNumber" placeholder="Routing Number">
+<input id="amount" placeholder="Amount (€)">
+<input id="description" placeholder="Description">
+<button onclick="openPinModal()">Send</button>
+</div>
+</div>
+
+<!-- BILLS -->
+<div id="billsPage" class="hidden">
+<div class="card">
+<b>Pay Bills</b>
+<button onclick="payBill('Electricity',120)">Electricity €120</button>
+<button onclick="payBill('Netflix',15)">Netflix €15</button>
+<button onclick="payBill('Internet',60)">Internet €60</button>
+</div>
+</div>
+
+<!-- GIFT -->
+<div id="giftPage" class="hidden">
+<div class="card">
+<b>Gift Cards</b>
+<button onclick="buyGiftCard('Amazon',100)">Amazon €100</button>
+<button onclick="buyGiftCard('Apple',50)">Apple €50</button>
+<button onclick="buyGiftCard('Steam',25)">Steam €25</button>
+</div>
+</div>
+
+<!-- PROFILE -->
+<div id="profilePage" class="hidden">
+<div class="card">
+Name: <span id="nameProfile"></span><br>
+Email: <span id="emailProfile"></span>
+</div>
+
+<div class="card">
+<button onclick="contactSupport()">📞 Contact Support</button>
+<button onclick="logout()">🚪 Logout</button>
+</div>
+</div>
+
+<!-- PIN MODAL -->
+<div id="pinModal" class="hidden" style="position:fixed;top:0;width:100%;height:100%;background:#0008;display:flex;justify-content:center;align-items:center;">
+<div class="card">
+<input id="pinInput" placeholder="Enter PIN">
+<button onclick="confirmPin()">Confirm</button>
+<button onclick="closePin()">Cancel</button>
+</div>
+</div>
+
 <!-- RECEIPT -->
 <div id="receiptModal" class="hidden">
 <div class="receipt-box">
@@ -194,6 +224,7 @@ Address: <span id="bankAddress"></span>
 </div>
 </div>
 
+<!-- NAV -->
 <div class="bottomNav">
 <button onclick="openPage('homePage')">Home</button>
 <button onclick="openPage('paymentsPage')">Payments</button>
@@ -232,7 +263,7 @@ cvv.innerText = cvvVisible ? cvv.innerText : "***";
 }
 </script>
 
-<script type="module" src="dashboard.js?v=500"></script>
+<script type="module" src="dashboard.js?v=600"></script>
 
 </body>
 </html>

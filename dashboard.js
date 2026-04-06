@@ -16,6 +16,7 @@ const db = getFirestore(app);
 
 // ===== GLOBAL STATE =====
 let balance = 0;
+let lastBalance = 0; // 🔥 animation fix
 let tx = [];
 let frozen = false;
 let userRef = null;
@@ -45,22 +46,76 @@ let clean = (num || "").replace(/\s/g,'');
 return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
 }
 
-// 🔥 PREMIUM ACCOUNT FORMAT
+// 🔥 ACCOUNT FORMAT
 function formatAccountNumber(acc){
 if(!acc) return "DCB-0000000";
-return acc.toUpperCase(); // keeps your DCB-3810058 style
+return acc.toUpperCase();
 }
 
-// ===== TIME + GREETING =====
+// ===== 🔥 BALANCE ANIMATION =====
+function animateBalance(oldVal, newVal){
+const duration = 800;
+const startTime = performance.now();
+
+function update(currentTime){
+const progress = Math.min((currentTime - startTime) / duration, 1);
+const value = oldVal + (newVal - oldVal) * progress;
+
+if(!hidden){
+setText("balance", "€" + Math.floor(value).toLocaleString());
+}
+
+if(progress < 1){
+requestAnimationFrame(update);
+}else{
+if(!hidden){
+setText("balance", "€" + newVal.toLocaleString());
+}
+}
+}
+
+requestAnimationFrame(update);
+
+// 🔥 COLOR FLASH
+const balEl = el("balance");
+if(!balEl) return;
+
+if(newVal > oldVal){
+balEl.style.color = "#22c55e";
+}else if(newVal < oldVal){
+balEl.style.color = "#ef4444";
+}
+
+setTimeout(()=>{
+balEl.style.color = "white";
+},600);
+}
+
+// ===== BALANCE RENDER =====
+function renderBalance(){
+
+animateBalance(lastBalance, balance);
+lastBalance = balance;
+
+// 👁 SMOOTH HIDE
+const balEl = el("balance");
+
+if(hidden){
+balEl.style.opacity = "0";
+setTimeout(()=>{
+balEl.innerText = "••••••";
+balEl.style.opacity = "1";
+},150);
+}
+
+if(el("toggleBalance")){
+el("toggleBalance").innerText = hidden ? "👁 Show" : "🙈 Hide";
+}
+}
+
+// ===== TIME =====
 function updateTime(){
 const now = new Date();
-const hours = now.getHours();
-
-let greet = "Good Morning";
-if(hours >= 12) greet = "Good Afternoon";
-if(hours >= 18) greet = "Good Evening";
-
-setText("greeting", greet);
 setText("time", now.toLocaleTimeString());
 }
 setInterval(updateTime,1000);
@@ -73,8 +128,8 @@ usersSnap.forEach(async (u)=>{
 let d = u.data();
 
 let bal = (d.usdBalance && d.usdBalance > 0)
-  ? d.usdBalance
-  : (d.balance ?? 0);
+? d.usdBalance
+: (d.balance ?? 0);
 
 await updateDoc(doc(db,"users",u.id),{
 usdBalance: bal,
@@ -89,7 +144,7 @@ accountNumber: d.accountNumber || "DCB-" + Math.floor(1000000 + Math.random()*90
 });
 }
 
-// ===== RENDER =====
+// ===== RENDER TX =====
 function renderTransactions(list){
 const box = el("transactions");
 if(!box) return;
@@ -113,15 +168,6 @@ ${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
 });
 }
 
-// ===== BALANCE =====
-function renderBalance(){
-setText("balance", hidden ? "••••••" : "€" + balance.toLocaleString());
-
-if(el("toggleBalance")){
-el("toggleBalance").innerText = hidden ? "👁 Show" : "🙈 Hide";
-}
-}
-
 // ===== BILL =====
 window.payBill = async (name, amount)=>{
 if(frozen) return alert("Card is frozen");
@@ -130,10 +176,10 @@ if(amount > balance) return alert("Insufficient funds");
 balance -= amount;
 
 tx.unshift({
-amount: -amount,
-note: name + " Bill",
-reference: genRef(),
-date: new Date().toISOString()
+amount:-amount,
+note:name + " Bill",
+reference:genRef(),
+date:new Date().toISOString()
 });
 
 await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
@@ -151,10 +197,10 @@ if(amount > balance) return alert("Insufficient funds");
 balance -= amount;
 
 tx.unshift({
-amount: -amount,
-note: name + " Gift Card",
-reference: genRef(),
-date: new Date().toISOString()
+amount:-amount,
+note:name + " Gift Card",
+reference:genRef(),
+date:new Date().toISOString()
 });
 
 await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
@@ -183,7 +229,6 @@ if(!snap.exists()) return location.replace("index.html");
 let data = snap.data();
 
 if(savedPassword && data.password !== savedPassword){
-alert("Session expired. Login again.");
 localStorage.clear();
 location.replace("index.html");
 return;
@@ -196,6 +241,7 @@ balance = Number(
 : (data.balance ?? 0)
 );
 
+lastBalance = balance; // 🔥 important fix
 tx = getTx(data);
 frozen = data.cardFrozen || false;
 
@@ -206,11 +252,8 @@ setText("routingDisplay",data.routingNumber || "021069021");
 setText("swift",data.swift || "BOFAUS3NXXX");
 setText("bankAddress",data.bankAddress || "DeChase Bank, United States");
 
-// 🔥 ACCOUNT NUMBER (FIXED)
+// ACCOUNT NUMBER
 setText("accountNumberDisplay", formatAccountNumber(data.accountNumber));
-
-// IBAN
-setText("iban", data.iban || "GB29NWBK60161331926819");
 
 // PROFILE
 setText("nameProfile", data.fullName || "User");
@@ -230,9 +273,7 @@ el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 window.toggleCard = async ()=>{
 frozen = !frozen;
 await updateDoc(userRef,{ cardFrozen: frozen });
-if(el("cardBtn")){
 el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
-}
 };
 
 // 👁 TOGGLE
@@ -251,25 +292,15 @@ setText("usdWallet","€" + balance.toLocaleString());
 setText("eurWallet","€" + balance.toLocaleString());
 setText("gbpWallet","£" + (balance * 0.78).toLocaleString());
 
-// CONVERTER
-setText("convertedEUR","€" + balance.toLocaleString());
-setText("convertedGBP","£" + (balance * 0.78).toLocaleString());
-
 // TX
 renderTransactions(tx);
 
-// START TIME
+// TIME
 updateTime();
 
 // REALTIME
 onSnapshot(userRef,(snap)=>{
 let d = snap.data();
-
-if(savedPassword && d.password !== savedPassword){
-localStorage.clear();
-location.replace("index.html");
-return;
-}
 
 balance = Number(
 (d.usdBalance && d.usdBalance > 0)
@@ -285,82 +316,10 @@ renderTransactions(tx);
 setText("usdWallet","€" + balance.toLocaleString());
 setText("eurWallet","€" + balance.toLocaleString());
 
-// 🔥 KEEP ACCOUNT UPDATED
 setText("accountNumberDisplay", formatAccountNumber(d.accountNumber));
-
 setText("nameProfile", d.fullName || "User");
 setText("emailProfile", d.email || "dechasebank@gmail.com");
 });
-
-// ===== PENDING =====
-const q = query(collection(db,"pendingTransfers"));
-
-onSnapshot(q,(snapshot)=>{
-const box = el("pendingTransactions");
-if(box) box.innerHTML = "";
-
-snapshot.forEach(d=>{
-const p = d.data();
-
-if(p.sender === username && p.status === "pending"){
-box.innerHTML += `
-<div class="tx">
-⏳ Pending<br>
-€${Number(p.amount).toLocaleString()}
-</div>`;
-}
-});
-});
-
-// ===== TRANSFER =====
-let pending = null;
-
-window.openPinModal = ()=>{
-if(frozen) return alert("Card frozen");
-
-const amount = parseFloat(el("amount").value);
-
-if(isNaN(amount) || amount > balance){
-alert("Invalid amount");
-return;
-}
-
-pending = {amount};
-el("pinModal").classList.remove("hidden");
-};
-
-window.closePin = ()=>{
-el("pinModal").classList.add("hidden");
-};
-
-window.confirmPin = async ()=>{
-const pin = el("pinInput").value;
-if(pin !== data.pin) return alert("Wrong PIN");
-
-balance -= pending.amount;
-
-tx.unshift({
-amount:-pending.amount,
-note:"Transfer Sent",
-reference:genRef(),
-date:new Date().toISOString()
-});
-
-await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
-
-await addDoc(collection(db,"pendingTransfers"),{
-sender: username,
-amount: pending.amount,
-status:"pending"
-});
-
-el("pinModal").classList.add("hidden");
-
-renderBalance();
-renderTransactions(tx);
-
-alert("Transfer Pending");
-};
 
 }
 

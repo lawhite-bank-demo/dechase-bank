@@ -10,24 +10,63 @@
 <style>
 body{margin:0;font-family:Arial;background:#020617;color:white;padding-bottom:80px;}
 .container{max-width:420px;margin:auto;padding:20px;}
+
 .card{background:#111827;padding:15px;border-radius:15px;margin-bottom:15px;}
-.balance-card{background:linear-gradient(135deg,#2563eb,#0ea5e9);padding:25px;border-radius:20px;text-align:center;margin-bottom:15px;}
-.balance{font-size:28px;font-weight:bold;}
+.balance-card{
+background:linear-gradient(135deg,#2563eb,#0ea5e9);
+padding:25px;border-radius:20px;text-align:center;margin-bottom:15px;
+}
+.balance{font-size:28px;font-weight:bold;transition:0.3s;}
 
 .bank-card{perspective:1000px;margin-top:10px;}
 .card-inner{width:100%;height:180px;position:relative;transition:.6s;transform-style:preserve-3d;}
 .card-inner.flipped{transform:rotateY(180deg);}
 .card-front,.card-back{position:absolute;width:100%;height:100%;border-radius:16px;padding:18px;backface-visibility:hidden;}
-
 .card-front{background:linear-gradient(135deg,#1e40af,#0284c7);}
 .card-back{transform:rotateY(180deg);background:#0f172a;}
 
 .tx{background:#1f2937;padding:10px;border-radius:10px;margin-top:10px;}
 
-.bottomNav{position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;background:#021a35;padding:10px;}
+.bottomNav{
+position:fixed;bottom:0;width:100%;
+display:flex;justify-content:space-around;
+background:#021a35;padding:10px;
+}
 .bottomNav button{background:none;color:white;font-size:12px;}
 
 .hidden{display:none !important;}
+
+/* 🔥 PREMIUM ACCOUNT */
+.account-box{
+background:#0f172a;
+padding:12px;
+border-radius:10px;
+font-size:14px;
+margin-top:8px;
+letter-spacing:2px;
+color:#38bdf8;
+font-weight:bold;
+}
+
+/* 🔥 RECEIPT MODAL */
+#receiptModal{
+position:fixed;
+top:0;left:0;width:100%;height:100%;
+background:#0009;
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:999;
+}
+
+.receipt-box{
+background:#0f172a;
+padding:20px;
+border-radius:15px;
+width:90%;
+max-width:350px;
+text-align:center;
+}
 </style>
 </head>
 
@@ -35,7 +74,7 @@ body{margin:0;font-family:Arial;background:#020617;color:white;padding-bottom:80
 
 <div class="container">
 
-<!-- 🔥 TIME + GREETING -->
+<!-- TIME + GREETING -->
 <div style="margin-bottom:10px;">
   <div id="greeting" style="font-size:13px;color:#9ca3af;"></div>
   <div id="time" style="font-size:20px;font-weight:bold;"></div>
@@ -92,10 +131,12 @@ GBP: <span id="convertedGBP"></span>
 <button onclick="openPage('giftPage')">🎁 Gift Cards</button>
 </div>
 
-<!-- 🔥 ACCOUNT DETAILS (FIXED) -->
+<!-- ACCOUNT DETAILS -->
 <div class="card">
 <b>Account Details</b><br>
-Account No: <span id="accountNumberDisplay"></span><br>
+
+<div class="account-box" id="accountNumberDisplay"></div>
+
 IBAN: <span id="iban"></span><br>
 Routing: <span id="routingDisplay"></span><br>
 SWIFT: <span id="swift"></span><br>
@@ -119,7 +160,7 @@ Address: <span id="bankAddress"></span>
 
 </div>
 
-<!-- OTHER PAGES SAME -->
+<!-- PAGES -->
 <div id="paymentsPage" class="hidden">
 <div class="card">
 <b>Send Money</b>
@@ -163,6 +204,7 @@ Email: <span id="emailProfile"></span>
 
 </div>
 
+<!-- PIN -->
 <div id="pinModal" class="hidden" style="position:fixed;top:0;width:100%;height:100%;background:#0008;display:flex;justify-content:center;align-items:center;">
 <div class="card">
 <input id="pinInput" placeholder="Enter PIN">
@@ -171,6 +213,24 @@ Email: <span id="emailProfile"></span>
 </div>
 </div>
 
+<!-- 🔥 RECEIPT MODAL (CORRECT PLACE) -->
+<div id="receiptModal" class="hidden">
+<div class="receipt-box">
+<h3>Transaction Receipt</h3>
+
+<p id="rType"></p>
+<p id="rAmount"></p>
+<p id="rAccount"></p>
+<p id="rRef"></p>
+<p id="rDate"></p>
+
+<p style="color:#22c55e;">Status: Successful</p>
+
+<button onclick="closeReceipt()">Done</button>
+</div>
+</div>
+
+<!-- NAV -->
 <div class="bottomNav">
 <button onclick="openPage('homePage')">Home</button>
 <button onclick="openPage('paymentsPage')">Payments</button>
@@ -210,7 +270,7 @@ cvv.innerText = cvvVisible ? cvv.innerText : "***";
 }
 </script>
 
-<script type="module" src="dashboard.js?v=300"></script>
+<script type="module" src="dashboard.js?v=400"></script>
 
 </body>
 </html>

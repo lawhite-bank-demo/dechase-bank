@@ -2,19 +2,18 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
 getFirestore, doc, getDoc, updateDoc,
-collection, getDocs, addDoc, query,
-onSnapshot
+collection, addDoc, query, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-apiKey: "AIzaSyBDp6wmJMY8WPyKPNE-bvVSiz4AIUbn71U",
+apiKey: "AIzaSy...",
 authDomain: "dechase-bank.firebaseapp.com",
 projectId: "dechase-bank"
 });
 
 const db = getFirestore(app);
 
-// ===== GLOBAL STATE =====
+// ===== GLOBAL =====
 let balance = 0;
 let lastBalance = 0;
 let tx = [];
@@ -22,23 +21,21 @@ let frozen = false;
 let userRef = null;
 let hidden = false;
 
-// 🔥 LIVE RATE
-let eurToGbp = 0.86;
+// 🔥 ACCOUNT SYSTEM
+let tier = "Basic";
+let maxTransfer = 10000;
+
+function applyTier(t){
+tier = t;
+
+if(t === "Premium") maxTransfer = 50000;
+else if(t === "VIP") maxTransfer = 100000;
+else maxTransfer = 10000;
+}
 
 // ===== HELPERS =====
 function el(id){ return document.getElementById(id); }
-
-function setText(id,val){
-if(el(id)) el(id).innerText = val;
-}
-
-function getTx(data){
-return data.transactions
-? (Array.isArray(data.transactions)
-? [...data.transactions]
-: Object.values(data.transactions))
-: [];
-}
+function setText(id,val){ if(el(id)) el(id).innerText = val; }
 
 function genRef(){
 return "TRX-" + Math.floor(Math.random()*1000000000);
@@ -47,38 +44,6 @@ return "TRX-" + Math.floor(Math.random()*1000000000);
 function maskCard(num){
 let clean = (num || "").replace(/\s/g,'');
 return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
-}
-
-function formatAccountNumber(acc){
-return acc ? acc.toUpperCase() : "DCB-0000000";
-}
-
-// ===== 🔥 EXCHANGE RATE =====
-async function fetchRate(){
-try{
-const res = await fetch("https://api.exchangerate.host/latest?base=EUR&symbols=GBP");
-const data = await res.json();
-
-if(data?.rates?.GBP){
-eurToGbp = data.rates.GBP;
-updateWalletUI();
-}
-}catch(e){
-console.log("Rate fetch failed");
-}
-}
-setInterval(fetchRate,30000);
-
-// ===== WALLET UI =====
-function updateWalletUI(){
-setText("usdWallet","€" + balance.toLocaleString());
-setText("eurWallet","€" + balance.toLocaleString());
-
-const gbp = balance * eurToGbp;
-setText("gbpWallet","£" + gbp.toLocaleString());
-
-setText("convertedEUR","€" + balance.toLocaleString());
-setText("convertedGBP","£" + gbp.toLocaleString());
 }
 
 // ===== RECEIPT =====
@@ -93,98 +58,22 @@ setText("rRef", ref);
 setText("rDate", new Date().toLocaleString());
 }
 
-window.closeReceipt = ()=>{
-if(el("receiptModal")){
-el("receiptModal").classList.add("hidden");
-}
-};
-
-// ===== BALANCE ANIMATION =====
-function animateBalance(oldVal, newVal){
-const balEl = el("balance");
-if(!balEl) return;
-
-if(hidden){
-balEl.innerText = "••••••";
-return;
-}
-
-const duration = 600;
-const start = performance.now();
-
-function frame(time){
-let progress = Math.min((time - start)/duration,1);
-let val = oldVal + (newVal-oldVal)*progress;
-
-balEl.innerText = "€" + Math.floor(val).toLocaleString();
-
-if(progress < 1){
-requestAnimationFrame(frame);
-}else{
-balEl.innerText = "€" + newVal.toLocaleString();
-}
-}
-
-requestAnimationFrame(frame);
-
-balEl.style.color = newVal > oldVal ? "#22c55e" : "#ef4444";
-setTimeout(()=> balEl.style.color = "white", 500);
-}
+window.closeReceipt = ()=> el("receiptModal")?.classList.add("hidden");
 
 // ===== BALANCE =====
 function renderBalance(){
-animateBalance(lastBalance, balance);
-lastBalance = balance;
+const balEl = el("balance");
+if(!balEl) return;
 
-if(el("toggleBalance")){
-el("toggleBalance").innerText = hidden ? "👁 Show" : "🙈 Hide";
-}
-}
-
-// ===== TIME =====
-function updateTime(){
-const now = new Date();
-
-setText("time", now.toLocaleTimeString());
-setText("date", now.toDateString());
-
-let h = now.getHours();
-let greet = h < 12 ? "Good Morning" : h < 18 ? "Good Afternoon" : "Good Evening";
-
-setText("greeting", greet);
-}
-setInterval(updateTime,1000);
-
-// ===== TRANSACTIONS =====
-function renderTransactions(list){
-const box = el("transactions");
-if(!box) return;
-
-box.innerHTML = "";
-
-list.sort((a,b)=> new Date(b.date) - new Date(a.date));
-
-list.forEach(t=>{
-const amt = Number(t.amount || 0);
-
-box.innerHTML += `
-<div class="tx">
-<strong>${t.note}</strong><br>
-<small>Ref: ${t.reference}</small><br>
-<small>${new Date(t.date).toLocaleString()}</small><br>
-<b style="color:${amt>=0?"#22c55e":"#ef4444"}">
-${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
-</b>
-</div>`;
-});
+balEl.innerText = hidden ? "••••••" : "€" + balance.toLocaleString();
 }
 
 // ===== BILL =====
 window.payBill = async (name, amount)=>{
-if(frozen) return alert("Card is frozen");
 if(amount > balance) return alert("Insufficient funds");
 
 balance -= amount;
+
 const ref = genRef();
 
 tx.unshift({
@@ -197,18 +86,15 @@ date:new Date().toISOString()
 await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
 
 renderBalance();
-renderTransactions(tx);
-updateWalletUI();
-
-showReceipt(name + " Bill", amount, ref);
+showReceipt(name, amount, ref);
 };
 
 // ===== GIFT =====
 window.buyGiftCard = async (name, amount)=>{
-if(frozen) return alert("Card is frozen");
 if(amount > balance) return alert("Insufficient funds");
 
 balance -= amount;
+
 const ref = genRef();
 
 tx.unshift({
@@ -221,100 +107,118 @@ date:new Date().toISOString()
 await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
 
 renderBalance();
-renderTransactions(tx);
-updateWalletUI();
-
-showReceipt(name + " Gift Card", amount, ref);
+showReceipt(name, amount, ref);
 };
+
+// ===== 🔥 TRANSFER SYSTEM =====
+let pending = null;
+
+window.openPinModal = ()=>{
+const amount = parseFloat(el("amount").value);
+
+if(isNaN(amount) || amount <= 0){
+alert("Invalid amount");
+return;
+}
+
+// 🔥 LIMIT CHECK
+if(amount > maxTransfer){
+alert(`Your ${tier} account limit is €${maxTransfer}`);
+return;
+}
+
+// 🔥 LARGE TRANSFER → APPROVAL
+if(amount > 70000){
+pending = { amount, type:"approval" };
+alert("Large transfer requires admin approval");
+return;
+}
+
+// 🔥 MEDIUM → VERIFICATION
+if(amount > 20000){
+pending = { amount, type:"verify" };
+let code = prompt("Enter verification code (1234):");
+if(code !== "1234") return alert("Verification failed");
+}
+
+pending = { amount, type:"normal" };
+confirmTransfer();
+};
+
+async function confirmTransfer(){
+
+balance -= pending.amount;
+
+const ref = genRef();
+
+tx.unshift({
+amount:-pending.amount,
+note:"Transfer Sent",
+reference:ref,
+date:new Date().toISOString()
+});
+
+await updateDoc(userRef,{
+usdBalance: balance,
+transactions: tx
+});
+
+// 🔥 SAVE PENDING APPROVAL
+if(pending.type === "approval"){
+await addDoc(collection(db,"pendingTransfers"),{
+sender: userRef.id,
+amount: pending.amount,
+status:"pending"
+});
+alert("Transfer pending approval");
+return;
+}
+
+renderBalance();
+showReceipt("Transfer", pending.amount, ref);
+}
 
 // ===== INIT =====
 async function initDashboard(){
 
 const username = localStorage.getItem("user");
-const savedPassword = localStorage.getItem("password");
-
 if(!username) return location.replace("index.html");
 
 userRef = doc(db,"users",username);
 const snap = await getDoc(userRef);
-if(!snap.exists()) return location.replace("index.html");
 
 let data = snap.data();
 
-if(savedPassword && data.password !== savedPassword){
-localStorage.clear();
-location.replace("index.html");
-return;
-}
+// 🔥 APPLY TIER
+applyTier(data.accountTier || "Basic");
 
-// ===== STATE =====
-balance = Number(data.usdBalance ?? data.balance ?? 0);
-lastBalance = balance;
-tx = getTx(data);
-frozen = data.cardFrozen || false;
+// ===== STATE
+balance = Number(data.usdBalance ?? 0);
+tx = data.transactions || [];
 
-// ===== UI (FIXED WITH FALLBACKS) =====
-setText("welcome","Hi, Welcome " + (data.fullName || "User"));
-
-setText("routingDisplay", data.routingNumber || "021069021");
-setText("swift", data.swift || "DEUTDEFF");
-setText("bankAddress", data.bankAddress || "DeChase Bank, Austria");
-setText("iban", data.iban || "GB29NWBK60161331926819");
-
-setText("accountNumberDisplay", formatAccountNumber(data.accountNumber));
-
-setText("nameProfile", data.fullName || "User");
-setText("emailProfile", data.email || "dechasebank@gmail.com");
+// ===== UI
+setText("welcome","Hi, Welcome " + data.fullName);
+setText("accountNumberDisplay", data.accountNumber);
+setText("nameProfile", data.fullName);
+setText("emailProfile", data.email);
 
 setText("cardNumber", maskCard(data.cardNumber));
-setText("cardName", (data.fullName || "").toUpperCase());
-setText("cardExpiry", data.cardExpiry || "07/27");
-setText("cardCVV", data.cvv || "123");
+setText("cardName", data.fullName);
+setText("cardExpiry", data.cardExpiry);
+setText("cardCVV", data.cvv);
 
-// toggle
-if(el("toggleBalance")){
-el("toggleBalance").onclick = ()=>{
-hidden = !hidden;
-renderBalance();
-};
+// SHOW TIER
+if(el("nameProfile")){
+el("nameProfile").innerText += ` (${tier})`;
 }
 
-// freeze
-window.toggleCard = async ()=>{
-frozen = !frozen;
-await updateDoc(userRef,{ cardFrozen: frozen });
-if(el("cardBtn")){
-el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
-}
-};
-
-// render
 renderBalance();
-renderTransactions(tx);
-updateWalletUI();
-updateTime();
-fetchRate();
 
-// ===== REALTIME (FIXED TOO) =====
+// ===== REALTIME
 onSnapshot(userRef,(snap)=>{
 let d = snap.data();
-
-balance = Number(d.usdBalance ?? d.balance ?? 0);
-tx = getTx(d);
-
+balance = Number(d.usdBalance ?? 0);
 renderBalance();
-renderTransactions(tx);
-updateWalletUI();
-
-setText("accountNumberDisplay", formatAccountNumber(d.accountNumber));
-
-setText("routingDisplay", d.routingNumber || "021069021");
-setText("swift", d.swift || "DEUTDEFF");
-setText("bankAddress", d.bankAddress || "DeChase Bank, Austria");
-setText("iban", d.iban || "GB29NWBK60161331926819");
-
-setText("nameProfile", d.fullName || "User");
-setText("emailProfile", d.email || "dechasebank@gmail.com");
 });
 
 }

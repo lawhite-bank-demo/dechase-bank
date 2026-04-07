@@ -22,13 +22,14 @@ let hidden = false;
 let realCVV = "";
 
 // ===== ACCOUNT SYSTEM =====
-let tier = "Basic";
+let tier = "Tier 1";
 let maxTransfer = 10000;
 
 function applyTier(t){
 tier = t;
-if(t === "Premium") maxTransfer = 50000;
-else if(t === "VIP") maxTransfer = 100000;
+
+if(t === "Tier 2") maxTransfer = 50000;
+else if(t === "Tier 3") maxTransfer = 100000;
 else maxTransfer = 10000;
 }
 
@@ -239,8 +240,18 @@ renderAll();
 showReceipt("Transfer", amount, ref);
 };
 
-// ===== CVV (SYNC WITH HTML FLIP) =====
+// ===== CVV =====
 window._realCVV = "";
+
+// ===== PROFILE + LOGOUT =====
+window.logout = ()=>{
+localStorage.clear();
+location.replace("index.html");
+};
+
+window.contactSupport = ()=>{
+window.open("https://wa.me/13312016202");
+};
 
 // ===== INIT =====
 async function initDashboard(){
@@ -256,7 +267,7 @@ if(!snap.exists()) return location.replace("index.html");
 let data = snap.data();
 
 // ===== STATE =====
-applyTier(data.accountTier || "Basic");
+applyTier(data.accountTier || "Tier 1");
 balance = Number(data.usdBalance ?? 0);
 tx = getTx(data);
 frozen = data.cardFrozen || false;
@@ -268,7 +279,6 @@ setText("accountNumberDisplay", data.accountNumber || "DCB-0000000");
 setText("iban", data.iban || "DE89370400440532013000");
 setText("routingDisplay", data.routingNumber || "021069021");
 setText("swift", data.swift || "DEUTDEFF");
-setText("bankAddress", data.bankAddress || "DeChase Bank");
 
 setText("nameProfile", data.fullName || "User");
 setText("emailProfile", data.email || "email@mail.com");
@@ -277,10 +287,14 @@ setText("cardNumber", maskCard(data.cardNumber));
 setText("cardName", (data.fullName || "").toUpperCase());
 setText("cardExpiry", data.cardExpiry || "07/27");
 
-// ===== CVV FIX =====
+// ===== CVV =====
 realCVV = data.cvv || Math.floor(100 + Math.random()*900).toString();
 window._realCVV = realCVV;
 setText("cardCVV","***");
+
+// ===== TIER UI =====
+setText("accountTier","Account: " + tier);
+setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
 // ===== TOGGLE BALANCE =====
 const toggle = el("toggleBalance");
@@ -313,11 +327,9 @@ tx = getTx(d);
 
 renderAll();
 
-// 🔥 FIXED NO MORE "021..."
 setText("iban", d.iban || "DE89370400440532013000");
 setText("routingDisplay", d.routingNumber || "021069021");
 setText("swift", d.swift || "DEUTDEFF");
-setText("bankAddress", d.bankAddress || "DeChase Bank");
 });
 
 }

@@ -16,11 +16,7 @@ color:white;
 padding-bottom:80px;
 }
 
-.container{
-max-width:420px;
-margin:auto;
-padding:20px;
-}
+.container{max-width:420px;margin:auto;padding:20px;}
 
 .card{
 background:#111827;
@@ -34,165 +30,79 @@ background:linear-gradient(135deg,#2563eb,#0ea5e9);
 padding:25px;
 border-radius:20px;
 text-align:center;
-margin-bottom:15px;
 }
 
-.balance{
-font-size:28px;
-font-weight:bold;
-}
+.balance{font-size:28px;font-weight:bold;}
 
 /* CARD */
 .bank-card{perspective:1000px;margin-top:10px;}
-
-.card-inner{
-width:100%;
-height:180px;
-position:relative;
-transition:.6s;
-transform-style:preserve-3d;
-}
-
+.card-inner{width:100%;height:180px;position:relative;transition:.6s;transform-style:preserve-3d;}
 .card-inner.flipped{transform:rotateY(180deg);}
-
 .card-front,.card-back{
-position:absolute;
-width:100%;
-height:100%;
-border-radius:16px;
-padding:18px;
-backface-visibility:hidden;
+position:absolute;width:100%;height:100%;
+border-radius:16px;padding:18px;backface-visibility:hidden;
 }
 
 .card-front{
 background:linear-gradient(135deg,#1e3a8a,#2563eb,#0ea5e9);
-display:flex;
-flex-direction:column;
-justify-content:space-between;
+display:flex;flex-direction:column;justify-content:space-between;
 }
 
-.card-back{
-transform:rotateY(180deg);
-background:#0f172a;
-}
+.card-back{transform:rotateY(180deg);background:#0f172a;}
 
-.card-top{
-display:flex;
-justify-content:space-between;
-}
-
-.chip{
-width:50px;
-height:36px;
-border-radius:8px;
-background:linear-gradient(135deg,#e6c200,#bfa100);
-}
-
-.visa{
-font-weight:bold;
-letter-spacing:3px;
-font-size:18px;
-}
-
-.card-number{
-font-size:20px;
-letter-spacing:4px;
-font-weight:bold;
-}
-
-.card-bottom{
-display:flex;
-justify-content:space-between;
-}
-
-.label{
-font-size:10px;
-opacity:0.7;
-}
+.card-top{display:flex;justify-content:space-between;}
+.chip{width:50px;height:36px;border-radius:8px;background:linear-gradient(135deg,#e6c200,#bfa100);}
+.visa{font-weight:bold;letter-spacing:3px;font-size:18px;}
+.card-number{font-size:20px;letter-spacing:4px;font-weight:bold;}
+.card-bottom{display:flex;justify-content:space-between;}
+.label{font-size:10px;opacity:0.7;}
 
 .bottomNav{
-position:fixed;
-bottom:0;
-width:100%;
-display:flex;
-justify-content:space-around;
-background:#021a35;
-padding:10px;
+position:fixed;bottom:0;width:100%;
+display:flex;justify-content:space-around;
+background:#021a35;padding:10px;
 }
 
-.bottomNav button{
-background:none;
-color:white;
-font-size:12px;
-}
-
+.bottomNav button{background:none;color:white;font-size:12px;}
 .hidden{display:none !important;}
 
 .account-box{
-background:#0f172a;
-padding:12px;
-border-radius:10px;
-margin-top:8px;
-letter-spacing:2px;
-color:#38bdf8;
-font-weight:bold;
+background:#0f172a;padding:12px;border-radius:10px;
+margin-top:8px;letter-spacing:2px;color:#38bdf8;font-weight:bold;
 }
 
 input{
-padding:12px;
-border-radius:10px;
-border:none;
-background:#1f2937;
-color:white;
-margin-top:8px;
-width:100%;
+padding:12px;border-radius:10px;border:none;
+background:#1f2937;color:white;margin-top:8px;width:100%;
 }
 
 button{
-margin-top:10px;
-padding:12px;
-border:none;
-border-radius:10px;
+margin-top:10px;padding:12px;border:none;border-radius:10px;
 background:linear-gradient(135deg,#2563eb,#0ea5e9);
-color:white;
-font-weight:bold;
+color:white;font-weight:bold;
 }
 
 /* PROFILE */
 .profile-avatar{
-width:80px;
-height:80px;
-border-radius:50%;
+width:80px;height:80px;border-radius:50%;
 background:linear-gradient(135deg,#2563eb,#0ea5e9);
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:30px;
-margin:auto;
+display:flex;align-items:center;justify-content:center;
+font-size:30px;margin:auto;
 }
 
-.logout-btn{
-background:linear-gradient(135deg,#ef4444,#dc2626);
-}
+.logout-btn{background:linear-gradient(135deg,#ef4444,#dc2626);}
+.upgrade-btn{background:linear-gradient(135deg,#22c55e,#16a34a);}
 
 /* RECEIPT */
 #receiptModal{
-position:fixed;
-top:0;left:0;width:100%;height:100%;
-background:#0009;
-display:flex;
-justify-content:center;
-align-items:center;
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:#0009;display:flex;justify-content:center;align-items:center;
 z-index:999;
 }
 
 .receipt-box{
-background:#0f172a;
-padding:20px;
-border-radius:15px;
-width:90%;
-max-width:350px;
-text-align:center;
+background:#0f172a;padding:20px;border-radius:15px;
+width:90%;max-width:350px;text-align:center;
 }
 </style>
 </head>
@@ -307,6 +217,11 @@ Address: <span id="bankAddress"></span>
 <input id="routingNumber" placeholder="Routing Number">
 <input id="description" placeholder="Description">
 <input id="amount" placeholder="€0.00">
+
+<div style="font-size:12px;color:#facc15;margin-top:10px;">
+⚠ Transfers above your limit require verification
+</div>
+
 <button onclick="openPinModal()">Send Money</button>
 </div>
 </div>
@@ -331,16 +246,20 @@ Address: <span id="bankAddress"></span>
 </div>
 </div>
 
-<!-- 🔥 PREMIUM PROFILE -->
+<!-- PROFILE -->
 <div id="profilePage" class="hidden">
 
 <div class="card" style="text-align:center;">
 <div class="profile-avatar">👤</div>
 <h3 id="nameProfile"></h3>
 <p id="emailProfile" style="color:#9ca3af;"></p>
+
+<p id="accountTier">Tier: Basic</p>
+<p id="accountLimit">Limit: €10,000</p>
 </div>
 
 <div class="card">
+<button onclick="upgradeAccount()" class="upgrade-btn">⬆ Upgrade Account</button>
 <button onclick="contactSupport()">📞 Contact Support</button>
 <button onclick="logout()" class="logout-btn">🚪 Logout</button>
 </div>
@@ -374,6 +293,7 @@ Always log out after using a shared device.
 </div>
 
 <script>
+// ===== NAV =====
 function openPage(page){
 ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
 .forEach(p=>{
@@ -383,13 +303,41 @@ if(el) el.classList.add("hidden");
 
 document.getElementById(page).classList.remove("hidden");
 
-// hide welcome outside home
 const welcome = document.getElementById("homeWelcome");
 if(welcome){
 welcome.style.display = (page === "homePage") ? "block" : "none";
 }
 }
 
+// ===== ACCOUNT TIER =====
+let tier = localStorage.getItem("tier") || "Basic";
+
+function updateTierUI(){
+const tierEl = document.getElementById("accountTier");
+const limitEl = document.getElementById("accountLimit");
+
+let limit = 10000;
+
+if(tier === "Premium") limit = 50000;
+if(tier === "VIP") limit = 100000;
+
+if(tierEl) tierEl.innerText = "Tier: " + tier;
+if(limitEl) limitEl.innerText = "Limit: €" + limit.toLocaleString();
+}
+
+function upgradeAccount(){
+if(tier === "Basic") tier = "Premium";
+else if(tier === "Premium") tier = "VIP";
+else return alert("You already have highest tier");
+
+localStorage.setItem("tier", tier);
+updateTierUI();
+alert("Account upgraded to " + tier);
+}
+
+updateTierUI();
+
+// ===== OTHER FUNCTIONS =====
 function logout(){
 localStorage.clear();
 location.replace("index.html");
@@ -411,7 +359,7 @@ cvv.innerText = cvvVisible ? cvv.innerText : "***";
 }
 </script>
 
-<script type="module" src="dashboard.js?v=1100"></script>
+<script type="module" src="dashboard.js?v=1200"></script>
 
 </body>
 </html>

@@ -19,6 +19,7 @@ let tx = [];
 let frozen = false;
 let userRef = null;
 let hidden = false;
+let realCVV = "";
 
 // ===== ACCOUNT SYSTEM =====
 let tier = "Basic";
@@ -35,7 +36,8 @@ else maxTransfer = 10000;
 function el(id){ return document.getElementById(id); }
 
 function setText(id,val){
-if(el(id)) el(id).innerText = val;
+const e = el(id);
+if(e) e.innerText = val;
 }
 
 function genRef(){
@@ -59,8 +61,6 @@ return Array.isArray(data.transactions)
 let eurToGbp = 0.86;
 
 function updateWalletUI(){
-if(!el("usdWallet")) return;
-
 setText("usdWallet", "$" + balance.toLocaleString());
 setText("eurWallet", "€" + balance.toLocaleString());
 
@@ -73,9 +73,10 @@ setText("convertedGBP", "£" + gbp.toLocaleString());
 
 // ===== RECEIPT =====
 function showReceipt(type, amount, ref){
-if(!el("receiptModal")) return;
+const modal = el("receiptModal");
+if(!modal) return;
 
-el("receiptModal").classList.remove("hidden");
+modal.classList.remove("hidden");
 
 setText("rType", type);
 setText("rAmount", "€" + amount.toLocaleString());
@@ -89,16 +90,14 @@ el("receiptModal")?.classList.add("hidden");
 
 // ===== BALANCE =====
 function renderBalance(){
-const balEl = el("balance");
-if(!balEl) return;
+const bal = el("balance");
+if(!bal) return;
 
-balEl.innerText = hidden
+bal.innerText = hidden
 ? "••••••"
 : "€" + balance.toLocaleString();
 
-if(el("toggleBalance")){
-el("toggleBalance").innerText = hidden ? "👁 Show" : "🙈 Hide";
-}
+setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 
 // ===== TRANSACTIONS =====
@@ -128,6 +127,13 @@ ${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
 </b>
 </div>`;
 });
+}
+
+// ===== MASTER RENDER =====
+function renderAll(){
+renderBalance();
+renderTransactions();
+updateWalletUI();
 }
 
 // ===== BILL =====
@@ -178,7 +184,7 @@ showReceipt(name, amount, ref);
 window.openPinModal = async ()=>{
 if(frozen) return alert("Card is frozen");
 
-const amount = parseFloat(el("amount").value);
+const amount = parseFloat(el("amount")?.value);
 
 if(isNaN(amount) || amount <= 0){
 alert("Enter valid amount");
@@ -209,7 +215,7 @@ return;
 // verification
 if(amount > 20000){
 let code = prompt("Enter code (1234)");
-if(code !== "1234") return alert("Failed");
+if(code !== "1234") return alert("Verification failed");
 }
 
 // normal
@@ -233,12 +239,17 @@ renderAll();
 showReceipt("Transfer", amount, ref);
 };
 
-// ===== MASTER RENDER =====
-function renderAll(){
-renderBalance();
-renderTransactions();
-updateWalletUI();
+// ===== CVV TOGGLE (FIXED) =====
+window.revealCVV = ()=>{
+const cvvEl = el("cardCVV");
+if(!cvvEl) return;
+
+if(cvvEl.innerText === "***"){
+cvvEl.innerText = realCVV;
+}else{
+cvvEl.innerText = "***";
 }
+};
 
 // ===== INIT =====
 async function initDashboard(){
@@ -253,13 +264,13 @@ if(!snap.exists()) return location.replace("index.html");
 
 let data = snap.data();
 
-// state
+// ===== STATE =====
 applyTier(data.accountTier || "Basic");
 balance = Number(data.usdBalance ?? 0);
 tx = getTx(data);
 frozen = data.cardFrozen || false;
 
-// UI
+// ===== UI =====
 setText("welcome","Hi, Welcome " + (data.fullName || "User"));
 
 setText("accountNumberDisplay", data.accountNumber || "DCB-0000000");
@@ -274,23 +285,24 @@ setText("emailProfile", data.email || "email@mail.com");
 setText("cardNumber", maskCard(data.cardNumber));
 setText("cardName", (data.fullName || "").toUpperCase());
 setText("cardExpiry", data.cardExpiry || "07/27");
-const realCVV = data.cvv || Math.floor(100 + Math.random()*900).toString();
-setText("cardCVV", "***");
 
-window._realCVV = realCVV;
+// 🔥 FIXED CVV
+realCVV = data.cvv || Math.floor(100 + Math.random()*900).toString();
+setText("cardCVV","***");
 
 setText("accountTier","Tier: " + tier);
 setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
-// toggle
-if(el("toggleBalance")){
-el("toggleBalance").onclick = ()=>{
+// ===== TOGGLE BALANCE FIX =====
+const toggle = el("toggleBalance");
+if(toggle){
+toggle.onclick = ()=>{
 hidden = !hidden;
 renderBalance();
 };
 }
 
-// freeze
+// ===== FREEZE =====
 window.toggleCard = async ()=>{
 frozen = !frozen;
 await updateDoc(userRef,{ cardFrozen: frozen });
@@ -300,10 +312,10 @@ el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 }
 };
 
-// render
+// ===== RENDER =====
 renderAll();
 
-// realtime
+// ===== REALTIME =====
 onSnapshot(userRef,(snap)=>{
 let d = snap.data();
 

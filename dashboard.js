@@ -20,13 +20,12 @@ let frozen = false;
 let userRef = null;
 let hidden = false;
 
-// 🔥 ACCOUNT SYSTEM
+// ===== ACCOUNT SYSTEM =====
 let tier = "Basic";
 let maxTransfer = 10000;
 
 function applyTier(t){
 tier = t;
-
 if(t === "Premium") maxTransfer = 50000;
 else if(t === "VIP") maxTransfer = 100000;
 else maxTransfer = 10000;
@@ -48,31 +47,26 @@ let clean = (num || "").replace(/\s/g,'');
 return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
 }
 
-// ===== 🔥 FIXED TRANSACTION FORMAT =====
+// ===== SAFE TRANSACTIONS =====
 function getTx(data){
-return data.transactions
-? (Array.isArray(data.transactions)
+if(!data.transactions) return [];
+return Array.isArray(data.transactions)
 ? data.transactions
-: Object.values(data.transactions))
-: [];
+: Object.values(data.transactions);
 }
 
-// ===== 🔥 CURRENCY SYSTEM =====
+// ===== CURRENCY =====
 let eurToGbp = 0.86;
 
 function updateWalletUI(){
+if(!el("usdWallet")) return;
 
-// USD (main shown)
 setText("usdWallet", "$" + balance.toLocaleString());
-
-// EUR
 setText("eurWallet", "€" + balance.toLocaleString());
 
-// GBP conversion
 const gbp = balance * eurToGbp;
 setText("gbpWallet", "£" + gbp.toLocaleString());
 
-// converted section
 setText("convertedEUR", "€" + balance.toLocaleString());
 setText("convertedGBP", "£" + gbp.toLocaleString());
 }
@@ -98,7 +92,13 @@ function renderBalance(){
 const balEl = el("balance");
 if(!balEl) return;
 
-balEl.innerText = hidden ? "••••••" : "€" + balance.toLocaleString();
+balEl.innerText = hidden
+? "••••••"
+: "€" + balance.toLocaleString();
+
+if(el("toggleBalance")){
+el("toggleBalance").innerText = hidden ? "👁 Show" : "🙈 Hide";
+}
 }
 
 // ===== TRANSACTIONS =====
@@ -107,6 +107,11 @@ const box = el("transactions");
 if(!box) return;
 
 box.innerHTML = "";
+
+if(!tx || tx.length === 0){
+box.innerHTML = "<p style='opacity:0.6;'>No transactions yet</p>";
+return;
+}
 
 tx
 .sort((a,b)=> new Date(b.date) - new Date(a.date))
@@ -143,10 +148,7 @@ date:new Date().toISOString()
 
 await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
 
-renderBalance();
-renderTransactions();
-updateWalletUI();
-
+renderAll();
 showReceipt(name, amount, ref);
 };
 
@@ -168,14 +170,11 @@ date:new Date().toISOString()
 
 await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
 
-renderBalance();
-renderTransactions();
-updateWalletUI();
-
+renderAll();
 showReceipt(name, amount, ref);
 };
 
-// ===== TRANSFER SYSTEM =====
+// ===== TRANSFER =====
 window.openPinModal = async ()=>{
 if(frozen) return alert("Card is frozen");
 
@@ -186,40 +185,34 @@ alert("Enter valid amount");
 return;
 }
 
-// LIMIT
 if(amount > maxTransfer){
-alert(`Your ${tier} account limit is €${maxTransfer}`);
+alert(`Your ${tier} limit is €${maxTransfer}`);
 return;
 }
 
-// BALANCE
 if(amount > balance){
 alert("Insufficient funds");
 return;
 }
 
-// ADMIN APPROVAL
+// approval
 if(amount > 70000){
 await addDoc(collection(db,"pendingTransfers"),{
 sender: userRef.id,
-amount: amount,
+amount,
 status:"pending"
 });
-
-alert("Transfer submitted for approval");
+alert("Transfer pending approval");
 return;
 }
 
-// VERIFICATION
+// verification
 if(amount > 20000){
-let code = prompt("Enter verification code (1234)");
-if(code !== "1234"){
-alert("Verification failed");
-return;
-}
+let code = prompt("Enter code (1234)");
+if(code !== "1234") return alert("Failed");
 }
 
-// NORMAL TRANSFER
+// normal
 balance -= amount;
 
 const ref = genRef();
@@ -236,12 +229,16 @@ usdBalance: balance,
 transactions: tx
 });
 
+renderAll();
+showReceipt("Transfer", amount, ref);
+};
+
+// ===== MASTER RENDER =====
+function renderAll(){
 renderBalance();
 renderTransactions();
 updateWalletUI();
-
-showReceipt("Transfer", amount, ref);
-};
+}
 
 // ===== INIT =====
 async function initDashboard(){
@@ -256,20 +253,23 @@ if(!snap.exists()) return location.replace("index.html");
 
 let data = snap.data();
 
-// APPLY TIER
+// state
 applyTier(data.accountTier || "Basic");
-
-// STATE
 balance = Number(data.usdBalance ?? 0);
 tx = getTx(data);
 frozen = data.cardFrozen || false;
 
 // UI
 setText("welcome","Hi, Welcome " + (data.fullName || "User"));
+
 setText("accountNumberDisplay", data.accountNumber || "DCB-0000000");
+setText("iban", data.iban || "GB29NWBK60161331926819");
+setText("routingDisplay", data.routingNumber || "021069021");
+setText("swift", data.swift || "DEUTDEFF");
+setText("bankAddress", data.bankAddress || "DeChase Bank");
 
 setText("nameProfile", data.fullName || "User");
-setText("emailProfile", data.email || "dechasebank@gmail.com");
+setText("emailProfile", data.email || "email@mail.com");
 
 setText("cardNumber", maskCard(data.cardNumber));
 setText("cardName", (data.fullName || "").toUpperCase());
@@ -279,7 +279,15 @@ setText("cardCVV", data.cvv || "123");
 setText("accountTier","Tier: " + tier);
 setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
-// FREEZE
+// toggle
+if(el("toggleBalance")){
+el("toggleBalance").onclick = ()=>{
+hidden = !hidden;
+renderBalance();
+};
+}
+
+// freeze
 window.toggleCard = async ()=>{
 frozen = !frozen;
 await updateDoc(userRef,{ cardFrozen: frozen });
@@ -289,21 +297,22 @@ el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 }
 };
 
-// RENDER
-renderBalance();
-renderTransactions();
-updateWalletUI();
+// render
+renderAll();
 
-// REALTIME
+// realtime
 onSnapshot(userRef,(snap)=>{
 let d = snap.data();
 
 balance = Number(d.usdBalance ?? 0);
 tx = getTx(d);
 
-renderBalance();
-renderTransactions();
-updateWalletUI();
+renderAll();
+
+setText("iban", d.iban || "GB...");
+setText("routingDisplay", d.routingNumber || "021...");
+setText("swift", d.swift || "DEUT...");
+setText("bankAddress", d.bankAddress || "DeChase Bank");
 });
 
 }

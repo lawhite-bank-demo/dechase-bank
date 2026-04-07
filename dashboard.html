@@ -34,26 +34,62 @@ text-align:center;
 
 .balance{font-size:28px;font-weight:bold;}
 
-/* CARD */
+/* 🔥 PREMIUM CARD */
 .bank-card{perspective:1000px;margin-top:10px;}
-.card-inner{width:100%;height:180px;position:relative;transition:.6s;transform-style:preserve-3d;}
+.card-inner{width:100%;height:190px;position:relative;transition:.6s;transform-style:preserve-3d;}
 .card-inner.flipped{transform:rotateY(180deg);}
+
 .card-front,.card-back{
 position:absolute;width:100%;height:100%;
-border-radius:16px;padding:18px;backface-visibility:hidden;
+border-radius:18px;padding:18px;backface-visibility:hidden;
 }
 
 .card-front{
 background:linear-gradient(135deg,#1e3a8a,#2563eb,#0ea5e9);
 display:flex;flex-direction:column;justify-content:space-between;
+box-shadow:0 10px 25px rgba(0,0,0,0.5);
+position:relative;
+}
+
+/* reflection */
+.card-front::after{
+content:"";
+position:absolute;
+width:100%;height:100%;
+background:linear-gradient(120deg,transparent,rgba(255,255,255,0.2),transparent);
+opacity:0.3;
+border-radius:18px;
 }
 
 .card-back{transform:rotateY(180deg);background:#0f172a;}
 
-.card-top{display:flex;justify-content:space-between;}
-.chip{width:50px;height:36px;border-radius:8px;background:linear-gradient(135deg,#e6c200,#bfa100);}
+.card-top{display:flex;justify-content:space-between;align-items:center;}
+
+/* 🔥 REAL CHIP */
+.chip{
+width:52px;height:36px;border-radius:8px;
+background:linear-gradient(145deg,#facc15,#d4af37,#bfa100);
+position:relative;
+box-shadow:inset 0 2px 6px rgba(0,0,0,0.5),0 4px 8px rgba(0,0,0,0.4);
+}
+
+.chip::before{
+content:"";
+position:absolute;top:6px;left:8px;right:8px;bottom:6px;
+border:1px solid rgba(0,0,0,0.35);
+border-radius:4px;
+}
+
+.chip::after{
+content:"";
+position:absolute;top:50%;width:100%;height:2px;
+background:rgba(0,0,0,0.3);
+transform:translateY(-50%);
+}
+
 .visa{font-weight:bold;letter-spacing:3px;font-size:18px;}
 .card-number{font-size:20px;letter-spacing:4px;font-weight:bold;}
+
 .card-bottom{display:flex;justify-content:space-between;}
 .label{font-size:10px;opacity:0.7;}
 
@@ -131,6 +167,7 @@ width:90%;max-width:350px;text-align:center;
 <div id="toggleBalance">👁 Hide</div>
 </div>
 
+<!-- CARD -->
 <div class="card">
 <div class="bank-card" onclick="flipCard()">
 <div class="card-inner" id="cardInner">
@@ -157,7 +194,7 @@ width:90%;max-width:350px;text-align:center;
 
 <div class="card-back">
 <div style="margin-top:40px;text-align:right;">
-CVV: <span id="cardCVV"></span>
+CVV: <span id="cardCVV">***</span>
 </div>
 </div>
 
@@ -198,18 +235,13 @@ Address: <span id="bankAddress"></span>
 </div>
 
 <div class="card">
-<b>Pending Transfers</b>
-<div id="pendingTransactions"></div>
-</div>
-
-<div class="card">
 <b>Transactions</b>
 <div id="transactions"></div>
 </div>
 
 </div>
 
-<!-- PAYMENTS -->
+<!-- PAGES -->
 <div id="paymentsPage" class="hidden">
 <div class="card">
 <b>💸 Send Money</b>
@@ -217,16 +249,10 @@ Address: <span id="bankAddress"></span>
 <input id="routingNumber" placeholder="Routing Number">
 <input id="description" placeholder="Description">
 <input id="amount" placeholder="€0.00">
-
-<div style="font-size:12px;color:#facc15;margin-top:10px;">
-⚠ Transfers above your limit require verification
-</div>
-
 <button onclick="openPinModal()">Send Money</button>
 </div>
 </div>
 
-<!-- BILLS -->
 <div id="billsPage" class="hidden">
 <div class="card">
 <b>Pay Bills</b>
@@ -236,7 +262,6 @@ Address: <span id="bankAddress"></span>
 </div>
 </div>
 
-<!-- GIFT -->
 <div id="giftPage" class="hidden">
 <div class="card">
 <b>Gift Cards</b>
@@ -246,40 +271,18 @@ Address: <span id="bankAddress"></span>
 </div>
 </div>
 
-<!-- PROFILE -->
 <div id="profilePage" class="hidden">
-
 <div class="card" style="text-align:center;">
 <div class="profile-avatar">👤</div>
 <h3 id="nameProfile"></h3>
-<p id="emailProfile" style="color:#9ca3af;"></p>
-
-<p id="accountTier">Tier: Basic</p>
-<p id="accountLimit">Limit: €10,000</p>
+<p id="emailProfile"></p>
+<p id="accountTier"></p>
+<p id="accountLimit"></p>
 </div>
 
 <div class="card">
-<button onclick="upgradeAccount()" class="upgrade-btn">⬆ Upgrade Account</button>
 <button onclick="contactSupport()">📞 Contact Support</button>
 <button onclick="logout()" class="logout-btn">🚪 Logout</button>
-</div>
-
-<div class="card" style="font-size:13px;color:#9ca3af;text-align:center;">
-🔒 Your account is protected with bank-level security.<br><br>
-Always log out after using a shared device.
-</div>
-
-</div>
-
-<!-- RECEIPT -->
-<div id="receiptModal" class="hidden">
-<div class="receipt-box">
-<h3>Transaction Receipt</h3>
-<p id="rType"></p>
-<p id="rAmount"></p>
-<p id="rRef"></p>
-<p id="rDate"></p>
-<button onclick="closeReceipt()">Done</button>
 </div>
 </div>
 
@@ -293,51 +296,16 @@ Always log out after using a shared device.
 </div>
 
 <script>
-// ===== NAV =====
 function openPage(page){
 ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
-.forEach(p=>{
-let el = document.getElementById(p);
-if(el) el.classList.add("hidden");
-});
+.forEach(p=>document.getElementById(p)?.classList.add("hidden"));
 
 document.getElementById(page).classList.remove("hidden");
 
-const welcome = document.getElementById("homeWelcome");
-if(welcome){
-welcome.style.display = (page === "homePage") ? "block" : "none";
-}
+document.getElementById("homeWelcome").style.display =
+(page === "homePage") ? "block" : "none";
 }
 
-// ===== ACCOUNT TIER =====
-let tier = localStorage.getItem("tier") || "Basic";
-
-function updateTierUI(){
-const tierEl = document.getElementById("accountTier");
-const limitEl = document.getElementById("accountLimit");
-
-let limit = 10000;
-
-if(tier === "Premium") limit = 50000;
-if(tier === "VIP") limit = 100000;
-
-if(tierEl) tierEl.innerText = "Tier: " + tier;
-if(limitEl) limitEl.innerText = "Limit: €" + limit.toLocaleString();
-}
-
-function upgradeAccount(){
-if(tier === "Basic") tier = "Premium";
-else if(tier === "Premium") tier = "VIP";
-else return alert("You already have highest tier");
-
-localStorage.setItem("tier", tier);
-updateTierUI();
-alert("Account upgraded to " + tier);
-}
-
-updateTierUI();
-
-// ===== OTHER FUNCTIONS =====
 function logout(){
 localStorage.clear();
 location.replace("index.html");
@@ -350,16 +318,10 @@ window.open("https://wa.me/13312016202");
 function flipCard(){
 document.getElementById("cardInner").classList.toggle("flipped");
 }
-
-let cvvVisible = false;
-function revealCVV(){
-const cvv = document.getElementById("cardCVV");
-cvvVisible = !cvvVisible;
-cvv.innerText = cvvVisible ? cvv.innerText : "***";
-}
 </script>
 
-<script type="module" src="dashboard.js?v=1200"></script>
+<!-- 🔥 CACHE FIX -->
+<script type="module" src="dashboard.js?v=3000"></script>
 
 </body>
 </html>

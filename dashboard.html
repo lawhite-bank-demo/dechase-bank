@@ -40,10 +40,9 @@ margin-bottom:15px;
 .balance{
 font-size:28px;
 font-weight:bold;
-transition:0.3s;
 }
 
-/* 🔥 PREMIUM CARD */
+/* CARD */
 .bank-card{perspective:1000px;margin-top:10px;}
 
 .card-inner{
@@ -70,7 +69,6 @@ background:linear-gradient(135deg,#1e3a8a,#2563eb,#0ea5e9);
 display:flex;
 flex-direction:column;
 justify-content:space-between;
-box-shadow:0 10px 25px rgba(0,0,0,0.5);
 }
 
 .card-back{
@@ -78,62 +76,31 @@ transform:rotateY(180deg);
 background:#0f172a;
 }
 
-/* CARD DETAILS */
 .card-top{
 display:flex;
 justify-content:space-between;
-align-items:center;
 }
 
-/* 🔥 REALISTIC CHIP */
 .chip{
 width:50px;
 height:36px;
 border-radius:8px;
 background:linear-gradient(135deg,#e6c200,#bfa100);
 position:relative;
-box-shadow:
-inset 0 0 6px rgba(0,0,0,0.5),
-0 2px 6px rgba(0,0,0,0.3);
 }
 
-.chip::before{
-content:"";
-position:absolute;
-top:6px;
-left:8px;
-right:8px;
-bottom:6px;
-border:1px solid rgba(0,0,0,0.3);
-border-radius:4px;
-}
-
-.chip::after{
-content:"";
-position:absolute;
-top:50%;
-left:0;
-width:100%;
-height:2px;
-background:rgba(0,0,0,0.25);
-transform:translateY(-50%);
-}
-
-/* VISA TEXT */
 .visa{
 font-weight:bold;
 letter-spacing:3px;
 font-size:18px;
 }
 
-/* NUMBER */
 .card-number{
 font-size:20px;
 letter-spacing:4px;
 font-weight:bold;
 }
 
-/* BOTTOM */
 .card-bottom{
 display:flex;
 justify-content:space-between;
@@ -142,13 +109,6 @@ justify-content:space-between;
 .label{
 font-size:10px;
 opacity:0.7;
-}
-
-.tx{
-background:#1f2937;
-padding:10px;
-border-radius:10px;
-margin-top:10px;
 }
 
 .bottomNav{
@@ -173,20 +133,37 @@ font-size:12px;
 background:#0f172a;
 padding:12px;
 border-radius:10px;
-font-size:14px;
 margin-top:8px;
 letter-spacing:2px;
 color:#38bdf8;
 font-weight:bold;
 }
 
+/* 🔥 INPUT STYLE */
+input{
+padding:12px;
+border-radius:10px;
+border:none;
+background:#1f2937;
+color:white;
+margin-top:8px;
+width:100%;
+}
+
+button{
+margin-top:10px;
+padding:12px;
+border:none;
+border-radius:10px;
+background:linear-gradient(135deg,#2563eb,#0ea5e9);
+color:white;
+font-weight:bold;
+}
+
 /* RECEIPT */
 #receiptModal{
 position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
+top:0;left:0;width:100%;height:100%;
 background:#0009;
 display:flex;
 justify-content:center;
@@ -210,14 +187,15 @@ text-align:center;
 <div class="container">
 
 <!-- TIME -->
-<div style="margin-bottom:10px;">
-<div id="greeting" style="font-size:13px;color:#9ca3af;"></div>
-<div id="time" style="font-size:20px;font-weight:bold;"></div>
-<div id="date" style="font-size:12px;color:#9ca3af;"></div>
+<div>
+<div id="greeting"></div>
+<div id="time"></div>
+<div id="date"></div>
 </div>
 
 <h3 id="welcome"></h3>
 
+<!-- HOME -->
 <div id="homePage">
 
 <div class="balance-card">
@@ -226,12 +204,12 @@ text-align:center;
 <div id="toggleBalance">👁 Hide</div>
 </div>
 
+<!-- CARD -->
 <div class="card">
 <div class="bank-card" onclick="flipCard()">
 <div class="card-inner" id="cardInner">
 
 <div class="card-front">
-
 <div class="card-top">
 <div class="chip"></div>
 <div class="visa">VISA</div>
@@ -244,13 +222,11 @@ text-align:center;
 <div class="label">CARD HOLDER</div>
 <div id="cardName"></div>
 </div>
-
 <div>
 <div class="label">EXPIRES</div>
 <div id="cardExpiry"></div>
 </div>
 </div>
-
 </div>
 
 <div class="card-back">
@@ -266,22 +242,18 @@ CVV: <span id="cardCVV"></span>
 <button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
 </div>
 
-<!-- REST UNCHANGED -->
-<!-- (I kept everything exactly same below to avoid bugs) -->
-
+<!-- 🔥 WALLET WITH USD -->
 <div class="card">
 <b>🌍 Multi Currency Wallet</b>
-<div style="margin-top:10px;">
-<div>EUR: <span id="usdWallet"></span></div>
-<div>Converted EUR: <span id="eurWallet"></span></div>
+<div>USD: <span id="usdWallet"></span></div>
+<div>EUR: <span id="eurWallet"></span></div>
 <div>GBP: <span id="gbpWallet"></span></div>
-</div>
 </div>
 
 <div class="card">
-<b>💱 Converted Balance</b><br>
-EUR: <span id="convertedEUR"></span><br>
-GBP: <span id="convertedGBP"></span>
+<b>💱 Converted Balance</b>
+<div>EUR: <span id="convertedEUR"></span></div>
+<div>GBP: <span id="convertedGBP"></span></div>
 </div>
 
 <div class="card">
@@ -291,7 +263,7 @@ GBP: <span id="convertedGBP"></span>
 </div>
 
 <div class="card">
-<b>Account Details</b><br>
+<b>Account Details</b>
 <div class="account-box" id="accountNumberDisplay"></div>
 IBAN: <span id="iban"></span><br>
 Routing: <span id="routingDisplay"></span><br>
@@ -311,11 +283,85 @@ Address: <span id="bankAddress"></span>
 
 </div>
 
-<!-- NAV + SCRIPT SAME -->
+<!-- 🔥 PREMIUM PAYMENTS PAGE -->
+<div id="paymentsPage" class="hidden">
+<div class="card">
+<b>💸 Send Money</b>
+
+<input id="accountNumber" placeholder="Recipient Account">
+<input id="routingNumber" placeholder="Routing Number">
+<input id="description" placeholder="Description">
+
+<div style="background:#020617;padding:15px;border-radius:12px;text-align:center;">
+<input id="amount" placeholder="€0.00" style="font-size:22px;text-align:center;">
+</div>
+
+<button onclick="openPinModal()">Send Money</button>
+
+</div>
+</div>
+
+<!-- BILLS -->
+<div id="billsPage" class="hidden">
+<div class="card">
+<b>Pay Bills</b>
+<button onclick="payBill('Electricity',120)">Electricity €120</button>
+<button onclick="payBill('Netflix',15)">Netflix €15</button>
+<button onclick="payBill('Internet',60)">Internet €60</button>
+</div>
+</div>
+
+<!-- GIFT -->
+<div id="giftPage" class="hidden">
+<div class="card">
+<b>Gift Cards</b>
+<button onclick="buyGiftCard('Amazon',100)">Amazon €100</button>
+<button onclick="buyGiftCard('Apple',50)">Apple €50</button>
+<button onclick="buyGiftCard('Steam',25)">Steam €25</button>
+</div>
+</div>
+
+<!-- PROFILE -->
+<div id="profilePage" class="hidden">
+<div class="card">
+Name: <span id="nameProfile"></span><br>
+Email: <span id="emailProfile"></span>
+</div>
+
+<div class="card">
+<button onclick="contactSupport()">📞 Contact Support</button>
+<button onclick="logout()">🚪 Logout</button>
+</div>
+</div>
+
+<!-- RECEIPT -->
+<div id="receiptModal" class="hidden">
+<div class="receipt-box">
+<h3>Transaction Receipt</h3>
+<p id="rType"></p>
+<p id="rAmount"></p>
+<p id="rRef"></p>
+<p id="rDate"></p>
+<button onclick="closeReceipt()">Done</button>
+</div>
+</div>
+
+<!-- NAV -->
+<div class="bottomNav">
+<button onclick="openPage('homePage')">Home</button>
+<button onclick="openPage('paymentsPage')">Payments</button>
+<button onclick="openPage('billsPage')">Bills</button>
+<button onclick="openPage('giftPage')">Gift</button>
+<button onclick="openPage('profilePage')">Profile</button>
+</div>
+
 <script>
 function openPage(page){
 ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
-.forEach(p=>document.getElementById(p).classList.add("hidden"));
+.forEach(p=>{
+let el = document.getElementById(p);
+if(el) el.classList.add("hidden");
+});
 document.getElementById(page).classList.remove("hidden");
 }
 
@@ -329,20 +375,18 @@ window.open("https://wa.me/13312016202");
 }
 
 function flipCard(){
-const card = document.getElementById("cardInner");
-if(card) card.classList.toggle("flipped");
+document.getElementById("cardInner").classList.toggle("flipped");
 }
 
 let cvvVisible = false;
 function revealCVV(){
 const cvv = document.getElementById("cardCVV");
-if(!cvv) return;
 cvvVisible = !cvvVisible;
 cvv.innerText = cvvVisible ? cvv.innerText : "***";
 }
 </script>
 
-<script type="module" src="dashboard.js?v=800"></script>
+<script type="module" src="dashboard.js?v=1000"></script>
 
 </body>
 </html>

@@ -32,17 +32,14 @@ text-align:center;
 
 .balance{font-size:28px;font-weight:bold;}
 
-/* CARD */
 .bank-card{perspective:1000px;margin-top:10px;}
-
 .card-inner{
 width:100%;
 height:180px;
 position:relative;
-transition:0.6s;
+transition:.6s;
 transform-style:preserve-3d;
 }
-
 .card-inner.flipped{transform:rotateY(180deg);}
 
 .card-front,.card-back{
@@ -71,7 +68,6 @@ width:50px;height:36px;border-radius:8px;
 background:linear-gradient(135deg,#e6c200,#bfa100);
 }
 
-.card-number{font-size:20px;letter-spacing:4px;}
 .card-bottom{display:flex;justify-content:space-between;}
 
 .bottomNav{
@@ -80,15 +76,13 @@ display:flex;justify-content:space-around;
 background:#021a35;padding:10px;
 }
 
-.bottomNav button{
-background:none;color:white;font-size:12px;
-}
+.bottomNav button{background:none;color:white;font-size:12px;}
 
 .hidden{display:none;}
 
 input{
 padding:12px;border-radius:10px;border:none;
-background:#1f2937;color:white;margin-top:8px;width:100%;
+background:#1f2937;color:white;margin-top:10px;width:100%;
 }
 
 button{
@@ -103,7 +97,7 @@ color:white;font-weight:bold;
 
 <div class="container">
 
-<!-- ✅ TIME + DATE BACK -->
+<!-- TIME -->
 <div>
 <div id="greeting"></div>
 <div id="time"></div>
@@ -121,7 +115,6 @@ color:white;font-weight:bold;
 <div id="toggleBalance">👁 Hide</div>
 </div>
 
-<!-- CARD -->
 <div class="card">
 <div class="bank-card" onclick="flipCard()">
 <div class="card-inner" id="cardInner">
@@ -132,7 +125,7 @@ color:white;font-weight:bold;
 <div>VISA</div>
 </div>
 
-<div id="cardNumber" class="card-number"></div>
+<div id="cardNumber"></div>
 
 <div class="card-bottom">
 <div>
@@ -147,7 +140,7 @@ color:white;font-weight:bold;
 </div>
 
 <div class="card-back">
-<div style="margin-top:40px;text-align:right;font-size:18px;">
+<div style="margin-top:40px;text-align:right;">
 CVV: <span id="cardCVV">***</span>
 </div>
 </div>
@@ -158,7 +151,6 @@ CVV: <span id="cardCVV">***</span>
 <button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
 </div>
 
-<!-- WALLET -->
 <div class="card">
 <b>🌍 Multi Currency Wallet</b>
 <div>USD: <span id="usdWallet"></span></div>
@@ -193,20 +185,19 @@ SWIFT: <span id="swift"></span>
 
 </div>
 
-<!-- PAYMENTS -->
+<!-- SEND MONEY -->
 <div id="paymentsPage" class="hidden">
 <div class="card">
-<b>Send Money</b>
-<input id="accountNumber">
-<input id="amount">
-<button onclick="openPinModal()">Send</button>
+<b>💸 Send Money</b>
+<input id="accountNumber" placeholder="Recipient Account">
+<input id="amount" placeholder="€ Amount">
+<button onclick="openPinModal()">Send Money</button>
 </div>
 </div>
 
 <!-- BILLS -->
 <div id="billsPage" class="hidden">
 <div class="card">
-<b>Pay Bills</b>
 <button onclick="payBill('Electricity',120)">Electricity</button>
 <button onclick="payBill('Netflix',15)">Netflix</button>
 </div>
@@ -215,7 +206,6 @@ SWIFT: <span id="swift"></span>
 <!-- GIFT -->
 <div id="giftPage" class="hidden">
 <div class="card">
-<b>Gift Cards</b>
 <button onclick="buyGiftCard('Amazon',100)">Amazon</button>
 <button onclick="buyGiftCard('Steam',25)">Steam</button>
 </div>
@@ -236,7 +226,6 @@ SWIFT: <span id="swift"></span>
 
 </div>
 
-<!-- NAV -->
 <div class="bottomNav">
 <button onclick="openPage('homePage')">Home</button>
 <button onclick="openPage('paymentsPage')">Payments</button>
@@ -246,53 +235,40 @@ SWIFT: <span id="swift"></span>
 </div>
 
 <script>
-// NAV
 function openPage(page){
 ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
-.forEach(p=>{
-const el=document.getElementById(p);
-if(el) el.classList.add("hidden");
-});
+.forEach(p=>document.getElementById(p).classList.add("hidden"));
 document.getElementById(page).classList.remove("hidden");
 }
 
-// ✅ FIXED CARD FLIP + CVV
 function flipCard(){
 const card = document.getElementById("cardInner");
 const cvv = document.getElementById("cardCVV");
 
 card.classList.toggle("flipped");
 
-if(card.classList.contains("flipped")){
-cvv.innerText = window._realCVV || "123";
-}else{
-cvv.innerText = "***";
-}
+cvv.innerText = card.classList.contains("flipped")
+? window._realCVV
+: "***";
 }
 
-// ✅ TIME + DATE FIX
 function updateTime(){
 const now = new Date();
-
 document.getElementById("time").innerText = now.toLocaleTimeString();
 document.getElementById("date").innerText = now.toDateString();
-
-let h = now.getHours();
-let greet = h < 12 ? "Good Morning" : h < 18 ? "Good Afternoon" : "Good Evening";
-
-document.getElementById("greeting").innerText = greet;
+document.getElementById("greeting").innerText =
+now.getHours()<12?"Good Morning":
+now.getHours()<18?"Good Afternoon":"Good Evening";
 }
-
 setInterval(updateTime,1000);
 updateTime();
 
-// ✅ CONTACT BACK
 function contactSupport(){
 window.open("https://wa.me/13312016202");
 }
 </script>
 
-<script type="module" src="dashboard.js?v=FINAL3"></script>
+<script type="module" src="dashboard.js?v=FINAL-CLEAN"></script>
 
 </body>
 </html>

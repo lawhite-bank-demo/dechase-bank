@@ -239,16 +239,15 @@ renderAll();
 showReceipt("Transfer", amount, ref);
 };
 
-// ===== CVV TOGGLE (FIXED) =====
+// ===== 🔥 CVV FIX (WORKS WITH FLIP + BUTTON) =====
 window.revealCVV = ()=>{
 const cvvEl = el("cardCVV");
 if(!cvvEl) return;
 
-if(cvvEl.innerText === "***"){
-cvvEl.innerText = realCVV;
-}else{
-cvvEl.innerText = "***";
-}
+cvvEl.innerText =
+cvvEl.innerText === "***"
+? realCVV
+: "***";
 };
 
 // ===== INIT =====
@@ -286,14 +285,14 @@ setText("cardNumber", maskCard(data.cardNumber));
 setText("cardName", (data.fullName || "").toUpperCase());
 setText("cardExpiry", data.cardExpiry || "07/27");
 
-// 🔥 FIXED CVV
+// ===== CVV =====
 realCVV = data.cvv || Math.floor(100 + Math.random()*900).toString();
 setText("cardCVV","***");
 
 setText("accountTier","Tier: " + tier);
 setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
-// ===== TOGGLE BALANCE FIX =====
+// ===== TOGGLE BALANCE =====
 const toggle = el("toggleBalance");
 if(toggle){
 toggle.onclick = ()=>{

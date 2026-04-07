@@ -86,7 +86,6 @@ width:50px;
 height:36px;
 border-radius:8px;
 background:linear-gradient(135deg,#e6c200,#bfa100);
-position:relative;
 }
 
 .visa{
@@ -139,7 +138,6 @@ color:#38bdf8;
 font-weight:bold;
 }
 
-/* 🔥 INPUT STYLE */
 input{
 padding:12px;
 border-radius:10px;
@@ -158,6 +156,23 @@ border-radius:10px;
 background:linear-gradient(135deg,#2563eb,#0ea5e9);
 color:white;
 font-weight:bold;
+}
+
+/* PROFILE */
+.profile-avatar{
+width:80px;
+height:80px;
+border-radius:50%;
+background:linear-gradient(135deg,#2563eb,#0ea5e9);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:30px;
+margin:auto;
+}
+
+.logout-btn{
+background:linear-gradient(135deg,#ef4444,#dc2626);
 }
 
 /* RECEIPT */
@@ -193,7 +208,9 @@ text-align:center;
 <div id="date"></div>
 </div>
 
+<div id="homeWelcome">
 <h3 id="welcome"></h3>
+</div>
 
 <!-- HOME -->
 <div id="homePage">
@@ -204,7 +221,6 @@ text-align:center;
 <div id="toggleBalance">👁 Hide</div>
 </div>
 
-<!-- CARD -->
 <div class="card">
 <div class="bank-card" onclick="flipCard()">
 <div class="card-inner" id="cardInner">
@@ -242,7 +258,7 @@ CVV: <span id="cardCVV"></span>
 <button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
 </div>
 
-<!-- 🔥 WALLET WITH USD -->
+<!-- WALLET -->
 <div class="card">
 <b>🌍 Multi Currency Wallet</b>
 <div>USD: <span id="usdWallet"></span></div>
@@ -283,21 +299,15 @@ Address: <span id="bankAddress"></span>
 
 </div>
 
-<!-- 🔥 PREMIUM PAYMENTS PAGE -->
+<!-- PAYMENTS -->
 <div id="paymentsPage" class="hidden">
 <div class="card">
 <b>💸 Send Money</b>
-
 <input id="accountNumber" placeholder="Recipient Account">
 <input id="routingNumber" placeholder="Routing Number">
 <input id="description" placeholder="Description">
-
-<div style="background:#020617;padding:15px;border-radius:12px;text-align:center;">
-<input id="amount" placeholder="€0.00" style="font-size:22px;text-align:center;">
-</div>
-
+<input id="amount" placeholder="€0.00">
 <button onclick="openPinModal()">Send Money</button>
-
 </div>
 </div>
 
@@ -321,17 +331,25 @@ Address: <span id="bankAddress"></span>
 </div>
 </div>
 
-<!-- PROFILE -->
+<!-- 🔥 PREMIUM PROFILE -->
 <div id="profilePage" class="hidden">
-<div class="card">
-Name: <span id="nameProfile"></span><br>
-Email: <span id="emailProfile"></span>
+
+<div class="card" style="text-align:center;">
+<div class="profile-avatar">👤</div>
+<h3 id="nameProfile"></h3>
+<p id="emailProfile" style="color:#9ca3af;"></p>
 </div>
 
 <div class="card">
 <button onclick="contactSupport()">📞 Contact Support</button>
-<button onclick="logout()">🚪 Logout</button>
+<button onclick="logout()" class="logout-btn">🚪 Logout</button>
 </div>
+
+<div class="card" style="font-size:13px;color:#9ca3af;text-align:center;">
+🔒 Your account is protected with bank-level security.<br><br>
+Always log out after using a shared device.
+</div>
+
 </div>
 
 <!-- RECEIPT -->
@@ -362,7 +380,14 @@ function openPage(page){
 let el = document.getElementById(p);
 if(el) el.classList.add("hidden");
 });
+
 document.getElementById(page).classList.remove("hidden");
+
+// hide welcome outside home
+const welcome = document.getElementById("homeWelcome");
+if(welcome){
+welcome.style.display = (page === "homePage") ? "block" : "none";
+}
 }
 
 function logout(){
@@ -386,7 +411,7 @@ cvv.innerText = cvvVisible ? cvv.innerText : "***";
 }
 </script>
 
-<script type="module" src="dashboard.js?v=1000"></script>
+<script type="module" src="dashboard.js?v=1100"></script>
 
 </body>
 </html>

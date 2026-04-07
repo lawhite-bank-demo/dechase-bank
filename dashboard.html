@@ -32,7 +32,7 @@ text-align:center;
 
 .balance{font-size:28px;font-weight:bold;}
 
-/* CARD FIX */
+/* CARD */
 .bank-card{perspective:1000px;margin-top:10px;}
 
 .card-inner{
@@ -103,6 +103,7 @@ color:white;font-weight:bold;
 
 <div class="container">
 
+<!-- ✅ TIME + DATE BACK -->
 <div>
 <div id="greeting"></div>
 <div id="time"></div>
@@ -120,6 +121,7 @@ color:white;font-weight:bold;
 <div id="toggleBalance">👁 Hide</div>
 </div>
 
+<!-- CARD -->
 <div class="card">
 <div class="bank-card" onclick="flipCard()">
 <div class="card-inner" id="cardInner">
@@ -145,7 +147,7 @@ color:white;font-weight:bold;
 </div>
 
 <div class="card-back">
-<div style="margin-top:40px;text-align:right;">
+<div style="margin-top:40px;text-align:right;font-size:18px;">
 CVV: <span id="cardCVV">***</span>
 </div>
 </div>
@@ -156,6 +158,7 @@ CVV: <span id="cardCVV">***</span>
 <button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
 </div>
 
+<!-- WALLET -->
 <div class="card">
 <b>🌍 Multi Currency Wallet</b>
 <div>USD: <span id="usdWallet"></span></div>
@@ -226,6 +229,7 @@ SWIFT: <span id="swift"></span>
 </div>
 
 <div class="card">
+<button onclick="contactSupport()">Contact Support</button>
 <button onclick="logout()">Logout</button>
 </div>
 </div>
@@ -242,13 +246,17 @@ SWIFT: <span id="swift"></span>
 </div>
 
 <script>
+// NAV
 function openPage(page){
 ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
-.forEach(p=>document.getElementById(p).classList.add("hidden"));
+.forEach(p=>{
+const el=document.getElementById(p);
+if(el) el.classList.add("hidden");
+});
 document.getElementById(page).classList.remove("hidden");
 }
 
-/* ✅ FIXED FLIP + CVV */
+// ✅ FIXED CARD FLIP + CVV
 function flipCard(){
 const card = document.getElementById("cardInner");
 const cvv = document.getElementById("cardCVV");
@@ -261,9 +269,30 @@ cvv.innerText = window._realCVV || "123";
 cvv.innerText = "***";
 }
 }
+
+// ✅ TIME + DATE FIX
+function updateTime(){
+const now = new Date();
+
+document.getElementById("time").innerText = now.toLocaleTimeString();
+document.getElementById("date").innerText = now.toDateString();
+
+let h = now.getHours();
+let greet = h < 12 ? "Good Morning" : h < 18 ? "Good Afternoon" : "Good Evening";
+
+document.getElementById("greeting").innerText = greet;
+}
+
+setInterval(updateTime,1000);
+updateTime();
+
+// ✅ CONTACT BACK
+function contactSupport(){
+window.open("https://wa.me/13312016202");
+}
 </script>
 
-<script type="module" src="dashboard.js?v=FINAL2"></script>
+<script type="module" src="dashboard.js?v=FINAL3"></script>
 
 </body>
 </html>

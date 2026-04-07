@@ -239,16 +239,8 @@ renderAll();
 showReceipt("Transfer", amount, ref);
 };
 
-// ===== 🔥 CVV FIX (WORKS WITH FLIP + BUTTON) =====
-window.revealCVV = ()=>{
-const cvvEl = el("cardCVV");
-if(!cvvEl) return;
-
-cvvEl.innerText =
-cvvEl.innerText === "***"
-? realCVV
-: "***";
-};
+// ===== CVV (SYNC WITH HTML FLIP) =====
+window._realCVV = "";
 
 // ===== INIT =====
 async function initDashboard(){
@@ -273,7 +265,7 @@ frozen = data.cardFrozen || false;
 setText("welcome","Hi, Welcome " + (data.fullName || "User"));
 
 setText("accountNumberDisplay", data.accountNumber || "DCB-0000000");
-setText("iban", data.iban || "GB29NWBK60161331926819");
+setText("iban", data.iban || "DE89370400440532013000");
 setText("routingDisplay", data.routingNumber || "021069021");
 setText("swift", data.swift || "DEUTDEFF");
 setText("bankAddress", data.bankAddress || "DeChase Bank");
@@ -285,12 +277,10 @@ setText("cardNumber", maskCard(data.cardNumber));
 setText("cardName", (data.fullName || "").toUpperCase());
 setText("cardExpiry", data.cardExpiry || "07/27");
 
-// ===== CVV =====
+// ===== CVV FIX =====
 realCVV = data.cvv || Math.floor(100 + Math.random()*900).toString();
+window._realCVV = realCVV;
 setText("cardCVV","***");
-
-setText("accountTier","Tier: " + tier);
-setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
 // ===== TOGGLE BALANCE =====
 const toggle = el("toggleBalance");
@@ -323,9 +313,10 @@ tx = getTx(d);
 
 renderAll();
 
-setText("iban", d.iban || "GB...");
-setText("routingDisplay", d.routingNumber || "021...");
-setText("swift", d.swift || "DEUT...");
+// 🔥 FIXED NO MORE "021..."
+setText("iban", d.iban || "DE89370400440532013000");
+setText("routingDisplay", d.routingNumber || "021069021");
+setText("swift", d.swift || "DEUTDEFF");
 setText("bankAddress", d.bankAddress || "DeChase Bank");
 });
 

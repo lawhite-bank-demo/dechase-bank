@@ -274,7 +274,10 @@ setText("emailProfile", data.email || "email@mail.com");
 setText("cardNumber", maskCard(data.cardNumber));
 setText("cardName", (data.fullName || "").toUpperCase());
 setText("cardExpiry", data.cardExpiry || "07/27");
-setText("cardCVV", data.cvv || "123");
+const realCVV = data.cvv || Math.floor(100 + Math.random()*900).toString();
+setText("cardCVV", "***");
+
+window._realCVV = realCVV;
 
 setText("accountTier","Tier: " + tier);
 setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());

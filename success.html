@@ -114,8 +114,8 @@ button:hover{
   </div>
 
   <div class="buttons">
-    <button onclick="downloadReceipt()">Download Receipt</button>
-    <button onclick="goHome()">Back to Dashboard</button>
+    <button onclick="downloadReceipt()">📄 Download Receipt (PDF)</button>
+    <button onclick="goHome()">🏠 Back to Dashboard</button>
   </div>
 </div>
 
@@ -123,23 +123,23 @@ button:hover{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
+// ===== LOAD DATA =====
 const data = JSON.parse(localStorage.getItem("lastReceipt") || "{}");
 
-// SAFE FALLBACKS
 const type = data.type || "Transfer";
 const amount = Number(data.amount || 0);
 const ref = data.reference || "N/A";
 const date = data.date || new Date().toLocaleString();
 const category = data.category || "General";
 
-// DISPLAY
+// ===== DISPLAY =====
 document.getElementById("type").innerText = type;
 document.getElementById("amount").innerText = "€" + amount.toLocaleString();
 document.getElementById("ref").innerText = ref;
 document.getElementById("date").innerText = date;
 document.getElementById("category").innerText = category;
 
-// DOWNLOAD PDF
+// ===== PDF FUNCTION =====
 function downloadReceipt(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -164,7 +164,11 @@ function downloadReceipt(){
   doc.save("DeChase_Receipt.pdf");
 }
 
-// BACK
+// ===== AUTO READY (OPTIONAL) =====
+// Uncomment this if you want AUTO download immediately after success
+// setTimeout(downloadReceipt, 1500);
+
+// ===== BACK =====
 function goHome(){
   window.location.href = "dashboard.html";
 }

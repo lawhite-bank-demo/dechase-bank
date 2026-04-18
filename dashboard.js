@@ -280,9 +280,8 @@ setText("swift", data.swift || "DEUTDEFF");
 setText("nameProfile", data.fullName || "User");
 setText("emailProfile", data.email || "email@mail.com");
 
-setText("cardNumber", maskCard(data.cardNumber));
-setText("cardName", (data.fullName || "").toUpperCase());
-setText("cardExpiry", data.cardExpiry || "07/27");
+setText("cardNumber", maskCard(data.card?.cardNumber));
+setText("cardExpiry", data.card?.expiry); || "07/27");
 
 // ===== CVV =====
 realCVV = data.cvv || Math.floor(100 + Math.random()*900).toString();

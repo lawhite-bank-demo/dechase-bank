@@ -38,12 +38,7 @@ padding:20px;
 border-radius:18px;
 margin-bottom:15px;
 text-align:center;
-box-shadow:0 10px 25px rgba(0,0,0,0.3);
 }
-
-.greeting{font-size:14px;opacity:0.9;}
-.time{font-size:32px;font-weight:bold;}
-.date{font-size:14px;opacity:0.8;}
 
 .bank-card{perspective:1000px;margin-top:10px;}
 
@@ -92,15 +87,14 @@ font-weight:bold;
 .card-bottom{display:flex;justify-content:space-between;}
 
 #cardBtn{
-  margin-top:20px;
-  padding:14px;
-  border-radius:12px;
-  background:linear-gradient(135deg,#ef4444,#dc2626);
-  color:white;
-  font-weight:bold;
-  width:100%;
-  border:none;
-  display:block;        /* IMPORTANT */
+margin-top:15px;
+padding:14px;
+border-radius:12px;
+background:linear-gradient(135deg,#ef4444,#dc2626);
+color:white;
+font-weight:bold;
+width:100%;
+border:none;
 }
 
 .bottomNav{
@@ -172,8 +166,8 @@ margin-top:10px;
 <!-- TIME -->
 <div class="time-card">
 <div id="greeting"></div>
-<div id="time" class="time"></div>
-<div id="date" class="date"></div>
+<div id="time"></div>
+<div id="date"></div>
 </div>
 
 <h3 id="welcome"></h3>
@@ -221,14 +215,8 @@ CVV: <span id="cardCVV">***</span>
 </div>
 </div>
 
-<!-- FIXED BUTTON POSITION -->
-<button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
-</div>
-
-<!-- FIXED BUTTON POSITION -->
 <button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
 
-<!-- WALLET -->
 <div class="card">
 <b>🌍 Multi Currency Wallet</b>
 <div>USD: <span id="usdWallet"></span></div>
@@ -262,10 +250,9 @@ SWIFT: <span id="swift"></span>
 <div id="transactions"></div>
 </div>
 
-</div> <!-- ✅ CLOSE homePage HERE (VERY IMPORTANT) -->
+</div>
 
-
-<!-- SEND -->
+<!-- PAYMENTS -->
 <div id="paymentsPage" class="hidden">
 <div class="card">
 <b>💸 Send Money</b>
@@ -331,7 +318,9 @@ SWIFT: <span id="swift"></span>
 function openPage(p){
 ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
 .forEach(x=>document.getElementById(x).classList.add("hidden"));
+
 document.getElementById(p).classList.remove("hidden");
+window.scrollTo(0,0);
 }
 
 function flipCard(){

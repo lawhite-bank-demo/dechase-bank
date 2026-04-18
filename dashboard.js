@@ -322,7 +322,7 @@ frozen = data.cardFrozen || false;
 // INITIAL UI LOAD (IMPORTANT)
 setText("welcome","Hi, Welcome " + (data.fullName || "User"));
 setText("nameProfile", data.fullName || "User");
-setText("emailProfile", data.email || "email@mail.com");
+setText("emailProfile", data.email || "dechasebank@gmail.com");
 setText("addressProfile", data.address || "No address set");
 
 setText("accountTier","Account: " + tier);

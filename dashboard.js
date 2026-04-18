@@ -367,27 +367,24 @@ fetchRates();
 setInterval(fetchRates, 1000 * 60 * 30);
 
 // REALTIME
-onSnapshot(userRef,(snap)=>{
-let d = snap.data();
-if(!d) return;
+onSnapshot(userRef, (snap) => {
+  let d = snap.data();
+  if(!d) return;
 
-// UPDATE STATE
-balance = Number(d.balance ?? d.usdBalance ?? 0);
-tx = getTx(d);
+  balance = Number(d.balance ?? d.usdBalance ?? 0);
+  tx = getTx(d);
 
-// ✅ FIXED (use d not data)
-setText("nameProfile", d.fullName || "User");
-setText("emailProfile", d.email || "dechasebank@gmail.com");
+  setText("nameProfile", d.fullName || "User");
+  setText("emailProfile", d.email || "dechasebank@gmail.com");
 
-// ✅ Better address display
-const addrEl = el("addressProfile");
-if(addrEl){
-addrEl.innerHTML = d.address
-  ? "📍 " + d.address.replace(/,/g, "<br>")
-  : "No address set";
-}
+  const addrEl = el("addressProfile");
+  if(addrEl){
+    addrEl.innerHTML = d.address
+      ? "📍 " + d.address.replace(/,/g, "<br>")
+      : "No address set";
+  }
 
-renderAll();
+  renderAll();
 });
 
 }

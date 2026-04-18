@@ -1,8 +1,7 @@
 // ===== FIREBASE =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, updateDoc,
-  onSnapshot
+  getFirestore, doc, getDoc, updateDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
@@ -21,13 +20,12 @@ let userRef = null;
 let hidden = false;
 let realCVV = "";
 
-let dailyLimit = 20000;
-let dailyUsed = 0;
-
-let processing = false;
-
 let tier = "Tier 1";
 let maxTransfer = 10000;
+
+// ===== CURRENCY =====
+let eurToGbp = 0.86;
+let eurToUsd = 1.08;
 
 // ===== HELPERS =====
 function el(id){ return document.getElementById(id); }
@@ -57,36 +55,14 @@ function notify(msg){
   n.style.background = "#111827";
   n.style.padding = "12px 18px";
   n.style.borderRadius = "10px";
-  n.style.boxShadow = "0 10px 25px rgba(0,0,0,0.4)";
   n.style.zIndex = "9999";
-
   document.body.appendChild(n);
   setTimeout(()=> n.remove(), 2500);
 }
 
-// ===== ACCOUNT =====
-function applyTier(t){
-  tier = t;
-
-  if(t === "Tier 2"){
-    maxTransfer = 50000;
-    dailyLimit = 50000;
-  } else if(t === "Tier 3"){
-    maxTransfer = 100000;
-    dailyLimit = 100000;
-  } else {
-    maxTransfer = 10000;
-    dailyLimit = 20000;
-  }
-}
-
-// ===== LOGOUT (GLOBAL FIX) =====
+// ===== LOGOUT =====
 window.logoutUser = function(){
-  localStorage.removeItem("user");
-  localStorage.removeItem("pendingTx");
-  localStorage.removeItem("otpCode");
-  localStorage.removeItem("appLocked");
-
+  localStorage.clear();
   window.location.href = "index.html";
 };
 
@@ -96,9 +72,16 @@ function lockApp(){
   window.location.href = "lock.html";
 }
 
-// ===== CHECK LOCK =====
 if(localStorage.getItem("appLocked") === "true"){
   window.location.href = "lock.html";
+}
+
+// ===== ACCOUNT =====
+function applyTier(t){
+  tier = t;
+  if(t === "Tier 2") maxTransfer = 50000;
+  else if(t === "Tier 3") maxTransfer = 100000;
+  else maxTransfer = 10000;
 }
 
 // ===== BALANCE =====
@@ -115,7 +98,7 @@ window.toggleBalance = function(){
   renderBalance();
 };
 
-// ===== FREEZE =====
+// ===== FREEZE CARD =====
 window.toggleCard = async function(){
   if(!userRef) return;
 
@@ -153,9 +136,7 @@ function renderTransactions(){
     return;
   }
 
-  const sorted = [...tx].sort((a,b)=>
-    new Date(b.date) - new Date(a.date)
-  );
+  const sorted = [...tx].sort((a,b)=> new Date(b.date) - new Date(a.date));
 
   sorted.forEach(t=>{
     const amt = Number(t.amount || 0);
@@ -179,10 +160,41 @@ function renderTransactions(){
   });
 }
 
-// ===== RENDER =====
+// ===== CURRENCY =====
+async function fetchRates(){
+  try{
+    const res = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
+    const data = await res.json();
+
+    if(data?.rates){
+      eurToGbp = data.rates.GBP || eurToGbp;
+      eurToUsd = data.rates.USD || eurToUsd;
+    }
+  }catch{
+    console.warn("Using fallback rates");
+  }
+
+  updateWalletUI();
+}
+
+function updateWalletUI(){
+  const usd = balance * eurToUsd;
+  const gbp = balance * eurToGbp;
+
+  setText("usdWallet", "$" + usd.toLocaleString());
+  setText("eurWallet", "€" + balance.toLocaleString());
+  setText("gbpWallet", "£" + gbp.toLocaleString());
+
+  setText("convertedEUR", "€" + balance.toLocaleString());
+  setText("convertedUSD", "$" + usd.toLocaleString());
+  setText("convertedGBP", "£" + gbp.toLocaleString());
+}
+
+// ===== RENDER ALL =====
 function renderAll(){
   renderBalance();
   renderTransactions();
+  updateWalletUI();
 }
 
 // ===== INIT =====
@@ -204,21 +216,31 @@ async function initDashboard(){
 
   updateFreezeUI();
 
+  // ===== PROFILE =====
   setText("welcome","Hi, Welcome " + (data.fullName || "User"));
   setText("nameProfile", data.fullName);
   setText("emailProfile", data.email);
-
   setText("accountTier","Account: " + tier);
   setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
+  // ===== ACCOUNT DETAILS =====
+  setText("accountNumberDisplay", data.accountNumber || "Not available");
+  setText("iban", data.iban || "Not available");
+  setText("routingDisplay", data.routingNumber || "Not available");
+  setText("swift", data.swift || "Not available");
+
+  // ===== CARD =====
   setText("cardNumber", maskCard(data.card?.cardNumber));
   setText("cardExpiry", data.card?.expiry);
+  setText("cardName", data.fullName || "User");
 
   realCVV = data.cvv;
   window._realCVV = realCVV;
 
   renderAll();
+  fetchRates();
 
+  // ===== REALTIME =====
   onSnapshot(userRef,(snap)=>{
     const d = snap.data();
     if(!d) return;
@@ -234,7 +256,7 @@ async function initDashboard(){
   });
 }
 
-// ✅ RUN ONCE
+// ===== START =====
 initDashboard();
 
 // ===== SESSION CONTROL =====
@@ -242,13 +264,8 @@ let sessionTimer;
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
-
-    // lock after 10s
     sessionTimer = setTimeout(lockApp, 10000);
-
-    // logout after 60s
     setTimeout(logoutUser, 60000);
-
   } else {
     clearTimeout(sessionTimer);
   }

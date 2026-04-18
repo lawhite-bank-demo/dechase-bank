@@ -231,10 +231,7 @@ reference:ref,
 date:new Date().toISOString()
 });
 
-await updateDoc(userRef,{
-usdBalance: balance,
-transactions: tx
-});
+await updateDoc(userRef,{ balance: balance, transactions: tx });
 
 renderAll();
 showReceipt("Transfer", amount, ref);
@@ -268,7 +265,7 @@ let data = snap.data();
 
 // ===== STATE =====
 applyTier(data.accountTier || "Tier 1");
-balance = Number(data.usdBalance ?? 0);
+balance = Number(data.balance ?? 0);
 tx = getTx(data);
 frozen = data.cardFrozen || false;
 

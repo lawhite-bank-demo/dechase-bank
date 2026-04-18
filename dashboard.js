@@ -377,3 +377,10 @@ async function initDashboard(){
 }
 
 initDashboard();
+
+// ===== FORCE HOME PAGE =====
+window.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("homePage")) {
+    openPage("homePage");
+  }
+});

@@ -392,25 +392,12 @@ window.addEventListener("DOMContentLoaded", ()=>{
     openPage("homePage");
   }
 });
-// ===== AUTO LOGOUT ON APP LEAVE =====
+let logoutTimer;
+
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
-    logoutUser();
+    logoutTimer = setTimeout(logoutUser, 30000); // 30 seconds
+  } else {
+    clearTimeout(logoutTimer);
   }
 });
-
-// OPTIONAL: also logout on refresh/close
-window.addEventListener("beforeunload", () => {
-  logoutUser();
-});
-
-// ===== LOGOUT FUNCTION =====
-function logoutUser(){
-  // clear session
-  localStorage.removeItem("user");
-  localStorage.removeItem("pendingTx");
-  localStorage.removeItem("otpCode");
-
-  // redirect
-  window.location.href = "index.html";
-}

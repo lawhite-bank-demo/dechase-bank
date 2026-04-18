@@ -377,7 +377,7 @@ tx = getTx(d);
 
 // ✅ FIXED (use d not data)
 setText("nameProfile", d.fullName || "User");
-setText("emailProfile", d.email || "email@mail.com");
+setText("emailProfile", d.email || "dechasebank@gmail.com");
 
 // ✅ Better address display
 const addrEl = el("addressProfile");

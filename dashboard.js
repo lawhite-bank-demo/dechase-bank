@@ -261,7 +261,7 @@ const snap = await getDoc(userRef);
 
 if(!snap.exists()) return location.replace("index.html");
 
-let data = snap.data();
+let data = snap.data() || {};
 
 // ===== STATE =====
 applyTier(data.accountTier || "Tier 1");

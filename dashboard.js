@@ -381,5 +381,6 @@ setText("nameProfile", d.fullName || "User");
 // RENDER EVERYTHING
 renderAll();
 });
+
 }
 initDashboard();

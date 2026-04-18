@@ -265,7 +265,7 @@ let data = snap.data() || {};
 
 // ===== STATE =====
 applyTier(data.accountTier || "Tier 1");
-balance = Number(data.balance ?? 0);
+balance = Number(d.balance ?? d.usdBalance ?? 0);
 tx = getTx(data);
 frozen = data.cardFrozen || false;
 
@@ -281,7 +281,7 @@ setText("nameProfile", data.fullName || "User");
 setText("emailProfile", data.email || "email@mail.com");
 
 setText("cardNumber", maskCard(data.card?.cardNumber));
-setText("cardExpiry", data.card?.expiry); || "07/27");
+setText("cardExpiry", data.card?.expiry || "07/27");
 
 // ===== CVV =====
 realCVV = data.cvv || Math.floor(100 + Math.random()*900).toString();

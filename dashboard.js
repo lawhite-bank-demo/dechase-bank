@@ -328,6 +328,26 @@ window.openPinModal = async ()=>{
   // 👉 GO TO OTP PAGE
   window.location.href = "otp.html";
 };
+// ===== LOGOUT =====
+function logoutUser(){
+  localStorage.removeItem("user");
+  localStorage.removeItem("pendingTx");
+  localStorage.removeItem("otpCode");
+  localStorage.removeItem("appLocked");
+
+  window.location.href = "index.html";
+}
+
+// ===== LOCK APP =====
+function lockApp(){
+  localStorage.setItem("appLocked", "true");
+  window.location.href = "lock.html";
+}
+
+// ===== CHECK LOCK FIRST =====
+if(localStorage.getItem("appLocked") === "true"){
+  window.location.href = "lock.html";
+}
 
 // ===== INIT =====
 async function initDashboard(){
@@ -383,55 +403,33 @@ async function initDashboard(){
     renderAll();
   });
 }
-// ===== BLOCK ACCESS IF LOCKED =====
-if(localStorage.getItem("appLocked") === "true"){
-  window.location.href = "lock.html";
-}
+
+// ✅ CALL INIT ONLY ONCE
 initDashboard();
+
+// ===== SMART SESSION CONTROL =====
+let sessionTimer;
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    // after 10s → lock app
+    sessionTimer = setTimeout(() => {
+      lockApp();
+    }, 10000);
+
+    // after 60s → logout completely
+    setTimeout(() => {
+      logoutUser();
+    }, 60000);
+
+  } else {
+    clearTimeout(sessionTimer);
+  }
+});
 
 // ===== FORCE HOME =====
 window.addEventListener("DOMContentLoaded", ()=>{
   if (document.getElementById("homePage")) {
     openPage("homePage");
-  }
-});
-let logoutTimer;
-
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    logoutTimer = setTimeout(logoutUser, 30000); // 30 seconds
-  } else {
-    clearTimeout(logoutTimer);
-  }
-});
-// ===== APP LOCK (instead of logout) =====
-let lockTimer;
-
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    // lock after 10 seconds (change if you want)
-    lockTimer = setTimeout(lockApp, 10000);
-  } else {
-    clearTimeout(lockTimer);
-  }
-});
-
-function lockApp(){
-  localStorage.setItem("appLocked", "true");
-  window.location.href = "lock.html";
-}
-// ===== SMART AUTO LOGOUT =====
-let logoutTimer;
-
-// when user leaves app (minimize / switch tab)
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    // wait 30 seconds before logout
-    logoutTimer = setTimeout(() => {
-      logoutUser();
-    }, 30000); // 30 sec
-  } else {
-    // user came back → cancel logout
-    clearTimeout(logoutTimer);
   }
 });

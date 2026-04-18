@@ -375,7 +375,7 @@ balance = Number(d.balance ?? d.usdBalance ?? 0);
 tx = getTx(d);
 
 // ✅ UPDATE PROFILE UI (LIVE)
-setText("emailProfile", d.email || "email@mail.com");
+setText("emailProfile", d.email || "dechase@gmail.com");
 setText("nameProfile", d.fullName || "User");
 
 // RENDER EVERYTHING

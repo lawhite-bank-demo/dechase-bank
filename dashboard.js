@@ -318,7 +318,7 @@ renderAll();
 onSnapshot(userRef,(snap)=>{
 let d = snap.data();
 
-balance = Number(d.usdBalance ?? 0);
+balance = Number(d.balance ?? d.usdBalance ?? 0);;
 tx = getTx(d);
 
 renderAll();

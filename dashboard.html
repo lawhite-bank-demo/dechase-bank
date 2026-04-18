@@ -92,14 +92,15 @@ font-weight:bold;
 .card-bottom{display:flex;justify-content:space-between;}
 
 #cardBtn{
-margin-top:20px;
-padding:14px;
-border-radius:12px;
-background:linear-gradient(135deg,#ef4444,#dc2626);
-color:white;
-font-weight:bold;
-width:100%;
-border:none;
+  margin-top:20px;
+  padding:14px;
+  border-radius:12px;
+  background:linear-gradient(135deg,#ef4444,#dc2626);
+  color:white;
+  font-weight:bold;
+  width:100%;
+  border:none;
+  display:block;        /* IMPORTANT */
 }
 
 .bottomNav{
@@ -221,7 +222,6 @@ CVV: <span id="cardCVV">***</span>
 </div>
 
 <!-- FIXED BUTTON POSITION -->
-<div style="margin-top:15px;">
 <button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
 </div>
 

@@ -374,9 +374,10 @@ let d = snap.data();
 balance = Number(d.balance ?? d.usdBalance ?? 0);
 tx = getTx(d);
 
-// ✅ UPDATE PROFILE UI (LIVE)
+// UPDATE PROFILE UI (LIVE)
 setText("emailProfile", d.email || "dechase@gmail.com");
 setText("nameProfile", d.fullName || "User");
+setText("addressProfile", d.address || "No address set");
 
 // RENDER EVERYTHING
 renderAll();

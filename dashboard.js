@@ -89,7 +89,10 @@ function renderBalance(){
   const bal = el("balance");
   if(!bal) return;
 
-  bal.innerText = hidden ? "••••••" : "€" + balance.toLocaleString();
+  bal.innerText = "€" + Number(balance).toLocaleString(undefined, {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+}); balance.toLocaleString();
   setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 

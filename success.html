@@ -20,12 +20,30 @@ body{
   padding:25px;
   border-radius:16px;
   width:360px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.4);
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  animation:fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(20px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+.success-icon{
+  font-size:40px;
+  text-align:center;
+  margin-bottom:10px;
+  animation:pop 0.4s ease;
+}
+
+@keyframes pop{
+  0%{transform:scale(0);}
+  100%{transform:scale(1);}
 }
 
 h2{
   text-align:center;
-  margin-bottom:10px;
+  margin-bottom:5px;
 }
 
 .sub{
@@ -37,7 +55,7 @@ h2{
 
 .amount{
   color:#22c55e;
-  font-size:26px;
+  font-size:28px;
   text-align:center;
   margin:15px 0;
   font-weight:bold;
@@ -61,6 +79,13 @@ h2{
   text-align:right;
 }
 
+.status{
+  text-align:center;
+  margin-top:10px;
+  color:#22c55e;
+  font-size:13px;
+}
+
 .buttons{
   margin-top:20px;
   display:flex;
@@ -78,52 +103,54 @@ button{
   cursor:pointer;
 }
 
-button:hover{
-  opacity:0.9;
-}
+button:hover{opacity:0.9;}
 </style>
-
 </head>
 
 <body>
 
 <div class="card">
-  <h2>✅ Transfer Successful</h2>
-  <div class="sub">Your payment has been processed</div>
 
-  <div class="amount" id="amount"></div>
+<div class="success-icon">✅</div>
 
-  <div class="row">
-    <span class="label">Type</span>
-    <span class="value" id="type"></span>
-  </div>
+<h2>Transfer Successful</h2>
+<div class="sub">Your payment has been processed securely</div>
 
-  <div class="row">
-    <span class="label">Category</span>
-    <span class="value" id="category"></span>
-  </div>
+<div class="amount" id="amount"></div>
 
-  <div class="row">
-    <span class="label">Reference</span>
-    <span class="value" id="ref"></span>
-  </div>
-
-  <div class="row">
-    <span class="label">Date</span>
-    <span class="value" id="date"></span>
-  </div>
-
-  <div class="buttons">
-    <button onclick="downloadReceipt()">📄 Download Receipt (PDF)</button>
-    <button onclick="goHome()">🏠 Back to Dashboard</button>
-  </div>
+<div class="row">
+<span class="label">Type</span>
+<span class="value" id="type"></span>
 </div>
 
-<!-- jsPDF -->
+<div class="row">
+<span class="label">Category</span>
+<span class="value" id="category"></span>
+</div>
+
+<div class="row">
+<span class="label">Reference</span>
+<span class="value" id="ref"></span>
+</div>
+
+<div class="row">
+<span class="label">Date</span>
+<span class="value" id="date"></span>
+</div>
+
+<div class="status">✔ Verified • Secure Transaction</div>
+
+<div class="buttons">
+<button onclick="downloadReceipt()">📄 Download Receipt</button>
+<button onclick="copyRef()">📋 Copy Reference</button>
+<button onclick="goHome()">🏠 Back to Dashboard</button>
+</div>
+
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-// ===== LOAD DATA =====
 const data = JSON.parse(localStorage.getItem("lastReceipt") || "{}");
 
 const type = data.type || "Transfer";
@@ -132,14 +159,19 @@ const ref = data.reference || "N/A";
 const date = data.date || new Date().toLocaleString();
 const category = data.category || "General";
 
-// ===== DISPLAY =====
 document.getElementById("type").innerText = type;
 document.getElementById("amount").innerText = "€" + amount.toLocaleString();
 document.getElementById("ref").innerText = ref;
 document.getElementById("date").innerText = date;
 document.getElementById("category").innerText = category;
 
-// ===== PDF FUNCTION =====
+// COPY REF
+function copyRef(){
+  navigator.clipboard.writeText(ref);
+  alert("Reference copied");
+}
+
+// PDF
 function downloadReceipt(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -147,28 +179,22 @@ function downloadReceipt(){
   doc.setFontSize(18);
   doc.text("DeChase Bank", 20, 20);
 
-  doc.setFontSize(14);
-  doc.text("Transaction Receipt", 20, 30);
-
   doc.setFontSize(12);
+  doc.text("Official Transaction Receipt", 20, 30);
+
   doc.text("Type: " + type, 20, 50);
   doc.text("Category: " + category, 20, 60);
   doc.text("Amount: €" + amount.toLocaleString(), 20, 70);
   doc.text("Reference: " + ref, 20, 80);
   doc.text("Date: " + date, 20, 90);
 
-  doc.text("------------------------------", 20, 105);
-  doc.text("Status: SUCCESS", 20, 115);
-  doc.text("Thank you for banking with us", 20, 125);
+  doc.text("-----------------------------", 20, 105);
+  doc.text("STATUS: SUCCESS", 20, 115);
+  doc.text("Processed Securely", 20, 125);
 
   doc.save("DeChase_Receipt.pdf");
 }
 
-// ===== AUTO READY (OPTIONAL) =====
-// Uncomment this if you want AUTO download immediately after success
-// setTimeout(downloadReceipt, 1500);
-
-// ===== BACK =====
 function goHome(){
   window.location.href = "dashboard.html";
 }

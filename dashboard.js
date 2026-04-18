@@ -277,7 +277,7 @@ window.buyGiftCard = async (name, amount)=>{
   goToSuccess(name, amount, ref, "Personal");
 };
 
-// ===== TRANSFER =====
+// ===== TRANSFER (OTP FIRST) =====
 window.openPinModal = async ()=>{
   if(processing) return;
   processing = true;
@@ -307,40 +307,26 @@ window.openPinModal = async ()=>{
     return notify(`Daily limit €${dailyLimit}`);
   }
 
-  balance -= amount;
+  // ✅ SAVE ONLY (DO NOT SEND YET)
   const ref = genRef();
 
-  tx.unshift({
-    amount:-amount,
-    note: el("description")?.value || "Transfer",
-    reference:ref,
+  localStorage.setItem("pendingTx", JSON.stringify({
+    amount,
+    ref,
     category: el("category")?.value || "Personal",
-    date:new Date().toISOString()
-  });
+    note: el("description")?.value || "Transfer"
+  }));
 
-  await updateDoc(userRef,{ balance, transactions: tx });
+  // ✅ GENERATE OTP
+  const otp = Math.floor(100000 + Math.random()*900000);
+  localStorage.setItem("otpCode", otp);
 
-  await new Promise(r=>setTimeout(r,1200));
-
-  renderAll();
-  // save pending transaction
-localStorage.setItem("pendingTx", JSON.stringify({
-  amount,
-  ref,
-  category: el("category")?.value || "Personal",
-  note: el("description")?.value || "Transfer"
-}));
-
-// generate OTP
-const otp = Math.floor(100000 + Math.random()*900000);
-localStorage.setItem("otpCode", otp);
-
-alert("OTP: " + otp); // testing only
-
-// go to OTP page
-window.location.href = "otp.html";
+  notify("OTP sent: " + otp); // or alert()
 
   processing = false;
+
+  // 👉 GO TO OTP PAGE
+  window.location.href = "otp.html";
 };
 
 // ===== INIT =====

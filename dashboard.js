@@ -369,13 +369,21 @@ onSnapshot(userRef,(snap)=>{
 let d = snap.data();
 if(!d) return;
 
+// UPDATE STATE
 balance = Number(d.balance ?? d.usdBalance ?? 0);
 tx = getTx(d);
 
+// ✅ FIXED (use d not data)
+setText("nameProfile", d.fullName || "User");
 setText("emailProfile", d.email || "email@mail.com");
-setText("nameProfile", data.fullName || "User");
-setText("emailProfile", data.email || "email@mail.com");
-setText("addressProfile", data.address || "No address set");
+
+// ✅ Better address display
+const addrEl = el("addressProfile");
+if(addrEl){
+addrEl.innerHTML = d.address
+  ? "📍 " + d.address.replace(/,/g, "<br>")
+  : "No address set";
+}
 
 renderAll();
 });

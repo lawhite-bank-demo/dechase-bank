@@ -126,28 +126,33 @@ bal.innerText = hidden ? "••••••" : "€" + balance.toLocaleString()
 setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 
-// ===== TRANSACTIONS =====
+// ===== TRANSACTIONS (✅ FIXED) =====
 function renderTransactions(){
 const box = el("transactions");
 if(!box) return;
 
 box.innerHTML = "";
 
-if(!tx.length){
+if(!tx || !tx.length){
 box.innerHTML = "<p style='opacity:0.6;'>No transactions yet</p>";
 return;
 }
 
-tx
-.sort((a,b)=> new Date(b.date) - new Date(a.date))
-.forEach(t=>{
+// ✅ SAFE SORT (no mutation + no crash)
+const sortedTx = [...tx].sort((a,b)=>{
+const dateA = a?.date ? new Date(a.date).getTime() : 0;
+const dateB = b?.date ? new Date(b.date).getTime() : 0;
+return dateB - dateA;
+});
+
+sortedTx.forEach(t=>{
 const amt = Number(t.amount || 0);
 
 box.innerHTML += `
 <div class="tx">
 <strong>${t.note || "Transaction"}</strong><br>
 <small>Ref: ${t.reference || "-"}</small><br>
-<small>${new Date(t.date).toLocaleString()}</small><br>
+<small>${t.date ? new Date(t.date).toLocaleString() : "-"}</small><br>
 <b style="color:${amt>=0?"#22c55e":"#ef4444"}">
 ${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
 </b>
@@ -251,7 +256,6 @@ processing=false;
 return alert(`Daily limit exceeded (€${dailyLimit})`);
 }
 
-// HIGH VALUE
 if(amount > 70000){
 await addDoc(collection(db,"pendingTransfers"),{
 sender: userRef.id,
@@ -262,7 +266,6 @@ processing=false;
 return alert("Transfer pending approval");
 }
 
-// VERIFICATION
 if(amount > 20000){
 let code = prompt("Enter code (1234)");
 if(code !== "1234"){
@@ -271,7 +274,6 @@ return alert("Verification failed");
 }
 }
 
-// PROCESS
 balance -= amount;
 
 const ref = genRef();
@@ -291,8 +293,6 @@ dailyUsed += amount;
 await updateDoc(userRef,{ balance, usdBalance: balance, transactions: tx });
 
 renderAll();
-
-// ✅ SUCCESS PAGE
 goToSuccess("Transfer", amount, ref, category);
 
 processing = false;
@@ -326,7 +326,6 @@ balance = Number(data.balance ?? data.usdBalance ?? 0);
 tx = getTx(data);
 frozen = data.cardFrozen || false;
 
-// UI
 setText("welcome","Hi, Welcome " + (data.fullName || "User"));
 setText("accountNumberDisplay", data.accountNumber || "DCB-0000000");
 setText("iban", data.iban || "DE89370400440532013000");
@@ -339,16 +338,13 @@ setText("emailProfile", data.email || "email@mail.com");
 setText("cardNumber", maskCard(data.card?.cardNumber));
 setText("cardExpiry", data.card?.expiry || "07/27");
 
-// CVV
 realCVV = data.cvv || Math.floor(100 + Math.random()*900).toString();
 window._realCVV = realCVV;
 setText("cardCVV","***");
 
-// TIER
 setText("accountTier","Account: " + tier);
 setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
-// TOGGLE
 const toggle = el("toggleBalance");
 if(toggle){
 toggle.onclick = ()=>{
@@ -357,7 +353,6 @@ renderBalance();
 };
 }
 
-// FREEZE
 window.toggleCard = async ()=>{
 frozen = !frozen;
 await updateDoc(userRef,{ cardFrozen: frozen });
@@ -367,14 +362,11 @@ el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 }
 };
 
-// RENDER
 renderAll();
 
-// LIVE FX
 fetchRates();
 setInterval(fetchRates, 1000 * 60 * 30);
 
-// REALTIME
 onSnapshot(userRef,(snap)=>{
 let d = snap.data();
 

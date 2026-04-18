@@ -21,11 +21,11 @@ let userRef = null;
 let hidden = false;
 let realCVV = "";
 
-// ✅ NEW (daily limit)
+// LIMITS
 let dailyLimit = 20000;
 let dailyUsed = 0;
 
-// ✅ anti-duplicate
+// ANTI DUPLICATE
 let processing = false;
 
 // ===== ACCOUNT SYSTEM =====
@@ -74,7 +74,7 @@ return Array.isArray(data.transactions)
 : Object.values(data.transactions);
 }
 
-// ✅ NEW: DAILY CALCULATOR
+// ===== DAILY LIMIT =====
 function calculateDailyUsed(){
 const today = new Date().toDateString();
 
@@ -100,7 +100,7 @@ eurToUsd = data.rates.USD || eurToUsd;
 
 updateWalletUI();
 
-}catch(err){
+}catch{
 console.warn("Using fallback rates");
 }
 }
@@ -117,32 +117,12 @@ setText("convertedEUR", "€" + balance.toLocaleString());
 setText("convertedGBP", "£" + gbp.toLocaleString());
 }
 
-// ===== RECEIPT =====
-function showReceipt(type, amount, ref){
-const modal = el("receiptModal");
-if(!modal) return;
-
-modal.classList.remove("hidden");
-
-setText("rType", type);
-setText("rAmount", "€" + amount.toLocaleString());
-setText("rRef", ref);
-setText("rDate", new Date().toLocaleString());
-}
-
-window.closeReceipt = ()=>{
-el("receiptModal")?.classList.add("hidden");
-};
-
 // ===== BALANCE =====
 function renderBalance(){
 const bal = el("balance");
 if(!bal) return;
 
-bal.innerText = hidden
-? "••••••"
-: "€" + balance.toLocaleString();
-
+bal.innerText = hidden ? "••••••" : "€" + balance.toLocaleString();
 setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 
@@ -153,7 +133,7 @@ if(!box) return;
 
 box.innerHTML = "";
 
-if(!tx || tx.length === 0){
+if(!tx.length){
 box.innerHTML = "<p style='opacity:0.6;'>No transactions yet</p>";
 return;
 }
@@ -182,6 +162,19 @@ renderTransactions();
 updateWalletUI();
 }
 
+// ===== SUCCESS REDIRECT =====
+function goToSuccess(type, amount, ref, category){
+localStorage.setItem("lastReceipt", JSON.stringify({
+type,
+amount,
+reference: ref,
+category,
+date: new Date().toLocaleString()
+}));
+
+window.location.href = "success.html";
+}
+
 // ===== BILL =====
 window.payBill = async (name, amount)=>{
 if(frozen) return alert("Card is frozen");
@@ -195,13 +188,14 @@ tx.unshift({
 amount:-amount,
 note:name + " Bill",
 reference:ref,
+category:"Bills",
 date:new Date().toISOString()
 });
 
-await updateDoc(userRef,{ balance: balance, usdBalance: balance, transactions: tx });
+await updateDoc(userRef,{ balance, usdBalance: balance, transactions: tx });
 
 renderAll();
-showReceipt(name, amount, ref);
+goToSuccess(name, amount, ref, "Bills");
 };
 
 // ===== GIFT =====
@@ -217,13 +211,14 @@ tx.unshift({
 amount:-amount,
 note:name + " Gift Card",
 reference:ref,
+category:"Personal",
 date:new Date().toISOString()
 });
 
-await updateDoc(userRef,{ balance: balance, usdBalance: balance, transactions: tx });
+await updateDoc(userRef,{ balance, usdBalance: balance, transactions: tx });
 
 renderAll();
-showReceipt(name, amount, ref);
+goToSuccess(name, amount, ref, "Personal");
 };
 
 // ===== TRANSFER =====
@@ -237,30 +232,26 @@ const amount = parseFloat(el("amount")?.value);
 
 if(isNaN(amount) || amount <= 0){
 processing=false;
-alert("Enter valid amount");
-return;
+return alert("Enter valid amount");
 }
 
 if(amount > maxTransfer){
 processing=false;
-alert(`Your ${tier} limit is €${maxTransfer}`);
-return;
+return alert(`Your ${tier} limit is €${maxTransfer}`);
 }
 
 if(amount > balance){
 processing=false;
-alert("Insufficient funds");
-return;
+return alert("Insufficient funds");
 }
 
-// ✅ DAILY LIMIT CHECK
 calculateDailyUsed();
 if(dailyUsed + amount > dailyLimit){
 processing=false;
-alert(`Daily limit exceeded. Limit: €${dailyLimit}`);
-return;
+return alert(`Daily limit exceeded (€${dailyLimit})`);
 }
 
+// HIGH VALUE
 if(amount > 70000){
 await addDoc(collection(db,"pendingTransfers"),{
 sender: userRef.id,
@@ -268,10 +259,10 @@ amount,
 status:"pending"
 });
 processing=false;
-alert("Transfer pending approval");
-return;
+return alert("Transfer pending approval");
 }
 
+// VERIFICATION
 if(amount > 20000){
 let code = prompt("Enter code (1234)");
 if(code !== "1234"){
@@ -280,34 +271,34 @@ return alert("Verification failed");
 }
 }
 
+// PROCESS
 balance -= amount;
 
 const ref = genRef();
-
-const narration = el("description")?.value || "Transfer Sent";
+const narration = el("description")?.value || "Transfer";
+const category = el("category")?.value || "Personal";
 
 tx.unshift({
 amount: -amount,
 note: narration,
 reference: ref,
+category,
 date: new Date().toISOString()
 });
 
-// update daily usage
 dailyUsed += amount;
 
-await updateDoc(userRef,{ balance: balance, usdBalance: balance, transactions: tx });
+await updateDoc(userRef,{ balance, usdBalance: balance, transactions: tx });
 
 renderAll();
-showReceipt("Transfer", amount, ref);
+
+// ✅ SUCCESS PAGE
+goToSuccess("Transfer", amount, ref, category);
 
 processing = false;
 };
 
-// ===== CVV =====
-window._realCVV = "";
-
-// ===== PROFILE + LOGOUT =====
+// ===== PROFILE =====
 window.logout = ()=>{
 localStorage.clear();
 location.replace("index.html");
@@ -330,15 +321,13 @@ if(!snap.exists()) return location.replace("index.html");
 
 let data = snap.data() || {};
 
-// ===== STATE =====
 applyTier(data.accountTier || "Tier 1");
 balance = Number(data.balance ?? data.usdBalance ?? 0);
 tx = getTx(data);
 frozen = data.cardFrozen || false;
 
-// ===== UI =====
+// UI
 setText("welcome","Hi, Welcome " + (data.fullName || "User"));
-
 setText("accountNumberDisplay", data.accountNumber || "DCB-0000000");
 setText("iban", data.iban || "DE89370400440532013000");
 setText("routingDisplay", data.routingNumber || "021069021");
@@ -359,7 +348,7 @@ setText("cardCVV","***");
 setText("accountTier","Account: " + tier);
 setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
-// TOGGLE BALANCE
+// TOGGLE
 const toggle = el("toggleBalance");
 if(toggle){
 toggle.onclick = ()=>{
@@ -381,7 +370,7 @@ el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 // RENDER
 renderAll();
 
-// 🔥 LIVE RATES
+// LIVE FX
 fetchRates();
 setInterval(fetchRates, 1000 * 60 * 30);
 
@@ -394,12 +383,6 @@ tx = getTx(d);
 
 renderAll();
 });
-
-// BUTTON
-const sendBtn = el("sendBtn");
-if(sendBtn){
-sendBtn.onclick = openPinModal;
-}
 }
 
 initDashboard();

@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore, doc, getDoc, updateDoc,
-  collection, addDoc, onSnapshot
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
@@ -21,29 +21,44 @@ let userRef = null;
 let hidden = false;
 let realCVV = "";
 
-// LIMITS
 let dailyLimit = 20000;
 let dailyUsed = 0;
 
-// ANTI DUPLICATE
 let processing = false;
 
-// ===== ACCOUNT SYSTEM =====
 let tier = "Tier 1";
 let maxTransfer = 10000;
 
+// ===== UI NOTIFY =====
+function notify(msg){
+  const n = document.createElement("div");
+  n.innerText = msg;
+
+  n.style.position = "fixed";
+  n.style.bottom = "100px";
+  n.style.left = "50%";
+  n.style.transform = "translateX(-50%)";
+  n.style.background = "#111827";
+  n.style.padding = "12px 18px";
+  n.style.borderRadius = "10px";
+  n.style.boxShadow = "0 10px 25px rgba(0,0,0,0.4)";
+  n.style.zIndex = "9999";
+
+  document.body.appendChild(n);
+  setTimeout(()=> n.remove(), 2500);
+}
+
+// ===== ACCOUNT =====
 function applyTier(t){
   tier = t;
 
   if(t === "Tier 2"){
     maxTransfer = 50000;
     dailyLimit = 50000;
-  }
-  else if(t === "Tier 3"){
+  } else if(t === "Tier 3"){
     maxTransfer = 100000;
     dailyLimit = 100000;
-  }
-  else{
+  } else {
     maxTransfer = 10000;
     dailyLimit = 20000;
   }
@@ -66,33 +81,35 @@ function maskCard(num){
   return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
 }
 
+// ===== TOGGLE BALANCE =====
+window.toggleBalance = function(){
+  hidden = !hidden;
+  renderBalance();
+};
+
 // ===== FREEZE CARD =====
 window.toggleCard = async function(){
   if(!userRef) return;
 
   frozen = !frozen;
-
-  await updateDoc(userRef,{
-    cardFrozen: frozen
-  });
-
+  await updateDoc(userRef,{ cardFrozen: frozen });
   updateFreezeUI();
 };
 
 function updateFreezeUI(){
-  const btn = document.getElementById("cardBtn");
+  const btn = el("cardBtn");
   if(!btn) return;
 
   if(frozen){
     btn.innerText = "Unfreeze Card";
     btn.style.background = "linear-gradient(135deg,#22c55e,#16a34a)";
-  }else{
+  } else {
     btn.innerText = "Freeze Card";
     btn.style.background = "linear-gradient(135deg,#ef4444,#dc2626)";
   }
 }
 
-// ===== SAFE TRANSACTIONS =====
+// ===== TRANSACTIONS SAFE =====
 function getTx(data){
   if(!data?.transactions) return [];
   return Array.isArray(data.transactions)
@@ -106,10 +123,10 @@ function calculateDailyUsed(){
 
   dailyUsed = tx
     .filter(t=>{
-      const txDate = t?.date ? new Date(t.date).toDateString() : "";
-      return txDate === today && Number(t.amount) < 0;
+      const d = t?.date ? new Date(t.date).toDateString() : "";
+      return d === today && Number(t.amount) < 0;
     })
-    .reduce((sum,t)=> sum + Math.abs(Number(t.amount)),0);
+    .reduce((s,t)=> s + Math.abs(Number(t.amount)),0);
 }
 
 // ===== CURRENCY =====
@@ -148,7 +165,12 @@ function renderBalance(){
   const bal = el("balance");
   if(!bal) return;
 
-  bal.innerText = hidden ? "••••••" : "€" + balance.toLocaleString();
+  if(hidden){
+    bal.innerText = "••••••";
+  } else {
+    bal.innerText = "€" + balance.toLocaleString();
+  }
+
   setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 
@@ -164,28 +186,34 @@ function renderTransactions(){
     return;
   }
 
-  const sortedTx = [...tx].sort((a,b)=>{
-    const dateA = a?.date ? new Date(a.date).getTime() : 0;
-    const dateB = b?.date ? new Date(b.date).getTime() : 0;
-    return dateB - dateA;
+  const sorted = [...tx].sort((a,b)=>{
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
   });
 
-  sortedTx.forEach(t=>{
+  sorted.forEach(t=>{
     const amt = Number(t.amount || 0);
 
-    box.innerHTML += `
-    <div class="tx">
-    <strong>${t.note || "Transaction"}</strong><br>
-    <small>Ref: ${t.reference || "-"}</small><br>
-    <small>${t.date ? new Date(t.date).toLocaleString() : "-"}</small><br>
-    <b style="color:${amt>=0?"#22c55e":"#ef4444"}">
-    ${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
-    </b>
-    </div>`;
+    const div = document.createElement("div");
+    div.className = "tx";
+    div.style.cursor = "pointer";
+
+    div.onclick = () => {
+      notify(`€${Math.abs(amt)} | ${t.category} | Ref: ${t.reference}`);
+    };
+
+    div.innerHTML = `
+      <strong>${t.note || "Transaction"}</strong><br>
+      <small>${new Date(t.date).toLocaleString()}</small><br>
+      <b style="color:${amt>=0?"#22c55e":"#ef4444"}">
+      ${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
+      </b>
+    `;
+
+    box.appendChild(div);
   });
 }
 
-// ===== MASTER RENDER =====
+// ===== RENDER =====
 function renderAll(){
   renderBalance();
   renderTransactions();
@@ -203,11 +231,10 @@ function goToSuccess(type, amount, ref, category){
 
 // ===== BILL =====
 window.payBill = async (name, amount)=>{
-  if(frozen) return alert("Card is frozen");
-  if(amount > balance) return alert("Insufficient funds");
+  if(frozen) return notify("Card is frozen");
+  if(amount > balance) return notify("Insufficient funds");
 
   balance -= amount;
-
   const ref = genRef();
 
   tx.unshift({
@@ -220,17 +247,18 @@ window.payBill = async (name, amount)=>{
 
   await updateDoc(userRef,{ balance, transactions: tx });
 
+  await new Promise(r=>setTimeout(r,1200));
+
   renderAll();
   goToSuccess(name, amount, ref, "Bills");
 };
 
 // ===== GIFT =====
 window.buyGiftCard = async (name, amount)=>{
-  if(frozen) return alert("Card is frozen");
-  if(amount > balance) return alert("Insufficient funds");
+  if(frozen) return notify("Card is frozen");
+  if(amount > balance) return notify("Insufficient funds");
 
   balance -= amount;
-
   const ref = genRef();
 
   tx.unshift({
@@ -243,6 +271,8 @@ window.buyGiftCard = async (name, amount)=>{
 
   await updateDoc(userRef,{ balance, transactions: tx });
 
+  await new Promise(r=>setTimeout(r,1200));
+
   renderAll();
   goToSuccess(name, amount, ref, "Personal");
 };
@@ -252,44 +282,45 @@ window.openPinModal = async ()=>{
   if(processing) return;
   processing = true;
 
-  if(frozen){ processing=false; return alert("Card is frozen"); }
+  if(frozen){ processing=false; return notify("Card is frozen"); }
 
   const amount = parseFloat(el("amount")?.value);
 
   if(isNaN(amount) || amount <= 0){
     processing=false;
-    return alert("Enter valid amount");
+    return notify("Enter valid amount");
   }
 
   if(amount > maxTransfer){
     processing=false;
-    return alert(`Your ${tier} limit is €${maxTransfer}`);
+    return notify(`Limit: €${maxTransfer}`);
   }
 
   if(amount > balance){
     processing=false;
-    return alert("Insufficient funds");
+    return notify("Insufficient funds");
   }
 
   calculateDailyUsed();
   if(dailyUsed + amount > dailyLimit){
     processing=false;
-    return alert(`Daily limit exceeded (€${dailyLimit})`);
+    return notify(`Daily limit €${dailyLimit}`);
   }
 
   balance -= amount;
-
   const ref = genRef();
 
   tx.unshift({
-    amount: -amount,
+    amount:-amount,
     note: el("description")?.value || "Transfer",
-    reference: ref,
+    reference:ref,
     category: el("category")?.value || "Personal",
-    date: new Date().toISOString()
+    date:new Date().toISOString()
   });
 
   await updateDoc(userRef,{ balance, transactions: tx });
+
+  await new Promise(r=>setTimeout(r,1200));
 
   renderAll();
   goToSuccess("Transfer", amount, ref, "Transfer");
@@ -305,72 +336,48 @@ async function initDashboard(){
 
   userRef = doc(db,"users",username);
   const snap = await getDoc(userRef);
-
   if(!snap.exists()) return location.replace("index.html");
 
-  let data = snap.data() || {};
+  const data = snap.data();
 
   applyTier(data.accountTier || "Tier 1");
   balance = Number(data.balance ?? 0);
   tx = getTx(data);
   frozen = data.cardFrozen || false;
 
-  updateFreezeUI(); // ✅ IMPORTANT
+  updateFreezeUI();
 
-  // PROFILE
   setText("welcome","Hi, Welcome " + (data.fullName || "User"));
-  setText("nameProfile", data.fullName || "User");
-  setText("emailProfile", data.email || "dechasebank@gmail.com");
-
-  const addrEl = el("addressProfile");
-  if(addrEl){
-    addrEl.innerHTML = data.address
-      ? "📍 " + data.address.replace(/,/g,"<br>")
-      : "No address set";
-  }
+  setText("nameProfile", data.fullName);
+  setText("emailProfile", data.email);
 
   setText("accountTier","Account: " + tier);
   setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
-  setText("accountNumberDisplay", data.accountNumber || "DCB-0000000");
-  setText("iban", data.iban || "DE89370400440532013000");
-  setText("routingDisplay", data.routingNumber || "021069021");
-  setText("swift", data.swift || "DEUTDEFF");
+  setText("accountNumberDisplay", data.accountNumber);
+  setText("iban", data.iban);
+  setText("routingDisplay", data.routingNumber);
+  setText("swift", data.swift);
 
   setText("cardNumber", maskCard(data.card?.cardNumber));
-  setText("cardExpiry", data.card?.expiry || "07/27");
+  setText("cardExpiry", data.card?.expiry);
 
-  realCVV = data.cvv || "123";
+  realCVV = data.cvv;
   window._realCVV = realCVV;
 
   renderAll();
   fetchRates();
 
-  // REALTIME
   onSnapshot(userRef,(snap)=>{
-    let d = snap.data();
+    const d = snap.data();
     if(!d) return;
 
     balance = Number(d.balance ?? 0);
     tx = getTx(d);
     frozen = d.cardFrozen || false;
 
-    updateFreezeUI(); // ✅ REALTIME SYNC
-
+    updateFreezeUI();
     applyTier(d.accountTier || "Tier 1");
-
-    setText("nameProfile", d.fullName || "User");
-    setText("emailProfile", d.email || "dechasebank@gmail.com");
-
-    const addrEl = el("addressProfile");
-    if(addrEl){
-      addrEl.innerHTML = d.address
-        ? "📍 " + d.address.replace(/,/g,"<br>")
-        : "No address set";
-    }
-
-    setText("accountTier","Account: " + tier);
-    setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
     renderAll();
   });
@@ -378,8 +385,8 @@ async function initDashboard(){
 
 initDashboard();
 
-// ===== FORCE HOME PAGE =====
-window.addEventListener("DOMContentLoaded", () => {
+// ===== FORCE HOME =====
+window.addEventListener("DOMContentLoaded", ()=>{
   if (document.getElementById("homePage")) {
     openPage("homePage");
   }

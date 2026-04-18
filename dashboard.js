@@ -420,3 +420,18 @@ function lockApp(){
   localStorage.setItem("appLocked", "true");
   window.location.href = "lock.html";
 }
+// ===== SMART AUTO LOGOUT =====
+let logoutTimer;
+
+// when user leaves app (minimize / switch tab)
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    // wait 30 seconds before logout
+    logoutTimer = setTimeout(() => {
+      logoutUser();
+    }, 30000); // 30 sec
+  } else {
+    // user came back → cancel logout
+    clearTimeout(logoutTimer);
+  }
+});

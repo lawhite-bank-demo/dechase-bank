@@ -323,7 +323,7 @@ frozen = data.cardFrozen || false;
 setText("welcome","Hi, Welcome " + (data.fullName || "User"));
 setText("nameProfile", data.fullName || "User");
 setText("emailProfile", data.email || "dechasebank@gmail.com");
-setText("addressProfile", data.address || "No address set");
+setText("addressProfile", d.address || "No address set");
 
 setText("accountTier","Account: " + tier);
 setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());

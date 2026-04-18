@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Transfer Successful</title>
+<style>
+body{
+font-family: Arial;
+background:#0b1220;
+color:white;
+text-align:center;
+padding:40px;
+}
+.card{
+background:#111827;
+padding:20px;
+border-radius:12px;
+max-width:400px;
+margin:auto;
+}
+button{
+margin-top:15px;
+padding:10px 20px;
+border:none;
+border-radius:8px;
+background:#3b82f6;
+color:white;
+cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h2>✅ Transfer Successful</h2>
+
+<p id="type"></p>
+<p id="amount"></p>
+<p id="ref"></p>
+<p id="date"></p>
+
+<button onclick="downloadReceipt()">Download Receipt</button>
+<button onclick="goHome()">Back to Dashboard</button>
+</div>
+
+<script>
+const data = JSON.parse(localStorage.getItem("lastReceipt") || "{}");
+
+document.getElementById("type").innerText = data.type || "";
+document.getElementById("amount").innerText = "Amount: €" + (data.amount || 0);
+document.getElementById("ref").innerText = "Ref: " + (data.reference || "-");
+document.getElementById("date").innerText = data.date || "";
+
+// DOWNLOAD RECEIPT
+function downloadReceipt(){
+const text = `
+----- RECEIPT -----
+Type: ${data.type}
+Amount: €${data.amount}
+Reference: ${data.reference}
+Date: ${data.date}
+-------------------
+`;
+
+const blob = new Blob([text], { type: "text/plain" });
+const url = URL.createObjectURL(blob);
+
+const a = document.createElement("a");
+a.href = url;
+a.download = "receipt.txt";
+a.click();
+
+URL.revokeObjectURL(url);
+}
+
+// BACK
+function goHome(){
+window.location.href = "dashboard.html";
+}
+</script>
+
+</body>
+</html>

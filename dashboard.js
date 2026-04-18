@@ -20,12 +20,14 @@ let userRef = null;
 let hidden = false;
 let realCVV = "";
 
+let dailyLimit = 20000;
+let dailyUsed = 0;
+
 let tier = "Tier 1";
 let maxTransfer = 10000;
 
-// ===== CURRENCY =====
-let eurToGbp = 0.86;
 let eurToUsd = 1.08;
+let eurToGbp = 0.86;
 
 // ===== HELPERS =====
 function el(id){ return document.getElementById(id); }
@@ -35,20 +37,15 @@ function setText(id,val){
   if(e) e.innerText = val ?? "";
 }
 
-function genRef(){
-  return "TRX-" + Math.floor(Math.random()*1000000000);
-}
-
-function maskCard(num){
-  let clean = (num || "").replace(/\s/g,'');
-  return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
-}
-
-function formatMoney(val, symbol="€"){
-  return symbol + Number(val).toLocaleString(undefined,{
+function formatMoney(v){
+  return "€" + Number(v).toLocaleString(undefined,{
     minimumFractionDigits:2,
     maximumFractionDigits:2
   });
+}
+
+function genRef(){
+  return "TRX-" + Math.floor(Math.random()*1000000000);
 }
 
 // ===== NOTIFY =====
@@ -67,29 +64,20 @@ function notify(msg){
   setTimeout(()=> n.remove(), 2500);
 }
 
-// ===== LOGOUT =====
-window.logoutUser = function(){
-  localStorage.removeItem("user");
-  localStorage.removeItem("appLocked");
-  window.location.href = "index.html";
-};
-
-// ===== LOCK =====
-function lockApp(){
-  localStorage.setItem("appLocked", "true");
-  window.location.href = "lock.html";
-}
-
-if(localStorage.getItem("appLocked") === "true"){
-  window.location.href = "lock.html";
-}
-
-// ===== ACCOUNT =====
+// ===== ACCOUNT TIER =====
 function applyTier(t){
   tier = t;
-  if(t === "Tier 2") maxTransfer = 50000;
-  else if(t === "Tier 3") maxTransfer = 100000;
-  else maxTransfer = 10000;
+
+  if(t === "Tier 2"){
+    maxTransfer = 50000;
+    dailyLimit = 50000;
+  } else if(t === "Tier 3"){
+    maxTransfer = 100000;
+    dailyLimit = 100000;
+  } else {
+    maxTransfer = 10000;
+    dailyLimit = 20000;
+  }
 }
 
 // ===== BALANCE =====
@@ -97,12 +85,7 @@ function renderBalance(){
   const bal = el("balance");
   if(!bal) return;
 
-  if(hidden){
-    bal.innerText = "••••••";
-  } else {
-    bal.innerText = formatMoney(balance);
-  }
-
+  bal.innerText = hidden ? "••••••" : formatMoney(balance);
   setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 
@@ -110,25 +93,6 @@ window.toggleBalance = function(){
   hidden = !hidden;
   renderBalance();
 };
-
-// ===== FREEZE CARD =====
-window.toggleCard = async function(){
-  if(!userRef) return;
-
-  frozen = !frozen;
-  await updateDoc(userRef,{ cardFrozen: frozen });
-  updateFreezeUI();
-};
-
-function updateFreezeUI(){
-  const btn = el("cardBtn");
-  if(!btn) return;
-
-  btn.innerText = frozen ? "Unfreeze Card" : "Freeze Card";
-  btn.style.background = frozen
-    ? "linear-gradient(135deg,#22c55e,#16a34a)"
-    : "linear-gradient(135deg,#ef4444,#dc2626)";
-}
 
 // ===== TRANSACTIONS =====
 function getTx(data){
@@ -144,18 +108,12 @@ function renderTransactions(){
 
   box.innerHTML = "";
 
-  if(!tx.length){
-    box.innerHTML = "<p style='opacity:0.6;'>No transactions yet</p>";
-    return;
-  }
-
   const sorted = [...tx].sort((a,b)=>
     new Date(b.date) - new Date(a.date)
   );
 
   sorted.forEach(t=>{
     const amt = Number(t.amount || 0);
-    const date = t.date ? new Date(t.date).toLocaleString() : "—";
 
     const div = document.createElement("div");
     div.className = "tx";
@@ -164,57 +122,133 @@ function renderTransactions(){
       <div style="display:flex;justify-content:space-between;">
         <div>
           <strong>${t.note || "Transaction"}</strong><br>
-          <small style="opacity:0.6;">${date}</small>
+          <small>${new Date(t.date).toLocaleString()}</small>
         </div>
-        <div style="color:${amt>=0?"#22c55e":"#ef4444"};font-weight:bold;">
+        <div style="color:${amt>=0?"#22c55e":"#ef4444"}">
           ${amt>=0?"+":"-"}${formatMoney(Math.abs(amt))}
         </div>
       </div>
     `;
 
-    div.onclick = () => {
-      notify(`${formatMoney(Math.abs(amt))} | Ref: ${t.reference}`);
+    div.onclick = ()=>{
+      notify(`Ref: ${t.reference} | ${t.category}`);
     };
 
     box.appendChild(div);
   });
 }
 
-// ===== CURRENCY =====
-async function fetchRates(){
-  try{
-    const res = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
-    const data = await res.json();
+// ===== DAILY LIMIT =====
+function calculateDailyUsed(){
+  const today = new Date().toDateString();
 
-    if(data?.rates){
-      eurToGbp = data.rates.GBP || eurToGbp;
-      eurToUsd = data.rates.USD || eurToUsd;
-    }
-  }catch{
-    console.warn("Using fallback rates");
+  dailyUsed = tx
+    .filter(t=>new Date(t.date).toDateString() === today && t.amount < 0)
+    .reduce((s,t)=> s + Math.abs(t.amount),0);
+}
+
+// ===== WALLET =====
+function updateWallet(){
+  setText("eurWallet", formatMoney(balance));
+  setText("usdWallet", "$"+(balance*eurToUsd).toFixed(2));
+  setText("gbpWallet", "£"+(balance*eurToGbp).toFixed(2));
+
+  setText("convertedEUR", formatMoney(balance));
+  setText("convertedUSD", "$"+(balance*eurToUsd).toFixed(2));
+  setText("convertedGBP", "£"+(balance*eurToGbp).toFixed(2));
+}
+
+// ===== FREEZE =====
+window.toggleCard = async function(){
+  if(!userRef) return;
+
+  frozen = !frozen;
+  await updateDoc(userRef,{ cardFrozen:frozen });
+
+  notify(frozen ? "Card Frozen" : "Card Unfrozen");
+};
+
+// ===== BILL =====
+window.payBill = async (name, amount)=>{
+  if(frozen) return notify("Card frozen");
+  if(amount > balance) return notify("Insufficient");
+
+  balance -= amount;
+
+  tx.unshift({
+    amount:-amount,
+    note:name+" Bill",
+    reference:genRef(),
+    category:"Bills",
+    date:new Date().toISOString()
+  });
+
+  await updateDoc(userRef,{ balance, transactions:tx });
+
+  renderAll();
+};
+
+// ===== GIFT =====
+window.buyGiftCard = async (name, amount)=>{
+  if(frozen) return notify("Card frozen");
+  if(amount > balance) return notify("Insufficient");
+
+  balance -= amount;
+
+  tx.unshift({
+    amount:-amount,
+    note:name+" Gift",
+    reference:genRef(),
+    category:"Personal",
+    date:new Date().toISOString()
+  });
+
+  await updateDoc(userRef,{ balance, transactions:tx });
+
+  renderAll();
+};
+
+// ===== TRANSFER (OTP) =====
+window.openPinModal = ()=>{
+  const amount = parseFloat(el("amount")?.value);
+
+  if(!amount || amount <= 0) return notify("Enter amount");
+  if(amount > balance) return notify("Insufficient");
+
+  calculateDailyUsed();
+  if(dailyUsed + amount > dailyLimit){
+    return notify("Daily limit exceeded");
   }
 
-  updateWalletUI();
-}
+  if(amount > maxTransfer){
+    return notify("Max transfer exceeded");
+  }
 
-function updateWalletUI(){
-  const usd = balance * eurToUsd;
-  const gbp = balance * eurToGbp;
+  const otp = Math.floor(100000 + Math.random()*900000);
 
-  setText("usdWallet", formatMoney(usd,"$"));
-  setText("eurWallet", formatMoney(balance,"€"));
-  setText("gbpWallet", formatMoney(gbp,"£"));
+  localStorage.setItem("otpCode", otp);
+  localStorage.setItem("pendingTx", JSON.stringify({
+    amount,
+    note:"Transfer",
+    category: el("category")?.value || "Personal"
+  }));
 
-  setText("convertedEUR", formatMoney(balance,"€"));
-  setText("convertedUSD", formatMoney(usd,"$"));
-  setText("convertedGBP", formatMoney(gbp,"£"));
-}
+  notify("OTP: "+otp);
+
+  window.location.href = "otp.html";
+};
+
+// ===== LOGOUT =====
+window.logoutUser = ()=>{
+  localStorage.clear();
+  window.location.href = "index.html";
+};
 
 // ===== RENDER =====
 function renderAll(){
   renderBalance();
   renderTransactions();
-  updateWalletUI();
+  updateWallet();
 }
 
 // ===== INIT =====
@@ -230,36 +264,26 @@ async function initDashboard(){
   const data = snap.data();
 
   applyTier(data.accountTier || "Tier 1");
+
   balance = Number(data.balance ?? 0);
   tx = getTx(data);
   frozen = data.cardFrozen || false;
 
-  updateFreezeUI();
+  setText("welcome","Hi, "+data.fullName);
+  setText("iban", data.iban);
+  setText("routingDisplay", data.routingNumber);
+  setText("swift", data.swift);
 
-  // PROFILE
-  setText("welcome","Hi, Welcome " + (data.fullName || "User"));
-  setText("nameProfile", data.fullName);
-  setText("emailProfile", data.email);
-  setText("accountTier","Account: " + tier);
-  setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
-
-  // ACCOUNT DETAILS
-  setText("accountNumberDisplay", data.accountNumber || "Not available");
-  setText("iban", data.iban || "Not available");
-  setText("routingDisplay", data.routingNumber || "Not available");
-  setText("swift", data.swift || "Not available");
-
-  // CARD
-  setText("cardNumber", maskCard(data.card?.cardNumber));
+  setText("cardName", data.fullName);
+  setText("cardNumber","**** **** **** "+(data.card?.cardNumber?.slice(-4)||"1122"));
   setText("cardExpiry", data.card?.expiry);
-  setText("cardName", data.fullName || "User");
 
   realCVV = data.cvv;
   window._realCVV = realCVV;
 
   renderAll();
-  fetchRates();
 
+  // REALTIME
   onSnapshot(userRef,(snap)=>{
     const d = snap.data();
     if(!d) return;
@@ -268,88 +292,9 @@ async function initDashboard(){
     tx = getTx(d);
     frozen = d.cardFrozen || false;
 
-    updateFreezeUI();
-    applyTier(d.accountTier || "Tier 1");
-
     renderAll();
   });
 }
 
-// ===== START =====
+// START
 initDashboard();
-
-// ===== SESSION =====
-let sessionTimer;
-
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    sessionTimer = setTimeout(lockApp, 10000);
-    setTimeout(logoutUser, 60000);
-  } else {
-    clearTimeout(sessionTimer);
-  }
-});
-// ===== PAY BILL =====
-window.payBill = async (name, amount)=>{
-  if(frozen) return notify("Card is frozen");
-  if(amount > balance) return notify("Insufficient funds");
-
-  balance -= amount;
-
-  tx.unshift({
-    amount: -amount,
-    note: name + " Bill",
-    reference: genRef(),
-    category: "Bills",
-    date: new Date().toISOString()
-  });
-
-  await updateDoc(userRef,{ balance, transactions: tx });
-
-  renderAll();
-  notify(name + " paid successfully");
-};
-
-// ===== BUY GIFT CARD =====
-window.buyGiftCard = async (name, amount)=>{
-  if(frozen) return notify("Card is frozen");
-  if(amount > balance) return notify("Insufficient funds");
-
-  balance -= amount;
-
-  tx.unshift({
-    amount: -amount,
-    note: name + " Gift Card",
-    reference: genRef(),
-    category: "Personal",
-    date: new Date().toISOString()
-  });
-
-  await updateDoc(userRef,{ balance, transactions: tx });
-
-  renderAll();
-  notify(name + " gift card purchased");
-};
-
-// ===== SIMPLE TRANSFER (TEMP FIX) =====
-window.openPinModal = async ()=>{
-  const amount = parseFloat(el("amount")?.value);
-
-  if(!amount || amount <= 0) return notify("Enter valid amount");
-  if(amount > balance) return notify("Insufficient funds");
-
-  balance -= amount;
-
-  tx.unshift({
-    amount: -amount,
-    note: "Transfer",
-    reference: genRef(),
-    category: el("category")?.value || "Personal",
-    date: new Date().toISOString()
-  });
-
-  await updateDoc(userRef,{ balance, transactions: tx });
-
-  renderAll();
-  notify("Transfer successful");
-};

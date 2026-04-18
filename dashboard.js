@@ -289,3 +289,67 @@ document.addEventListener("visibilitychange", () => {
     clearTimeout(sessionTimer);
   }
 });
+// ===== PAY BILL =====
+window.payBill = async (name, amount)=>{
+  if(frozen) return notify("Card is frozen");
+  if(amount > balance) return notify("Insufficient funds");
+
+  balance -= amount;
+
+  tx.unshift({
+    amount: -amount,
+    note: name + " Bill",
+    reference: genRef(),
+    category: "Bills",
+    date: new Date().toISOString()
+  });
+
+  await updateDoc(userRef,{ balance, transactions: tx });
+
+  renderAll();
+  notify(name + " paid successfully");
+};
+
+// ===== BUY GIFT CARD =====
+window.buyGiftCard = async (name, amount)=>{
+  if(frozen) return notify("Card is frozen");
+  if(amount > balance) return notify("Insufficient funds");
+
+  balance -= amount;
+
+  tx.unshift({
+    amount: -amount,
+    note: name + " Gift Card",
+    reference: genRef(),
+    category: "Personal",
+    date: new Date().toISOString()
+  });
+
+  await updateDoc(userRef,{ balance, transactions: tx });
+
+  renderAll();
+  notify(name + " gift card purchased");
+};
+
+// ===== SIMPLE TRANSFER (TEMP FIX) =====
+window.openPinModal = async ()=>{
+  const amount = parseFloat(el("amount")?.value);
+
+  if(!amount || amount <= 0) return notify("Enter valid amount");
+  if(amount > balance) return notify("Insufficient funds");
+
+  balance -= amount;
+
+  tx.unshift({
+    amount: -amount,
+    note: "Transfer",
+    reference: genRef(),
+    category: el("category")?.value || "Personal",
+    date: new Date().toISOString()
+  });
+
+  await updateDoc(userRef,{ balance, transactions: tx });
+
+  renderAll();
+  notify("Transfer successful");
+};

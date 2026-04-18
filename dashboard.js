@@ -367,21 +367,19 @@ renderAll();
 fetchRates();
 setInterval(fetchRates, 1000 * 60 * 30);
 
-onSnapshot(userRef,(snap)=>{
+onSnapshot(userRef, (snap) => {
 let d = snap.data();
 
 // UPDATE STATE
 balance = Number(d.balance ?? d.usdBalance ?? 0);
 tx = getTx(d);
 
-// ✅ UPDATE PROFILE UI
+// ✅ UPDATE PROFILE UI (LIVE)
 setText("emailProfile", d.email || "email@mail.com");
 setText("nameProfile", d.fullName || "User");
 
 // RENDER EVERYTHING
 renderAll();
-});.
 });
 }
-
 initDashboard();

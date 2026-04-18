@@ -3,84 +3,148 @@
 <head>
 <title>Transfer Successful</title>
 
-<!-- ✅ jsPDF MUST be loaded BEFORE your script -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <style>
 body{
-font-family: Arial;
-background:#0b1220;
-color:white;
-text-align:center;
-padding:40px;
+  font-family: Arial, sans-serif;
+  background:#0b1220;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  margin:0;
 }
+
 .card{
-background:#111827;
-padding:20px;
-border-radius:12px;
-max-width:400px;
-margin:auto;
+  background:#111827;
+  padding:25px;
+  border-radius:16px;
+  width:350px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.4);
 }
+
+h2{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  margin:10px 0;
+  padding:10px;
+  background:#1f2937;
+  border-radius:8px;
+}
+
+.label{
+  opacity:0.7;
+}
+
+.value{
+  font-weight:bold;
+}
+
+.amount{
+  color:#22c55e;
+  font-size:20px;
+  text-align:center;
+  margin:15px 0;
+}
+
+.buttons{
+  margin-top:20px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
 button{
-margin-top:15px;
-padding:10px 20px;
-border:none;
-border-radius:8px;
-background:#3b82f6;
-color:white;
-cursor:pointer;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#3b82f6;
+  color:white;
+  font-size:15px;
+  cursor:pointer;
+}
+
+button:hover{
+  opacity:0.9;
 }
 </style>
+
 </head>
 
 <body>
 
 <div class="card">
-<h2>✅ Transfer Successful</h2>
+  <h2>✅ Transfer Successful</h2>
 
-<p id="type"></p>
-<p id="amount"></p>
-<p id="ref"></p>
-<p id="date"></p>
+  <div class="amount" id="amount"></div>
 
-<button onclick="downloadReceipt()">Download Receipt</button>
-<button onclick="goHome()">Back to Dashboard</button>
+  <div class="row">
+    <span class="label">Type</span>
+    <span class="value" id="type"></span>
+  </div>
+
+  <div class="row">
+    <span class="label">Reference</span>
+    <span class="value" id="ref"></span>
+  </div>
+
+  <div class="row">
+    <span class="label">Date</span>
+    <span class="value" id="date"></span>
+  </div>
+
+  <div class="buttons">
+    <button onclick="downloadReceipt()">Download Receipt</button>
+    <button onclick="goHome()">Back to Dashboard</button>
+  </div>
 </div>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 const data = JSON.parse(localStorage.getItem("lastReceipt") || "{}");
 
-// ✅ fallback (prevents blank screen)
-if(!data || !data.amount){
-document.getElementById("type").innerText = "No recent transaction";
-}else{
-document.getElementById("type").innerText = data.type || "";
-document.getElementById("amount").innerText = "Amount: €" + (data.amount || 0);
-document.getElementById("ref").innerText = "Ref: " + (data.reference || "-");
-document.getElementById("date").innerText = data.date || "";
-}
+// SAFE FALLBACKS
+const type = data.type || "Transfer";
+const amount = data.amount || 0;
+const ref = data.reference || "N/A";
+const date = data.date || new Date().toLocaleString();
 
-// ✅ REAL PDF RECEIPT
+// UI DISPLAY
+document.getElementById("type").innerText = type;
+document.getElementById("amount").innerText = "€" + amount.toLocaleString();
+document.getElementById("ref").innerText = ref;
+document.getElementById("date").innerText = date;
+
+// DOWNLOAD PDF RECEIPT
 function downloadReceipt(){
-const { jsPDF } = window.jspdf;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
 
-const doc = new jsPDF();
+  doc.setFontSize(18);
+  doc.text("TRANSFER RECEIPT", 20, 20);
 
-doc.setFontSize(18);
-doc.text("TRANSFER RECEIPT", 20, 20);
+  doc.setFontSize(12);
+  doc.text("Type: " + type, 20, 40);
+  doc.text("Amount: €" + amount, 20, 50);
+  doc.text("Reference: " + ref, 20, 60);
+  doc.text("Date: " + date, 20, 70);
 
-doc.setFontSize(12);
-doc.text(`Type: ${data.type || "-"}`, 20, 40);
-doc.text(`Amount: €${data.amount || 0}`, 20, 50);
-doc.text(`Reference: ${data.reference || "-"}`, 20, 60);
-doc.text(`Date: ${data.date || "-"}`, 20, 70);
+  doc.text("-----------------------------", 20, 85);
+  doc.text("Thank you for banking with us", 20, 95);
 
-doc.save("receipt.pdf");
+  doc.save("receipt.pdf");
 }
 
 // BACK
 function goHome(){
-window.location.href = "dashboard.html";
+  window.location.href = "dashboard.html";
 }
 </script>
 

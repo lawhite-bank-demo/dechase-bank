@@ -264,7 +264,7 @@ async function initDashboard(){
     setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
     renderAll();
-  });
+ });
 
 }
 

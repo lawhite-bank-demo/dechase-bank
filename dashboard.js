@@ -136,7 +136,9 @@ function renderTransactions(){
     return;
   }
 
-  const sorted = [...tx].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  const sorted = [...tx].sort((a,b)=>
+    new Date(b.date) - new Date(a.date)
+  );
 
   sorted.forEach(t=>{
     const amt = Number(t.amount || 0);
@@ -144,17 +146,33 @@ function renderTransactions(){
     const div = document.createElement("div");
     div.className = "tx";
 
-    div.onclick = () => {
-      notify(`€${Math.abs(amt)} | ${t.category} | Ref: ${t.reference}`);
-    };
+    const title = t.note || "Transfer Sent";
+    const ref = t.reference || genRef();
+    const date = new Date(t.date).toLocaleString();
 
     div.innerHTML = `
-      <strong>${t.note || "Transaction"}</strong><br>
-      <small>${new Date(t.date).toLocaleString()}</small><br>
-      <b style="color:${amt>=0?"#22c55e":"#ef4444"}">
-      ${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
-      </b>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        
+        <div>
+          <strong style="font-size:16px;">${title}</strong><br>
+          <small style="opacity:0.7;">Ref: ${ref}</small><br>
+          <small style="opacity:0.7;">${date}</small>
+        </div>
+
+        <div style="
+          font-weight:bold;
+          font-size:16px;
+          color:${amt >= 0 ? "#22c55e" : "#ef4444"};
+        ">
+          ${amt >= 0 ? "+" : "-"}€${Math.abs(amt).toLocaleString()}
+        </div>
+
+      </div>
     `;
+
+    div.onclick = () => {
+      notify(`€${Math.abs(amt)} | ${t.category} | Ref: ${ref}`);
+    };
 
     box.appendChild(div);
   });

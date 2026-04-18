@@ -2,6 +2,10 @@
 <html>
 <head>
 <title>Transfer Successful</title>
+
+<!-- ✅ jsPDF MUST be loaded BEFORE your script -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body{
 font-family: Arial;
@@ -42,35 +46,36 @@ cursor:pointer;
 <button onclick="downloadReceipt()">Download Receipt</button>
 <button onclick="goHome()">Back to Dashboard</button>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
 const data = JSON.parse(localStorage.getItem("lastReceipt") || "{}");
 
+// ✅ fallback (prevents blank screen)
+if(!data || !data.amount){
+document.getElementById("type").innerText = "No recent transaction";
+}else{
 document.getElementById("type").innerText = data.type || "";
 document.getElementById("amount").innerText = "Amount: €" + (data.amount || 0);
 document.getElementById("ref").innerText = "Ref: " + (data.reference || "-");
 document.getElementById("date").innerText = data.date || "";
+}
 
-// DOWNLOAD RECEIPT
+// ✅ REAL PDF RECEIPT
 function downloadReceipt(){
-const text = `
------ RECEIPT -----
-Type: ${data.type}
-Amount: €${data.amount}
-Reference: ${data.reference}
-Date: ${data.date}
--------------------
-`;
+const { jsPDF } = window.jspdf;
 
-const blob = new Blob([text], { type: "application/pdf" });
-const url = URL.createObjectURL(blob);
+const doc = new jsPDF();
 
-const a = document.createElement("a");
-a.href = url;
-a.download = "receipt.txt";
-a.click();
+doc.setFontSize(18);
+doc.text("TRANSFER RECEIPT", 20, 20);
 
-URL.revokeObjectURL(url);
+doc.setFontSize(12);
+doc.text(`Type: ${data.type || "-"}`, 20, 40);
+doc.text(`Amount: €${data.amount || 0}`, 20, 50);
+doc.text(`Reference: ${data.reference || "-"}`, 20, 60);
+doc.text(`Date: ${data.date || "-"}`, 20, 70);
+
+doc.save("receipt.pdf");
 }
 
 // BACK

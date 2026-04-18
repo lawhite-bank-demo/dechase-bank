@@ -21,6 +21,13 @@ let userRef = null;
 let hidden = false;
 let realCVV = "";
 
+// ✅ NEW (daily limit)
+let dailyLimit = 20000;
+let dailyUsed = 0;
+
+// ✅ anti-duplicate
+let processing = false;
+
 // ===== ACCOUNT SYSTEM =====
 let tier = "Tier 1";
 let maxTransfer = 10000;
@@ -28,9 +35,18 @@ let maxTransfer = 10000;
 function applyTier(t){
 tier = t;
 
-if(t === "Tier 2") maxTransfer = 50000;
-else if(t === "Tier 3") maxTransfer = 100000;
-else maxTransfer = 10000;
+if(t === "Tier 2"){
+maxTransfer = 50000;
+dailyLimit = 50000;
+}
+else if(t === "Tier 3"){
+maxTransfer = 100000;
+dailyLimit = 100000;
+}
+else{
+maxTransfer = 10000;
+dailyLimit = 20000;
+}
 }
 
 // ===== HELPERS =====
@@ -58,7 +74,19 @@ return Array.isArray(data.transactions)
 : Object.values(data.transactions);
 }
 
-// ===== CURRENCY (FIXED + LIVE) =====
+// ✅ NEW: DAILY CALCULATOR
+function calculateDailyUsed(){
+const today = new Date().toDateString();
+
+dailyUsed = tx
+.filter(t=>{
+const txDate = new Date(t.date).toDateString();
+return txDate === today && Number(t.amount) < 0;
+})
+.reduce((sum,t)=> sum + Math.abs(Number(t.amount)),0);
+}
+
+// ===== CURRENCY =====
 let eurToGbp = 0.86;
 let eurToUsd = 1.08;
 
@@ -78,7 +106,6 @@ console.warn("Using fallback rates");
 }
 
 function updateWalletUI(){
-
 const usd = balance * eurToUsd;
 const gbp = balance * eurToGbp;
 
@@ -171,7 +198,6 @@ reference:ref,
 date:new Date().toISOString()
 });
 
-// FIXED (sync both fields)
 await updateDoc(userRef,{ balance: balance, usdBalance: balance, transactions: tx });
 
 renderAll();
@@ -194,7 +220,6 @@ reference:ref,
 date:new Date().toISOString()
 });
 
-// FIXED (sync both fields)
 await updateDoc(userRef,{ balance: balance, usdBalance: balance, transactions: tx });
 
 renderAll();
@@ -203,22 +228,36 @@ showReceipt(name, amount, ref);
 
 // ===== TRANSFER =====
 window.openPinModal = async ()=>{
-if(frozen) return alert("Card is frozen");
+if(processing) return;
+processing = true;
+
+if(frozen){ processing=false; return alert("Card is frozen"); }
 
 const amount = parseFloat(el("amount")?.value);
 
 if(isNaN(amount) || amount <= 0){
+processing=false;
 alert("Enter valid amount");
 return;
 }
 
 if(amount > maxTransfer){
+processing=false;
 alert(`Your ${tier} limit is €${maxTransfer}`);
 return;
 }
 
 if(amount > balance){
+processing=false;
 alert("Insufficient funds");
+return;
+}
+
+// ✅ DAILY LIMIT CHECK
+calculateDailyUsed();
+if(dailyUsed + amount > dailyLimit){
+processing=false;
+alert(`Daily limit exceeded. Limit: €${dailyLimit}`);
 return;
 }
 
@@ -228,13 +267,17 @@ sender: userRef.id,
 amount,
 status:"pending"
 });
+processing=false;
 alert("Transfer pending approval");
 return;
 }
 
 if(amount > 20000){
 let code = prompt("Enter code (1234)");
-if(code !== "1234") return alert("Verification failed");
+if(code !== "1234"){
+processing=false;
+return alert("Verification failed");
+}
 }
 
 balance -= amount;
@@ -250,10 +293,15 @@ reference: ref,
 date: new Date().toISOString()
 });
 
+// update daily usage
+dailyUsed += amount;
+
 await updateDoc(userRef,{ balance: balance, usdBalance: balance, transactions: tx });
 
 renderAll();
 showReceipt("Transfer", amount, ref);
+
+processing = false;
 };
 
 // ===== CVV =====
@@ -345,11 +393,9 @@ balance = Number(d.balance ?? d.usdBalance ?? 0);
 tx = getTx(d);
 
 renderAll();
-
-setText("iban", d.iban || "DE89370400440532013000");
-setText("routingDisplay", d.routingNumber || "021069021");
-setText("swift", d.swift || "DEUTDEFF");
 });
+
+// BUTTON
 const sendBtn = el("sendBtn");
 if(sendBtn){
 sendBtn.onclick = openPinModal;

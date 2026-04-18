@@ -58,14 +58,32 @@ return Array.isArray(data.transactions)
 : Object.values(data.transactions);
 }
 
-// ===== CURRENCY =====
+// ===== CURRENCY (FIXED + LIVE) =====
 let eurToGbp = 0.86;
+let eurToUsd = 1.08;
+
+async function fetchRates(){
+try{
+const res = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
+const data = await res.json();
+
+eurToGbp = data.rates.GBP || eurToGbp;
+eurToUsd = data.rates.USD || eurToUsd;
+
+updateWalletUI();
+
+}catch(err){
+console.warn("Using fallback rates");
+}
+}
 
 function updateWalletUI(){
-setText("usdWallet", "$" + balance.toLocaleString());
-setText("eurWallet", "€" + balance.toLocaleString());
 
+const usd = balance * eurToUsd;
 const gbp = balance * eurToGbp;
+
+setText("usdWallet", "$" + usd.toLocaleString());
+setText("eurWallet", "€" + balance.toLocaleString());
 setText("gbpWallet", "£" + gbp.toLocaleString());
 
 setText("convertedEUR", "€" + balance.toLocaleString());
@@ -153,7 +171,8 @@ reference:ref,
 date:new Date().toISOString()
 });
 
-await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
+// FIXED (sync both fields)
+await updateDoc(userRef,{ balance: balance, usdBalance: balance, transactions: tx });
 
 renderAll();
 showReceipt(name, amount, ref);
@@ -175,7 +194,8 @@ reference:ref,
 date:new Date().toISOString()
 });
 
-await updateDoc(userRef,{ usdBalance: balance, transactions: tx });
+// FIXED (sync both fields)
+await updateDoc(userRef,{ balance: balance, usdBalance: balance, transactions: tx });
 
 renderAll();
 showReceipt(name, amount, ref);
@@ -202,7 +222,6 @@ alert("Insufficient funds");
 return;
 }
 
-// approval
 if(amount > 70000){
 await addDoc(collection(db,"pendingTransfers"),{
 sender: userRef.id,
@@ -213,13 +232,11 @@ alert("Transfer pending approval");
 return;
 }
 
-// verification
 if(amount > 20000){
 let code = prompt("Enter code (1234)");
 if(code !== "1234") return alert("Verification failed");
 }
 
-// normal
 balance -= amount;
 
 const ref = genRef();
@@ -231,7 +248,7 @@ reference:ref,
 date:new Date().toISOString()
 });
 
-await updateDoc(userRef,{ balance: balance, transactions: tx });
+await updateDoc(userRef,{ balance: balance, usdBalance: balance, transactions: tx });
 
 renderAll();
 showReceipt("Transfer", amount, ref);
@@ -283,16 +300,16 @@ setText("emailProfile", data.email || "email@mail.com");
 setText("cardNumber", maskCard(data.card?.cardNumber));
 setText("cardExpiry", data.card?.expiry || "07/27");
 
-// ===== CVV =====
+// CVV
 realCVV = data.cvv || Math.floor(100 + Math.random()*900).toString();
 window._realCVV = realCVV;
 setText("cardCVV","***");
 
-// ===== TIER UI =====
+// TIER
 setText("accountTier","Account: " + tier);
 setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
-// ===== TOGGLE BALANCE =====
+// TOGGLE BALANCE
 const toggle = el("toggleBalance");
 if(toggle){
 toggle.onclick = ()=>{
@@ -301,7 +318,7 @@ renderBalance();
 };
 }
 
-// ===== FREEZE =====
+// FREEZE
 window.toggleCard = async ()=>{
 frozen = !frozen;
 await updateDoc(userRef,{ cardFrozen: frozen });
@@ -311,14 +328,18 @@ el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 }
 };
 
-// ===== RENDER =====
+// RENDER
 renderAll();
 
-// ===== REALTIME =====
+// 🔥 LIVE RATES
+fetchRates();
+setInterval(fetchRates, 1000 * 60 * 30);
+
+// REALTIME
 onSnapshot(userRef,(snap)=>{
 let d = snap.data();
 
-balance = Number(d.balance ?? d.usdBalance ?? 0);;
+balance = Number(d.balance ?? d.usdBalance ?? 0);
 tx = getTx(d);
 
 renderAll();

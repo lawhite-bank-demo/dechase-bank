@@ -392,3 +392,25 @@ window.addEventListener("DOMContentLoaded", ()=>{
     openPage("homePage");
   }
 });
+// ===== AUTO LOGOUT ON APP LEAVE =====
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    logoutUser();
+  }
+});
+
+// OPTIONAL: also logout on refresh/close
+window.addEventListener("beforeunload", () => {
+  logoutUser();
+});
+
+// ===== LOGOUT FUNCTION =====
+function logoutUser(){
+  // clear session
+  localStorage.removeItem("user");
+  localStorage.removeItem("pendingTx");
+  localStorage.removeItem("otpCode");
+
+  // redirect
+  window.location.href = "index.html";
+}

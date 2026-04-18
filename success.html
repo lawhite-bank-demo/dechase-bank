@@ -19,19 +19,34 @@ body{
   background:#111827;
   padding:25px;
   border-radius:16px;
-  width:350px;
+  width:360px;
   box-shadow:0 10px 25px rgba(0,0,0,0.4);
 }
 
 h2{
   text-align:center;
-  margin-bottom:20px;
+  margin-bottom:10px;
+}
+
+.sub{
+  text-align:center;
+  opacity:0.6;
+  font-size:13px;
+  margin-bottom:15px;
+}
+
+.amount{
+  color:#22c55e;
+  font-size:26px;
+  text-align:center;
+  margin:15px 0;
+  font-weight:bold;
 }
 
 .row{
   display:flex;
   justify-content:space-between;
-  margin:10px 0;
+  margin:8px 0;
   padding:10px;
   background:#1f2937;
   border-radius:8px;
@@ -43,13 +58,7 @@ h2{
 
 .value{
   font-weight:bold;
-}
-
-.amount{
-  color:#22c55e;
-  font-size:20px;
-  text-align:center;
-  margin:15px 0;
+  text-align:right;
 }
 
 .buttons{
@@ -80,12 +89,18 @@ button:hover{
 
 <div class="card">
   <h2>✅ Transfer Successful</h2>
+  <div class="sub">Your payment has been processed</div>
 
   <div class="amount" id="amount"></div>
 
   <div class="row">
     <span class="label">Type</span>
     <span class="value" id="type"></span>
+  </div>
+
+  <div class="row">
+    <span class="label">Category</span>
+    <span class="value" id="category"></span>
   </div>
 
   <div class="row">
@@ -112,34 +127,41 @@ const data = JSON.parse(localStorage.getItem("lastReceipt") || "{}");
 
 // SAFE FALLBACKS
 const type = data.type || "Transfer";
-const amount = data.amount || 0;
+const amount = Number(data.amount || 0);
 const ref = data.reference || "N/A";
 const date = data.date || new Date().toLocaleString();
+const category = data.category || "General";
 
-// UI DISPLAY
+// DISPLAY
 document.getElementById("type").innerText = type;
 document.getElementById("amount").innerText = "€" + amount.toLocaleString();
 document.getElementById("ref").innerText = ref;
 document.getElementById("date").innerText = date;
+document.getElementById("category").innerText = category;
 
-// DOWNLOAD PDF RECEIPT
+// DOWNLOAD PDF
 function downloadReceipt(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
   doc.setFontSize(18);
-  doc.text("TRANSFER RECEIPT", 20, 20);
+  doc.text("DeChase Bank", 20, 20);
+
+  doc.setFontSize(14);
+  doc.text("Transaction Receipt", 20, 30);
 
   doc.setFontSize(12);
-  doc.text("Type: " + type, 20, 40);
-  doc.text("Amount: €" + amount, 20, 50);
-  doc.text("Reference: " + ref, 20, 60);
-  doc.text("Date: " + date, 20, 70);
+  doc.text("Type: " + type, 20, 50);
+  doc.text("Category: " + category, 20, 60);
+  doc.text("Amount: €" + amount.toLocaleString(), 20, 70);
+  doc.text("Reference: " + ref, 20, 80);
+  doc.text("Date: " + date, 20, 90);
 
-  doc.text("-----------------------------", 20, 85);
-  doc.text("Thank you for banking with us", 20, 95);
+  doc.text("------------------------------", 20, 105);
+  doc.text("Status: SUCCESS", 20, 115);
+  doc.text("Thank you for banking with us", 20, 125);
 
-  doc.save("receipt.pdf");
+  doc.save("DeChase_Receipt.pdf");
 }
 
 // BACK

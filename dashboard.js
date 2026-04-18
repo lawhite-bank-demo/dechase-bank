@@ -367,22 +367,30 @@ fetchRates();
 setInterval(fetchRates, 1000 * 60 * 30);
 
 // REALTIME
-onSnapshot(userRef, (snap) => {
+onSnapshot(userRef,(snap)=>{
   let d = snap.data();
   if(!d) return;
 
+  // UPDATE STATE
   balance = Number(d.balance ?? d.usdBalance ?? 0);
   tx = getTx(d);
 
+  applyTier(d.accountTier || "Tier 1"); // ✅ IMPORTANT
+
+  // PROFILE
   setText("nameProfile", d.fullName || "User");
   setText("emailProfile", d.email || "dechasebank@gmail.com");
 
   const addrEl = el("addressProfile");
   if(addrEl){
     addrEl.innerHTML = d.address
-      ? "📍 " + d.address.replace(/,/g, "<br>")
+      ? "📍 " + d.address.replace(/,/g,"<br>")
       : "No address set";
   }
+
+  // ✅ ADD THIS BACK
+  setText("accountTier","Account: " + tier);
+  setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
   renderAll();
 });

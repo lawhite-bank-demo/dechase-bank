@@ -66,6 +66,32 @@ function maskCard(num){
   return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
 }
 
+// ===== FREEZE CARD =====
+window.toggleCard = async function(){
+  if(!userRef) return;
+
+  frozen = !frozen;
+
+  await updateDoc(userRef,{
+    cardFrozen: frozen
+  });
+
+  updateFreezeUI();
+};
+
+function updateFreezeUI(){
+  const btn = document.getElementById("cardBtn");
+  if(!btn) return;
+
+  if(frozen){
+    btn.innerText = "Unfreeze Card";
+    btn.style.background = "linear-gradient(135deg,#22c55e,#16a34a)";
+  }else{
+    btn.innerText = "Freeze Card";
+    btn.style.background = "linear-gradient(135deg,#ef4444,#dc2626)";
+  }
+}
+
 // ===== SAFE TRANSACTIONS =====
 function getTx(data){
   if(!data?.transactions) return [];
@@ -289,6 +315,8 @@ async function initDashboard(){
   tx = getTx(data);
   frozen = data.cardFrozen || false;
 
+  updateFreezeUI(); // ✅ IMPORTANT
+
   // PROFILE
   setText("welcome","Hi, Welcome " + (data.fullName || "User"));
   setText("nameProfile", data.fullName || "User");
@@ -325,6 +353,9 @@ async function initDashboard(){
 
     balance = Number(d.balance ?? 0);
     tx = getTx(d);
+    frozen = d.cardFrozen || false;
+
+    updateFreezeUI(); // ✅ REALTIME SYNC
 
     applyTier(d.accountTier || "Tier 1");
 

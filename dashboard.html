@@ -1,26 +1,11 @@
-<!DOCTYPE 
-html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DeChase Bank</title><style>
-#cardBtn{
-  margin-top: 25px;
-  padding: 15px;
-  border-radius: 12px;
-  background: linear-gradient(135deg,#ef4444,#dc2626);
-  color: white;
-  font-weight: bold;
-}
+<title>DeChase Bank</title>
 
-.time-card{
-  background: linear-gradient(135deg, #0ea5e9, #2563eb);
-  padding: 20px;
-  border-radius: 18px;
-  margin-bottom: 15px;
-  text-align: center;
-}
-
+<style>
 body{
 margin:0;
 font-family:Arial;
@@ -47,15 +32,27 @@ text-align:center;
 
 .balance{font-size:28px;font-weight:bold;}
 
+.time-card{
+background:linear-gradient(135deg,#0ea5e9,#2563eb);
+padding:20px;
+border-radius:18px;
+margin-bottom:15px;
+text-align:center;
+box-shadow:0 10px 25px rgba(0,0,0,0.3);
+}
+
+.greeting{font-size:14px;opacity:0.9;}
+.time{font-size:32px;font-weight:bold;}
+.date{font-size:14px;opacity:0.8;}
+
 .bank-card{perspective:1000px;margin-top:10px;}
 
-/* ✅ FIXED */
 .card-inner{
-  width:100%;
-  height:200px;
-  position:relative;
-  transition:.6s;
-  transform-style:preserve-3d;
+width:100%;
+height:200px;
+position:relative;
+transition:.6s;
+transform-style:preserve-3d;
 }
 
 .card-inner.flipped{transform:rotateY(180deg);}
@@ -94,13 +91,33 @@ font-weight:bold;
 
 .card-bottom{display:flex;justify-content:space-between;}
 
-.bottomNav{
-position:fixed;bottom:0;width:100%;
-display:flex;justify-content:space-around;
-background:#021a35;padding:10px;
+#cardBtn{
+margin-top:20px;
+padding:14px;
+border-radius:12px;
+background:linear-gradient(135deg,#ef4444,#dc2626);
+color:white;
+font-weight:bold;
+width:100%;
+border:none;
 }
 
-.bottomNav button{background:none;color:white;font-size:12px;}
+.bottomNav{
+position:fixed;
+bottom:0;
+width:100%;
+display:flex;
+justify-content:space-around;
+background:#021a35;
+padding:10px;
+}
+
+.bottomNav button{
+background:none;
+color:white;
+font-size:12px;
+border:none;
+}
 
 .hidden{display:none;}
 
@@ -130,8 +147,11 @@ cursor:pointer;
 width:70px;height:70px;
 border-radius:50%;
 background:linear-gradient(135deg,#2563eb,#0ea5e9);
-display:flex;align-items:center;justify-content:center;
-margin:auto;font-size:28px;
+display:flex;
+align-items:center;
+justify-content:center;
+margin:auto;
+font-size:28px;
 }
 
 .center{text-align:center;}
@@ -141,21 +161,44 @@ padding:10px;
 border-bottom:1px solid #1f2937;
 margin-top:10px;
 }
-</style></head><body><div class="container"><!-- TIME --><div class="time-card">
-  <div id="greeting"></div>
-  <div id="time"></div>
-  <div id="date"></div>
-</div><h3 id="welcome"></h3><!-- HOME --><div id="homePage"><div class="balance-card">
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- TIME -->
+<div class="time-card">
+<div id="greeting"></div>
+<div id="time" class="time"></div>
+<div id="date" class="date"></div>
+</div>
+
+<h3 id="welcome"></h3>
+
+<!-- HOME -->
+<div id="homePage">
+
+<div class="balance-card">
 <div>Total Balance</div>
 <div id="balance" class="balance"></div>
 <div id="toggleBalance">👁 Hide</div>
-</div><div class="card">
+</div>
+
+<div class="card">
 <div class="bank-card" onclick="flipCard()">
-<div class="card-inner" id="cardInner"><div class="card-front">
+<div class="card-inner" id="cardInner">
+
+<div class="card-front">
 <div style="display:flex;justify-content:space-between;">
 <div class="chip"></div>
 <div>VISA</div>
-</div><div id="cardNumber" class="card-number"></div><div class="card-bottom">
+</div>
+
+<div id="cardNumber" class="card-number"></div>
+
+<div class="card-bottom">
 <div>
 <div>CARD HOLDER</div>
 <div id="cardName"></div>
@@ -165,62 +208,100 @@ margin-top:10px;
 <div id="cardExpiry"></div>
 </div>
 </div>
-</div><div class="card-back">
+</div>
+
+<div class="card-back">
 <div style="margin-top:40px;text-align:right;">
 CVV: <span id="cardCVV">***</span>
 </div>
-</div></div>
-</div><!-- ✅ FIXED POSITION --><div>
-  <button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
-</div></div><!-- WALLET --><div class="card">
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- FIXED BUTTON POSITION -->
+<div style="margin-top:15px;">
+<button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
+</div>
+
+<!-- WALLET -->
+<div class="card">
 <b>🌍 Multi Currency Wallet</b>
 <div>USD: <span id="usdWallet"></span></div>
 <div>EUR: <span id="eurWallet"></span></div>
 <div>GBP: <span id="gbpWallet"></span></div>
-</div><div class="card">
+</div>
+
+<div class="card">
 <b>💱 Converted Balance</b>
 <div>EUR: <span id="convertedEUR"></span></div>
 <div>USD: <span id="convertedUSD"></span></div>
 <div>GBP: <span id="convertedGBP"></span></div>
-</div><div class="card">
+</div>
+
+<div class="card">
 <button onclick="openPage('paymentsPage')">Send Money</button>
 <button onclick="openPage('billsPage')">Pay Bills</button>
 <button onclick="openPage('giftPage')">Gift Cards</button>
-</div><div class="card">
+</div>
+
+<div class="card">
 <b>Account Details</b>
 <div id="accountNumberDisplay"></div>
 IBAN: <span id="iban"></span><br>
 Routing: <span id="routingDisplay"></span><br>
 SWIFT: <span id="swift"></span>
-</div><div class="card">
+</div>
+
+<div class="card">
 <b>Transactions</b>
 <div id="transactions"></div>
-</div></div><!-- SEND MONEY --><div id="paymentsPage" class="hidden">
-<div class="card">
-<b>💸 Send Money</b><input id="ibanInput" placeholder="Recipient IBAN">
-<input id="swiftInput" placeholder="SWIFT / BIC Code">
-<input id="description" placeholder="Payment Reference"><select id="category">
-<option value="Personal">Personal</option>
-<option value="Bills">Bills</option>
-<option value="Business">Business</option>
-</select><input id="amount" placeholder="€ Amount"><div style="font-size:12px;color:#facc15;margin-top:10px;">
-⚠ Transfers above your limit require verification
-</div><button onclick="openPinModal()">Send Transfer</button>
+</div>
 
 </div>
-</div><!-- BILLS --><div id="billsPage" class="hidden">
+
+<!-- SEND -->
+<div id="paymentsPage" class="hidden">
+<div class="card">
+<b>💸 Send Money</b>
+
+<input id="ibanInput" placeholder="Recipient IBAN">
+<input id="swiftInput" placeholder="SWIFT">
+<input id="description" placeholder="Reference">
+
+<select id="category">
+<option>Personal</option>
+<option>Bills</option>
+<option>Business</option>
+</select>
+
+<input id="amount" placeholder="€ Amount">
+
+<button onclick="openPinModal()">Send Transfer</button>
+</div>
+</div>
+
+<!-- BILLS -->
+<div id="billsPage" class="hidden">
 <div class="card">
 <b>Pay Bills</b>
 <button onclick="payBill('Electricity',120)">Electricity €120</button>
 <button onclick="payBill('Netflix',15)">Netflix €15</button>
 </div>
-</div><!-- GIFT --><div id="giftPage" class="hidden">
+</div>
+
+<!-- GIFT -->
+<div id="giftPage" class="hidden">
 <div class="card">
 <b>Gift Cards</b>
 <button onclick="buyGiftCard('Amazon',100)">Amazon €100</button>
 <button onclick="buyGiftCard('Steam',25)">Steam €25</button>
 </div>
-</div><!-- PROFILE --><div id="profilePage" class="hidden">
+</div>
+
+<!-- PROFILE -->
+<div id="profilePage" class="hidden">
 <div class="card center">
 <div class="profile-avatar">👤</div>
 <h3 id="nameProfile"></h3>
@@ -228,21 +309,25 @@ SWIFT: <span id="swift"></span>
 <p id="addressProfile"></p>
 <p id="accountTier"></p>
 <p id="accountLimit"></p>
-</div><div class="card">
-<button onclick="contactSupport()">📞 Contact Support</button>
-<button onclick="logout()">🚪 Logout</button>
 </div>
-</div></div><!-- NAV --><div class="bottomNav">
+</div>
+
+</div>
+
+<!-- NAV -->
+<div class="bottomNav">
 <button onclick="openPage('homePage')">Home</button>
 <button onclick="openPage('paymentsPage')">Payments</button>
 <button onclick="openPage('billsPage')">Bills</button>
 <button onclick="openPage('giftPage')">Gift</button>
 <button onclick="openPage('profilePage')">Profile</button>
-</div><script>
-function openPage(page){
+</div>
+
+<script>
+function openPage(p){
 ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
-.forEach(p=>document.getElementById(p).classList.add("hidden"));
-document.getElementById(page).classList.remove("hidden");
+.forEach(x=>document.getElementById(x).classList.add("hidden"));
+document.getElementById(p).classList.remove("hidden");
 }
 
 function flipCard(){
@@ -250,10 +335,7 @@ const card = document.getElementById("cardInner");
 const cvv = document.getElementById("cardCVV");
 
 card.classList.toggle("flipped");
-
-cvv.innerText = card.classList.contains("flipped")
-? window._realCVV
-: "***";
+cvv.innerText = card.classList.contains("flipped") ? window._realCVV : "***";
 }
 
 function updateTime(){
@@ -266,10 +348,9 @@ now.getHours()<18?"Good Afternoon":"Good Evening";
 }
 setInterval(updateTime,1000);
 updateTime();
+</script>
 
-function contactSupport(){
-window.open("https://wa.me/13312016202");
-}
-</script><script type="module" src="dashboard.js?v=FINAL-CLEAN"></script>
+<script type="module" src="dashboard.js?v=FINAL-STABLE"></script>
+
 </body>
 </html>

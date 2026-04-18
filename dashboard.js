@@ -348,7 +348,10 @@ setText("iban", d.iban || "DE89370400440532013000");
 setText("routingDisplay", d.routingNumber || "021069021");
 setText("swift", d.swift || "DEUTDEFF");
 });
-
+const sendBtn = el("sendBtn");
+if(sendBtn){
+sendBtn.onclick = openPinModal;
+}
 }
 
 initDashboard();

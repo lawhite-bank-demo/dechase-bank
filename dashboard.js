@@ -54,7 +54,9 @@ function el(id){ return document.getElementById(id); }
 
 function setText(id,val){
 const e = el(id);
-if(e) e.innerText = val;
+if(e){
+e.innerText = val ?? "";
+}
 }
 
 function genRef(){
@@ -68,7 +70,7 @@ return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
 
 // ===== SAFE TRANSACTIONS =====
 function getTx(data){
-if(!data.transactions) return [];
+if(!data?.transactions) return [];
 return Array.isArray(data.transactions)
 ? data.transactions
 : Object.values(data.transactions);
@@ -80,7 +82,7 @@ const today = new Date().toDateString();
 
 dailyUsed = tx
 .filter(t=>{
-const txDate = new Date(t.date).toDateString();
+const txDate = t?.date ? new Date(t.date).toDateString() : "";
 return txDate === today && Number(t.amount) < 0;
 })
 .reduce((sum,t)=> sum + Math.abs(Number(t.amount)),0);
@@ -95,8 +97,8 @@ try{
 const res = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
 const data = await res.json();
 
-eurToGbp = data.rates.GBP || eurToGbp;
-eurToUsd = data.rates.USD || eurToUsd;
+eurToGbp = data.rates?.GBP || eurToGbp;
+eurToUsd = data.rates?.USD || eurToUsd;
 
 updateWalletUI();
 
@@ -126,19 +128,18 @@ bal.innerText = hidden ? "••••••" : "€" + balance.toLocaleString()
 setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 
-// ===== TRANSACTIONS (✅ FIXED) =====
+// ===== TRANSACTIONS =====
 function renderTransactions(){
 const box = el("transactions");
 if(!box) return;
 
 box.innerHTML = "";
 
-if(!tx || !tx.length){
+if(!tx.length){
 box.innerHTML = "<p style='opacity:0.6;'>No transactions yet</p>";
 return;
 }
 
-// ✅ SAFE SORT (no mutation + no crash)
 const sortedTx = [...tx].sort((a,b)=>{
 const dateA = a?.date ? new Date(a.date).getTime() : 0;
 const dateB = b?.date ? new Date(b.date).getTime() : 0;
@@ -298,16 +299,6 @@ goToSuccess("Transfer", amount, ref, category);
 processing = false;
 };
 
-// ===== PROFILE =====
-window.logout = ()=>{
-localStorage.clear();
-location.replace("index.html");
-};
-
-window.contactSupport = ()=>{
-window.open("https://wa.me/13312016202");
-};
-
 // ===== INIT =====
 async function initDashboard(){
 
@@ -326,14 +317,19 @@ balance = Number(data.balance ?? data.usdBalance ?? 0);
 tx = getTx(data);
 frozen = data.cardFrozen || false;
 
+// INITIAL UI LOAD (IMPORTANT)
 setText("welcome","Hi, Welcome " + (data.fullName || "User"));
+setText("nameProfile", data.fullName || "User");
+setText("emailProfile", data.email || "email@mail.com");
+setText("addressProfile", data.address || "No address set");
+
+setText("accountTier","Account: " + tier);
+setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
+
 setText("accountNumberDisplay", data.accountNumber || "DCB-0000000");
 setText("iban", data.iban || "DE89370400440532013000");
 setText("routingDisplay", data.routingNumber || "021069021");
 setText("swift", data.swift || "DEUTDEFF");
-
-setText("nameProfile", data.fullName || "User");
-setText("emailProfile", data.email || "email@mail.com");
 
 setText("cardNumber", maskCard(data.card?.cardNumber));
 setText("cardExpiry", data.card?.expiry || "07/27");
@@ -342,9 +338,7 @@ realCVV = data.cvv || Math.floor(100 + Math.random()*900).toString();
 window._realCVV = realCVV;
 setText("cardCVV","***");
 
-setText("accountTier","Account: " + tier);
-setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
-
+// TOGGLE
 const toggle = el("toggleBalance");
 if(toggle){
 toggle.onclick = ()=>{
@@ -353,6 +347,7 @@ renderBalance();
 };
 }
 
+// FREEZE
 window.toggleCard = async ()=>{
 frozen = !frozen;
 await updateDoc(userRef,{ cardFrozen: frozen });
@@ -362,26 +357,28 @@ el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 }
 };
 
+// RENDER
 renderAll();
 
+// FX
 fetchRates();
 setInterval(fetchRates, 1000 * 60 * 30);
 
-onSnapshot(userRef, (snap) => {
+// REALTIME
+onSnapshot(userRef,(snap)=>{
 let d = snap.data();
+if(!d) return;
 
-// UPDATE STATE
 balance = Number(d.balance ?? d.usdBalance ?? 0);
 tx = getTx(d);
 
-// UPDATE PROFILE UI (LIVE)
-setText("emailProfile", d.email || "dechase@gmail.com");
+setText("emailProfile", d.email || "email@mail.com");
 setText("nameProfile", d.fullName || "User");
 setText("addressProfile", d.address || "No address set");
 
-// RENDER EVERYTHING
 renderAll();
 });
 
 }
+
 initDashboard();

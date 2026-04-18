@@ -275,16 +275,41 @@ CVV: <span id="cardCVV">***</span>
 </div>
 
 <div class="card">
-<b>Account Details</b>
-<div id="accountNumberDisplay"></div>
-IBAN: <span id="iban"></span><br>
-Routing: <span id="routingDisplay"></span><br>
-SWIFT: <span id="swift"></span>
+
+<b style="font-size:16px;">🏦 Account Details</b>
+
+<!-- INTERNATIONAL -->
+<div class="acc-section">
+  <small class="acc-label">🌍 International (SEPA)</small>
+  
+  <div class="acc-item">
+    <span>IBAN</span>
+    <span id="iban"></span>
+  </div>
+
+  <div class="acc-item">
+    <span>SWIFT / BIC</span>
+    <span id="swift"></span>
+  </div>
 </div>
 
-<div class="card">
-<b>Transactions</b>
-<div id="transactions"></div>
+<!-- LOCAL -->
+<div class="acc-section">
+  <small class="acc-label">🇺🇸 Local (US)</small>
+  
+  <div class="acc-item">
+    <span>Account Number</span>
+    <span id="accountNumberDisplay"></span>
+  </div>
+
+  <div class="acc-item">
+    <span>Routing Number</span>
+    <span id="routingDisplay"></span>
+  </div>
+</div>
+
+<div class="acc-note">
+  🔒 Only share these details with trusted parties
 </div>
 
 </div>

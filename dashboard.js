@@ -108,16 +108,18 @@ console.warn("Using fallback rates");
 }
 
 function updateWalletUI(){
-const usd = balance * eurToUsd;
-const gbp = balance * eurToGbp;
+  const usd = balance * eurToUsd;
+  const gbp = balance * eurToGbp;
 
-setText("usdWallet", "$" + usd.toLocaleString());
-setText("eurWallet", "€" + balance.toLocaleString());
-setText("gbpWallet", "£" + gbp.toLocaleString());
+  setText("usdWallet", "$" + usd.toLocaleString());
+  setText("eurWallet", "€" + balance.toLocaleString());
+  setText("gbpWallet", "£" + gbp.toLocaleString());
 
-setText("convertedEUR", "€" + balance.toLocaleString());
-setText("convertedGBP", "£" + gbp.toLocaleString());
+  setText("convertedEUR", "€" + balance.toLocaleString());
+  setText("convertedUSD", "$" + usd.toLocaleString()); // ✅ NEW
+  setText("convertedGBP", "£" + gbp.toLocaleString());
 }
+
 
 // ===== BALANCE =====
 function renderBalance(){

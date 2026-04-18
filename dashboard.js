@@ -329,7 +329,7 @@ window.openPinModal = async ()=>{
   window.location.href = "otp.html";
 };
 // ===== LOGOUT =====
-function logoutUser(){
+window.logoutUser = function(){
   localStorage.removeItem("user");
   localStorage.removeItem("pendingTx");
   localStorage.removeItem("otpCode");

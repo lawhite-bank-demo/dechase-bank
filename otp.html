@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>OTP Verification</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#0b1220;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  margin:0;
+}
+
+.card{
+  background:#111827;
+  padding:25px;
+  border-radius:16px;
+  width:340px;
+  text-align:center;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  margin-top:15px;
+  border-radius:10px;
+  border:none;
+  text-align:center;
+  font-size:18px;
+  letter-spacing:5px;
+}
+
+button{
+  margin-top:15px;
+  padding:12px;
+  width:100%;
+  border:none;
+  border-radius:10px;
+  background:#3b82f6;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.resend{
+  margin-top:10px;
+  font-size:13px;
+  opacity:0.7;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h2>🔐 Verify Transaction</h2>
+<p>Enter the 6-digit OTP sent to your email</p>
+
+<input id="otpInput" maxlength="6" placeholder="••••••">
+
+<button onclick="verifyOTP()">Verify & Send</button>
+
+<div class="resend" onclick="resendOTP()">Resend OTP</div>
+</div>
+
+<script>
+// get stored OTP
+const savedOTP = localStorage.getItem("otpCode");
+
+function verifyOTP(){
+  const input = document.getElementById("otpInput").value;
+
+  if(input === savedOTP){
+    // proceed to success
+    window.location.href = "success.html";
+  }else{
+    alert("Invalid OTP");
+  }
+}
+
+function resendOTP(){
+  generateOTP();
+}
+
+// generate OTP
+function generateOTP(){
+  const otp = Math.floor(100000 + Math.random()*900000);
+  localStorage.setItem("otpCode", otp);
+  alert("Demo OTP: " + otp); // 🔥 replace with email later
+}
+
+// auto generate when page loads
+generateOTP();
+</script>
+
+</body>
+</html>

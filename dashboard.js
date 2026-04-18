@@ -44,6 +44,13 @@ function maskCard(num){
   return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
 }
 
+function formatMoney(val, symbol="€"){
+  return symbol + Number(val).toLocaleString(undefined,{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
 // ===== NOTIFY =====
 function notify(msg){
   const n = document.createElement("div");
@@ -62,7 +69,8 @@ function notify(msg){
 
 // ===== LOGOUT =====
 window.logoutUser = function(){
-  localStorage.clear();
+  localStorage.removeItem("user");
+  localStorage.removeItem("appLocked");
   window.location.href = "index.html";
 };
 
@@ -89,10 +97,12 @@ function renderBalance(){
   const bal = el("balance");
   if(!bal) return;
 
-  bal.innerText = "€" + Number(balance).toLocaleString(undefined, {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2
-}); balance.toLocaleString();
+  if(hidden){
+    bal.innerText = "••••••";
+  } else {
+    bal.innerText = formatMoney(balance);
+  }
+
   setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 
@@ -145,36 +155,25 @@ function renderTransactions(){
 
   sorted.forEach(t=>{
     const amt = Number(t.amount || 0);
+    const date = t.date ? new Date(t.date).toLocaleString() : "—";
 
     const div = document.createElement("div");
     div.className = "tx";
 
-    const title = t.note || "Transfer Sent";
-    const ref = t.reference || genRef();
-    const date = new Date(t.date).toLocaleString();
-
     div.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        
+      <div style="display:flex;justify-content:space-between;">
         <div>
-          <strong style="font-size:16px;">${title}</strong><br>
-          <small style="opacity:0.7;">Ref: ${ref}</small><br>
-          <small style="opacity:0.7;">${date}</small>
+          <strong>${t.note || "Transaction"}</strong><br>
+          <small style="opacity:0.6;">${date}</small>
         </div>
-
-        <div style="
-          font-weight:bold;
-          font-size:16px;
-          color:${amt >= 0 ? "#22c55e" : "#ef4444"};
-        ">
-          ${amt >= 0 ? "+" : "-"}€${Math.abs(amt).toLocaleString()}
+        <div style="color:${amt>=0?"#22c55e":"#ef4444"};font-weight:bold;">
+          ${amt>=0?"+":"-"}${formatMoney(Math.abs(amt))}
         </div>
-
       </div>
     `;
 
     div.onclick = () => {
-      notify(`€${Math.abs(amt)} | ${t.category} | Ref: ${ref}`);
+      notify(`${formatMoney(Math.abs(amt))} | Ref: ${t.reference}`);
     };
 
     box.appendChild(div);
@@ -202,16 +201,16 @@ function updateWalletUI(){
   const usd = balance * eurToUsd;
   const gbp = balance * eurToGbp;
 
-  setText("usdWallet", "$" + usd.toLocaleString());
-  setText("eurWallet", "€" + balance.toLocaleString());
-  setText("gbpWallet", "£" + gbp.toLocaleString());
+  setText("usdWallet", formatMoney(usd,"$"));
+  setText("eurWallet", formatMoney(balance,"€"));
+  setText("gbpWallet", formatMoney(gbp,"£"));
 
-  setText("convertedEUR", "€" + balance.toLocaleString());
-  setText("convertedUSD", "$" + usd.toLocaleString());
-  setText("convertedGBP", "£" + gbp.toLocaleString());
+  setText("convertedEUR", formatMoney(balance,"€"));
+  setText("convertedUSD", formatMoney(usd,"$"));
+  setText("convertedGBP", formatMoney(gbp,"£"));
 }
 
-// ===== RENDER ALL =====
+// ===== RENDER =====
 function renderAll(){
   renderBalance();
   renderTransactions();
@@ -237,20 +236,20 @@ async function initDashboard(){
 
   updateFreezeUI();
 
-  // ===== PROFILE =====
+  // PROFILE
   setText("welcome","Hi, Welcome " + (data.fullName || "User"));
   setText("nameProfile", data.fullName);
   setText("emailProfile", data.email);
   setText("accountTier","Account: " + tier);
   setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
-  // ===== ACCOUNT DETAILS =====
+  // ACCOUNT DETAILS
   setText("accountNumberDisplay", data.accountNumber || "Not available");
   setText("iban", data.iban || "Not available");
   setText("routingDisplay", data.routingNumber || "Not available");
   setText("swift", data.swift || "Not available");
 
-  // ===== CARD =====
+  // CARD
   setText("cardNumber", maskCard(data.card?.cardNumber));
   setText("cardExpiry", data.card?.expiry);
   setText("cardName", data.fullName || "User");
@@ -261,7 +260,6 @@ async function initDashboard(){
   renderAll();
   fetchRates();
 
-  // ===== REALTIME =====
   onSnapshot(userRef,(snap)=>{
     const d = snap.data();
     if(!d) return;
@@ -280,7 +278,7 @@ async function initDashboard(){
 // ===== START =====
 initDashboard();
 
-// ===== SESSION CONTROL =====
+// ===== SESSION =====
 let sessionTimer;
 
 document.addEventListener("visibilitychange", () => {

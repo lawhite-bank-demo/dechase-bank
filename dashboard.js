@@ -323,7 +323,22 @@ window.openPinModal = async ()=>{
   await new Promise(r=>setTimeout(r,1200));
 
   renderAll();
-  goToSuccess("Transfer", amount, ref, "Transfer");
+  // save pending transaction
+localStorage.setItem("pendingTx", JSON.stringify({
+  amount,
+  ref,
+  category: el("category")?.value || "Personal",
+  note: el("description")?.value || "Transfer"
+}));
+
+// generate OTP
+const otp = Math.floor(100000 + Math.random()*900000);
+localStorage.setItem("otpCode", otp);
+
+alert("OTP: " + otp); // testing only
+
+// go to OTP page
+window.location.href = "otp.html";
 
   processing = false;
 };

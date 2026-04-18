@@ -383,7 +383,10 @@ async function initDashboard(){
     renderAll();
   });
 }
-
+// ===== BLOCK ACCESS IF LOCKED =====
+if(localStorage.getItem("appLocked") === "true"){
+  window.location.href = "lock.html";
+}
 initDashboard();
 
 // ===== FORCE HOME =====
@@ -401,3 +404,19 @@ document.addEventListener("visibilitychange", () => {
     clearTimeout(logoutTimer);
   }
 });
+// ===== APP LOCK (instead of logout) =====
+let lockTimer;
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    // lock after 10 seconds (change if you want)
+    lockTimer = setTimeout(lockApp, 10000);
+  } else {
+    clearTimeout(lockTimer);
+  }
+});
+
+function lockApp(){
+  localStorage.setItem("appLocked", "true");
+  window.location.href = "lock.html";
+}

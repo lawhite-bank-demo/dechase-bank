@@ -241,11 +241,13 @@ balance -= amount;
 
 const ref = genRef();
 
+const narration = el("description")?.value || "Transfer Sent";
+
 tx.unshift({
-amount:-amount,
-note:"Transfer Sent",
-reference:ref,
-date:new Date().toISOString()
+amount: -amount,
+note: narration,
+reference: ref,
+date: new Date().toISOString()
 });
 
 await updateDoc(userRef,{ balance: balance, usdBalance: balance, transactions: tx });

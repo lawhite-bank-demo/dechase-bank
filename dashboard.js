@@ -20,14 +20,12 @@ let userRef = null;
 let hidden = false;
 let realCVV = "";
 
-let dailyLimit = 20000;
-let dailyUsed = 0;
-
 let tier = "Tier 1";
 let maxTransfer = 10000;
 
-let eurToUsd = 1.08;
+// ===== CURRENCY =====
 let eurToGbp = 0.86;
+let eurToUsd = 1.08;
 
 // ===== HELPERS =====
 function el(id){ return document.getElementById(id); }
@@ -37,15 +35,13 @@ function setText(id,val){
   if(e) e.innerText = val ?? "";
 }
 
-function formatMoney(v){
-  return "€" + Number(v).toLocaleString(undefined,{
-    minimumFractionDigits:2,
-    maximumFractionDigits:2
-  });
-}
-
 function genRef(){
   return "TRX-" + Math.floor(Math.random()*1000000000);
+}
+
+function maskCard(num){
+  let clean = (num || "").replace(/\s/g,'');
+  return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
 }
 
 // ===== NOTIFY =====
@@ -64,20 +60,28 @@ function notify(msg){
   setTimeout(()=> n.remove(), 2500);
 }
 
-// ===== ACCOUNT TIER =====
+// ===== LOGOUT =====
+window.logoutUser = function(){
+  localStorage.clear();
+  window.location.href = "index.html";
+};
+
+// ===== LOCK =====
+function lockApp(){
+  localStorage.setItem("appLocked", "true");
+  window.location.href = "lock.html";
+}
+
+if(localStorage.getItem("appLocked") === "true"){
+  window.location.href = "lock.html";
+}
+
+// ===== ACCOUNT =====
 function applyTier(t){
   tier = t;
-
-  if(t === "Tier 2"){
-    maxTransfer = 50000;
-    dailyLimit = 50000;
-  } else if(t === "Tier 3"){
-    maxTransfer = 100000;
-    dailyLimit = 100000;
-  } else {
-    maxTransfer = 10000;
-    dailyLimit = 20000;
-  }
+  if(t === "Tier 2") maxTransfer = 50000;
+  else if(t === "Tier 3") maxTransfer = 100000;
+  else maxTransfer = 10000;
 }
 
 // ===== BALANCE =====
@@ -85,7 +89,15 @@ function renderBalance(){
   const bal = el("balance");
   if(!bal) return;
 
-  bal.innerText = hidden ? "••••••" : formatMoney(balance);
+  if(hidden){
+    bal.innerText = "••••••";
+  } else {
+    bal.innerText = "€" + Number(balance).toLocaleString(undefined,{
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    });
+  }
+
   setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 
@@ -93,6 +105,25 @@ window.toggleBalance = function(){
   hidden = !hidden;
   renderBalance();
 };
+
+// ===== FREEZE =====
+window.toggleCard = async function(){
+  if(!userRef) return;
+
+  frozen = !frozen;
+  await updateDoc(userRef,{ cardFrozen: frozen });
+  updateFreezeUI();
+};
+
+function updateFreezeUI(){
+  const btn = el("cardBtn");
+  if(!btn) return;
+
+  btn.innerText = frozen ? "Unfreeze Card" : "Freeze Card";
+  btn.style.background = frozen
+    ? "linear-gradient(135deg,#22c55e,#16a34a)"
+    : "linear-gradient(135deg,#ef4444,#dc2626)";
+}
 
 // ===== TRANSACTIONS =====
 function getTx(data){
@@ -108,6 +139,11 @@ function renderTransactions(){
 
   box.innerHTML = "";
 
+  if(!tx.length){
+    box.innerHTML = "<p style='opacity:0.6;'>No transactions yet</p>";
+    return;
+  }
+
   const sorted = [...tx].sort((a,b)=>
     new Date(b.date) - new Date(a.date)
   );
@@ -118,137 +154,109 @@ function renderTransactions(){
     const div = document.createElement("div");
     div.className = "tx";
 
+    const title = t.note || "Transaction";
+    const ref = t.reference || genRef();
+    const date = new Date(t.date).toLocaleString();
+
     div.innerHTML = `
       <div style="display:flex;justify-content:space-between;">
         <div>
-          <strong>${t.note || "Transaction"}</strong><br>
-          <small>${new Date(t.date).toLocaleString()}</small>
+          <strong>${title}</strong><br>
+          <small style="opacity:0.7;">${date}</small>
         </div>
-        <div style="color:${amt>=0?"#22c55e":"#ef4444"}">
-          ${amt>=0?"+":"-"}${formatMoney(Math.abs(amt))}
+        <div style="color:${amt>=0?"#22c55e":"#ef4444"};font-weight:bold;">
+          ${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
         </div>
       </div>
     `;
 
-    div.onclick = ()=>{
-      notify(`Ref: ${t.reference} | ${t.category}`);
+    div.onclick = () => {
+      notify(`€${Math.abs(amt)} | ${t.category} | Ref: ${ref}`);
     };
 
     box.appendChild(div);
   });
 }
 
-// ===== DAILY LIMIT =====
-function calculateDailyUsed(){
-  const today = new Date().toDateString();
-
-  dailyUsed = tx
-    .filter(t=>new Date(t.date).toDateString() === today && t.amount < 0)
-    .reduce((s,t)=> s + Math.abs(t.amount),0);
-}
-
-// ===== WALLET =====
-function updateWallet(){
-  setText("eurWallet", formatMoney(balance));
-  setText("usdWallet", "$"+(balance*eurToUsd).toFixed(2));
-  setText("gbpWallet", "£"+(balance*eurToGbp).toFixed(2));
-
-  setText("convertedEUR", formatMoney(balance));
-  setText("convertedUSD", "$"+(balance*eurToUsd).toFixed(2));
-  setText("convertedGBP", "£"+(balance*eurToGbp).toFixed(2));
-}
-
-// ===== FREEZE =====
-window.toggleCard = async function(){
-  if(!userRef) return;
-
-  frozen = !frozen;
-  await updateDoc(userRef,{ cardFrozen:frozen });
-
-  notify(frozen ? "Card Frozen" : "Card Unfrozen");
-};
-
-// ===== BILL =====
-window.payBill = async (name, amount)=>{
-  if(frozen) return notify("Card frozen");
-  if(amount > balance) return notify("Insufficient");
+// ===== PAY BILL =====
+window.payBill = async function(name, amount){
+  if(balance < amount) return notify("Insufficient funds");
 
   balance -= amount;
 
-  tx.unshift({
-    amount:-amount,
-    note:name+" Bill",
-    reference:genRef(),
-    category:"Bills",
-    date:new Date().toISOString()
+  tx.push({
+    note: name,
+    amount: -amount,
+    category: "Bills",
+    reference: genRef(),
+    date: new Date().toISOString()
   });
 
-  await updateDoc(userRef,{ balance, transactions:tx });
+  await updateDoc(userRef,{
+    balance,
+    transactions: tx
+  });
 
-  renderAll();
+  notify(name + " paid");
 };
 
 // ===== GIFT =====
-window.buyGiftCard = async (name, amount)=>{
-  if(frozen) return notify("Card frozen");
-  if(amount > balance) return notify("Insufficient");
+window.buyGiftCard = async function(name, amount){
+  if(balance < amount) return notify("Insufficient funds");
 
   balance -= amount;
 
-  tx.unshift({
-    amount:-amount,
-    note:name+" Gift",
-    reference:genRef(),
-    category:"Personal",
-    date:new Date().toISOString()
+  tx.push({
+    note: name + " Gift Card",
+    amount: -amount,
+    category: "Gift",
+    reference: genRef(),
+    date: new Date().toISOString()
   });
 
-  await updateDoc(userRef,{ balance, transactions:tx });
+  await updateDoc(userRef,{
+    balance,
+    transactions: tx
+  });
 
-  renderAll();
+  notify("Gift card purchased");
 };
 
-// ===== TRANSFER (OTP) =====
-window.openPinModal = ()=>{
-  const amount = parseFloat(el("amount")?.value);
+// ===== CURRENCY =====
+async function fetchRates(){
+  try{
+    const res = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
+    const data = await res.json();
 
-  if(!amount || amount <= 0) return notify("Enter amount");
-  if(amount > balance) return notify("Insufficient");
-
-  calculateDailyUsed();
-  if(dailyUsed + amount > dailyLimit){
-    return notify("Daily limit exceeded");
+    if(data?.rates){
+      eurToGbp = data.rates.GBP || eurToGbp;
+      eurToUsd = data.rates.USD || eurToUsd;
+    }
+  }catch{
+    console.warn("Fallback rates");
   }
 
-  if(amount > maxTransfer){
-    return notify("Max transfer exceeded");
-  }
+  updateWalletUI();
+}
 
-  const otp = Math.floor(100000 + Math.random()*900000);
+function updateWalletUI(){
+  const usd = balance * eurToUsd;
+  const gbp = balance * eurToGbp;
 
-  localStorage.setItem("otpCode", otp);
-  localStorage.setItem("pendingTx", JSON.stringify({
-    amount,
-    note:"Transfer",
-    category: el("category")?.value || "Personal"
-  }));
+  setText("usdWallet","$"+usd.toLocaleString());
+  setText("eurWallet","€"+balance.toLocaleString());
+  setText("gbpWallet","£"+gbp.toLocaleString());
 
-  notify("OTP: "+otp);
-
-  window.location.href = "otp.html";
-};
-
-// ===== LOGOUT =====
-window.logoutUser = ()=>{
-  localStorage.clear();
-  window.location.href = "index.html";
-};
+  setText("convertedEUR","€"+balance.toLocaleString());
+  setText("convertedUSD","$"+usd.toLocaleString());
+  setText("convertedGBP","£"+gbp.toLocaleString());
+}
 
 // ===== RENDER =====
 function renderAll(){
   renderBalance();
   renderTransactions();
-  updateWallet();
+  updateWalletUI();
 }
 
 // ===== INIT =====
@@ -264,24 +272,35 @@ async function initDashboard(){
   const data = snap.data();
 
   applyTier(data.accountTier || "Tier 1");
-
   balance = Number(data.balance ?? 0);
   tx = getTx(data);
   frozen = data.cardFrozen || false;
 
-  setText("welcome","Hi, "+data.fullName);
+  updateFreezeUI();
+
+  setText("welcome","Hi, Welcome " + (data.fullName || "User"));
+  setText("nameProfile", data.fullName);
+  setText("emailProfile", data.email);
+
+  setText("accountTier","Account: " + tier);
+  setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
+
+  // ACCOUNT DETAILS
+  setText("accountNumberDisplay", data.accountNumber);
   setText("iban", data.iban);
   setText("routingDisplay", data.routingNumber);
   setText("swift", data.swift);
 
-  setText("cardName", data.fullName);
-  setText("cardNumber","**** **** **** "+(data.card?.cardNumber?.slice(-4)||"1122"));
+  // CARD
+  setText("cardNumber", maskCard(data.card?.cardNumber));
   setText("cardExpiry", data.card?.expiry);
+  setText("cardName", data.fullName);
 
   realCVV = data.cvv;
   window._realCVV = realCVV;
 
   renderAll();
+  fetchRates();
 
   // REALTIME
   onSnapshot(userRef,(snap)=>{
@@ -291,6 +310,9 @@ async function initDashboard(){
     balance = Number(d.balance ?? 0);
     tx = getTx(d);
     frozen = d.cardFrozen || false;
+
+    updateFreezeUI();
+    applyTier(d.accountTier || "Tier 1");
 
     renderAll();
   });

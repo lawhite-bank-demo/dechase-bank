@@ -7,13 +7,19 @@
 
 <style>
 #cardBtn{
-  margin-top: 20px; /* increase from 15px */
+  margin-top: 20px;
   padding: 15px;
   border-radius: 12px;
   background: linear-gradient(135deg,#ef4444,#dc2626);
   color: white;
   font-weight: bold;
 }
+
+/* NEW wrapper for spacing */
+.card-btn-wrapper{
+  margin-top: 20px;
+}
+
 .time-card{
   background: linear-gradient(135deg, #0ea5e9, #2563eb);
   padding: 20px;
@@ -23,23 +29,10 @@
   box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
-.greeting{
-  font-size: 14px;
-  opacity: 0.9;
-  margin-bottom: 5px;
-}
+.greeting{font-size:14px;opacity:.9;margin-bottom:5px;}
+.time{font-size:32px;font-weight:bold;}
+.date{font-size:14px;opacity:.8;margin-top:5px;}
 
-.time{
-  font-size: 32px;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.date{
-  font-size: 14px;
-  opacity: 0.8;
-  margin-top: 5px;
-}
 body{
 margin:0;
 font-family:Arial;
@@ -67,13 +60,16 @@ text-align:center;
 .balance{font-size:28px;font-weight:bold;}
 
 .bank-card{perspective:1000px;margin-top:10px;}
+
+/* ✅ FIXED PROPERLY */
 .card-inner{
-width:100%;
-height:180px;
-position:relative;
-transition:.6s;
-transform-style:preserve-3d;
+  width:100%;
+  height:200px;
+  position:relative;
+  transition:.6s;
+  transform-style:preserve-3d;
 }
+
 .card-inner.flipped{transform:rotateY(180deg);}
 
 .card-front,.card-back{
@@ -100,15 +96,9 @@ transform:rotateY(180deg);
 .chip{
 width:50px;height:36px;border-radius:8px;
 background:linear-gradient(135deg,#ffd700,#bfa100);
-box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
 }
 
-.card-number{
-font-size:20px;
-letter-spacing:3px;
-font-weight:bold;
-}
-
+.card-number{font-size:20px;letter-spacing:3px;font-weight:bold;}
 .card-bottom{display:flex;justify-content:space-between;}
 
 .bottomNav{
@@ -144,8 +134,7 @@ cursor:pointer;
 }
 
 .profile-avatar{
-width:70px;height:70px;
-border-radius:50%;
+width:70px;height:70px;border-radius:50%;
 background:linear-gradient(135deg,#2563eb,#0ea5e9);
 display:flex;align-items:center;justify-content:center;
 margin:auto;font-size:28px;
@@ -167,9 +156,9 @@ margin-top:10px;
 
 <!-- TIME -->
 <div class="time-card">
-  <div id="greeting" class="greeting"></div>
-  <div id="time" class="time"></div>
-  <div id="date" class="date"></div>
+  <div id="greeting"></div>
+  <div id="time"></div>
+  <div id="date"></div>
 </div>
 
 <h3 id="welcome"></h3>
@@ -179,11 +168,12 @@ margin-top:10px;
 
 <div class="balance-card">
 <div>Total Balance</div>
-<div id="balance" class="balance"></div>
+<div id="balance"></div>
 <div id="toggleBalance">👁 Hide</div>
 </div>
 
 <div class="card">
+
 <div class="bank-card" onclick="flipCard()">
 <div class="card-inner" id="cardInner">
 
@@ -216,7 +206,11 @@ CVV: <span id="cardCVV">***</span>
 </div>
 </div>
 
-<button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
+<!-- ✅ CLEAN FIX -->
+<div class="card-btn-wrapper">
+  <button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
+</div>
+
 </div>
 
 <!-- WALLET -->
@@ -227,115 +221,11 @@ CVV: <span id="cardCVV">***</span>
 <div>GBP: <span id="gbpWallet"></span></div>
 </div>
 
-<div class="card">
-<b>💱 Converted Balance</b>
-<div>EUR: <span id="convertedEUR"></span></div>
-<div>USD: <span id="convertedUSD"></span></div>
-<div>GBP: <span id="convertedGBP"></span></div>
 </div>
 
-<div class="card">
-<button onclick="openPage('paymentsPage')">Send Money</button>
-<button onclick="openPage('billsPage')">Pay Bills</button>
-<button onclick="openPage('giftPage')">Gift Cards</button>
-</div>
-
-<div class="card">
-<b>Account Details</b>
-<div id="accountNumberDisplay"></div>
-IBAN: <span id="iban"></span><br>
-Routing: <span id="routingDisplay"></span><br>
-SWIFT: <span id="swift"></span>
-</div>
-
-<div class="card">
-<b>Transactions</b>
-<div id="transactions"></div>
-</div>
-
-</div>
-
-<!-- SEND MONEY -->
-<div id="paymentsPage" class="hidden">
-<div class="card">
-<b>💸 Send Money</b>
-
-<input id="ibanInput" placeholder="Recipient IBAN">
-<input id="swiftInput" placeholder="SWIFT / BIC Code">
-<input id="description" placeholder="Payment Reference">
-
-<!-- ✅ NEW CATEGORY -->
-<select id="category">
-<option value="Personal">Personal</option>
-<option value="Bills">Bills</option>
-<option value="Business">Business</option>
-</select>
-
-<input id="amount" placeholder="€ Amount">
-
-<div style="font-size:12px;color:#facc15;margin-top:10px;">
-⚠ Transfers above your limit require verification
-</div>
-
-<button onclick="openPinModal()">Send Transfer</button>
-</div>
-</div>
-
-<!-- BILLS -->
-<div id="billsPage" class="hidden">
-<div class="card">
-<b>Pay Bills</b>
-<button onclick="payBill('Electricity',120)">Electricity €120</button>
-<button onclick="payBill('Netflix',15)">Netflix €15</button>
-</div>
-</div>
-
-<!-- GIFT -->
-<div id="giftPage" class="hidden">
-<div class="card">
-<b>Gift Cards</b>
-<button onclick="buyGiftCard('Amazon',100)">Amazon €100</button>
-<button onclick="buyGiftCard('Steam',25)">Steam €25</button>
-</div>
-</div>
-
-<!-- PROFILE -->
-<div id="profilePage" class="hidden">
-
-<div class="card center">
-<div class="profile-avatar">👤</div>
-<h3 id="nameProfile"></h3>
-<p id="emailProfile"></p>
-<p id="addressProfile"></p>
-<p id="accountTier"></p>
-<p id="accountLimit"></p>
-</div>
-
-<div class="card">
-<button onclick="contactSupport()">📞 Contact Support</button>
-<button onclick="logout()">🚪 Logout</button>
-</div>
-
-</div>
-
-</div>
-
-<!-- NAV -->
-<div class="bottomNav">
-<button onclick="openPage('homePage')">Home</button>
-<button onclick="openPage('paymentsPage')">Payments</button>
-<button onclick="openPage('billsPage')">Bills</button>
-<button onclick="openPage('giftPage')">Gift</button>
-<button onclick="openPage('profilePage')">Profile</button>
 </div>
 
 <script>
-function openPage(page){
-["homePage","paymentsPage","billsPage","giftPage","profilePage"]
-.forEach(p=>document.getElementById(p).classList.add("hidden"));
-document.getElementById(page).classList.remove("hidden");
-}
-
 function flipCard(){
 const card = document.getElementById("cardInner");
 const cvv = document.getElementById("cardCVV");
@@ -345,21 +235,6 @@ card.classList.toggle("flipped");
 cvv.innerText = card.classList.contains("flipped")
 ? window._realCVV
 : "***";
-}
-
-function updateTime(){
-const now = new Date();
-document.getElementById("time").innerText = now.toLocaleTimeString();
-document.getElementById("date").innerText = now.toDateString();
-document.getElementById("greeting").innerText =
-now.getHours()<12?"Good Morning":
-now.getHours()<18?"Good Afternoon":"Good Evening";
-}
-setInterval(updateTime,1000);
-updateTime();
-
-function contactSupport(){
-window.open("https://wa.me/13312016202");
 }
 </script>
 

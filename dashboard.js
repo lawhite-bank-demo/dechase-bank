@@ -22,10 +22,16 @@ let realCVV = "";
 
 let tier = "Tier 1";
 let maxTransfer = 10000;
+let dailyLimit = 20000;
+let dailyUsed = 0;
 
-// ===== CURRENCY =====
-let eurToGbp = 0.86;
+// OTP
+let pendingTransfer = null;
+let generatedOTP = null;
+
+// Currency
 let eurToUsd = 1.08;
+let eurToGbp = 0.86;
 
 // ===== HELPERS =====
 function el(id){ return document.getElementById(id); }
@@ -39,9 +45,11 @@ function genRef(){
   return "TRX-" + Math.floor(Math.random()*1000000000);
 }
 
-function maskCard(num){
-  let clean = (num || "").replace(/\s/g,'');
-  return clean ? "**** **** **** " + clean.slice(-4) : "**** **** **** 1122";
+function formatMoney(v){
+  return Number(v).toLocaleString(undefined,{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
 }
 
 // ===== NOTIFY =====
@@ -63,25 +71,23 @@ function notify(msg){
 // ===== LOGOUT =====
 window.logoutUser = function(){
   localStorage.clear();
-  window.location.href = "index.html";
+  location.href = "index.html";
 };
 
-// ===== LOCK =====
-function lockApp(){
-  localStorage.setItem("appLocked", "true");
-  window.location.href = "lock.html";
-}
-
-if(localStorage.getItem("appLocked") === "true"){
-  window.location.href = "lock.html";
-}
-
-// ===== ACCOUNT =====
+// ===== TIER =====
 function applyTier(t){
   tier = t;
-  if(t === "Tier 2") maxTransfer = 50000;
-  else if(t === "Tier 3") maxTransfer = 100000;
-  else maxTransfer = 10000;
+
+  if(t === "Tier 2"){
+    maxTransfer = 50000;
+    dailyLimit = 50000;
+  }else if(t === "Tier 3"){
+    maxTransfer = 100000;
+    dailyLimit = 100000;
+  }else{
+    maxTransfer = 10000;
+    dailyLimit = 20000;
+  }
 }
 
 // ===== BALANCE =====
@@ -89,14 +95,9 @@ function renderBalance(){
   const bal = el("balance");
   if(!bal) return;
 
-  if(hidden){
-    bal.innerText = "••••••";
-  } else {
-    bal.innerText = "€" + Number(balance).toLocaleString(undefined,{
-      minimumFractionDigits:2,
-      maximumFractionDigits:2
-    });
-  }
+  bal.innerText = hidden
+    ? "••••••"
+    : "€" + formatMoney(balance);
 
   setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
@@ -108,10 +109,8 @@ window.toggleBalance = function(){
 
 // ===== FREEZE =====
 window.toggleCard = async function(){
-  if(!userRef) return;
-
   frozen = !frozen;
-  await updateDoc(userRef,{ cardFrozen: frozen });
+  await updateDoc(userRef,{ cardFrozen:frozen });
   updateFreezeUI();
 };
 
@@ -120,9 +119,6 @@ function updateFreezeUI(){
   if(!btn) return;
 
   btn.innerText = frozen ? "Unfreeze Card" : "Freeze Card";
-  btn.style.background = frozen
-    ? "linear-gradient(135deg,#22c55e,#16a34a)"
-    : "linear-gradient(135deg,#ef4444,#dc2626)";
 }
 
 // ===== TRANSACTIONS =====
@@ -144,83 +140,32 @@ function renderTransactions(){
     return;
   }
 
-  const sorted = [...tx].sort((a,b)=>
-    new Date(b.date) - new Date(a.date)
-  );
+  tx.sort((a,b)=> new Date(b.date) - new Date(a.date));
 
-  sorted.forEach(t=>{
-    const amt = Number(t.amount || 0);
+  tx.forEach(t=>{
+    const amt = Number(t.amount);
 
     const div = document.createElement("div");
     div.className = "tx";
 
-    const title = t.note || "Transaction";
-    const ref = t.reference || genRef();
-    const date = new Date(t.date).toLocaleString();
-
     div.innerHTML = `
-      <div style="display:flex;justify-content:space-between;">
-        <div>
-          <strong>${title}</strong><br>
-          <small style="opacity:0.7;">${date}</small>
-        </div>
-        <div style="color:${amt>=0?"#22c55e":"#ef4444"};font-weight:bold;">
-          ${amt>=0?"+":"-"}€${Math.abs(amt).toLocaleString()}
-        </div>
+      <div>
+        <strong>${t.note || "Transaction"}</strong><br>
+        <small>${new Date(t.date).toLocaleString()}</small>
+      </div>
+
+      <div style="color:${amt>=0?"#22c55e":"#ef4444"};font-weight:bold;">
+        ${amt>=0?"+":"-"}€${formatMoney(Math.abs(amt))}
       </div>
     `;
 
-    div.onclick = () => {
-      notify(`€${Math.abs(amt)} | ${t.category} | Ref: ${ref}`);
+    div.onclick = ()=>{
+      notify(`Ref: ${t.reference}`);
     };
 
     box.appendChild(div);
   });
 }
-
-// ===== PAY BILL =====
-window.payBill = async function(name, amount){
-  if(balance < amount) return notify("Insufficient funds");
-
-  balance -= amount;
-
-  tx.push({
-    note: name,
-    amount: -amount,
-    category: "Bills",
-    reference: genRef(),
-    date: new Date().toISOString()
-  });
-
-  await updateDoc(userRef,{
-    balance,
-    transactions: tx
-  });
-
-  notify(name + " paid");
-};
-
-// ===== GIFT =====
-window.buyGiftCard = async function(name, amount){
-  if(balance < amount) return notify("Insufficient funds");
-
-  balance -= amount;
-
-  tx.push({
-    note: name + " Gift Card",
-    amount: -amount,
-    category: "Gift",
-    reference: genRef(),
-    date: new Date().toISOString()
-  });
-
-  await updateDoc(userRef,{
-    balance,
-    transactions: tx
-  });
-
-  notify("Gift card purchased");
-};
 
 // ===== CURRENCY =====
 async function fetchRates(){
@@ -228,95 +173,152 @@ async function fetchRates(){
     const res = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
     const data = await res.json();
 
-    if(data?.rates){
-      eurToGbp = data.rates.GBP || eurToGbp;
-      eurToUsd = data.rates.USD || eurToUsd;
-    }
+    eurToUsd = data.rates.USD || eurToUsd;
+    eurToGbp = data.rates.GBP || eurToGbp;
   }catch{
-    console.warn("Fallback rates");
+    console.warn("Fallback rates used");
   }
 
-  updateWalletUI();
+  updateWallet();
 }
 
-function updateWalletUI(){
-  const usd = balance * eurToUsd;
-  const gbp = balance * eurToGbp;
+function updateWallet(){
+  setText("usdWallet","$"+formatMoney(balance * eurToUsd));
+  setText("eurWallet","€"+formatMoney(balance));
+  setText("gbpWallet","£"+formatMoney(balance * eurToGbp));
 
-  setText("usdWallet","$"+usd.toLocaleString());
-  setText("eurWallet","€"+balance.toLocaleString());
-  setText("gbpWallet","£"+gbp.toLocaleString());
-
-  setText("convertedEUR","€"+balance.toLocaleString());
-  setText("convertedUSD","$"+usd.toLocaleString());
-  setText("convertedGBP","£"+gbp.toLocaleString());
+  setText("convertedEUR","€"+formatMoney(balance));
+  setText("convertedUSD","$"+formatMoney(balance * eurToUsd));
+  setText("convertedGBP","£"+formatMoney(balance * eurToGbp));
 }
 
-// ===== RENDER =====
-function renderAll(){
-  renderBalance();
-  renderTransactions();
-  updateWalletUI();
+// ===== OTP =====
+window.openPinModal = function(){
+  const amount = Number(el("amount").value);
+
+  if(!amount || amount <= 0) return notify("Invalid amount");
+  if(amount > balance) return notify("Insufficient funds");
+  if(amount > maxTransfer) return notify("Limit exceeded");
+  if(dailyUsed + amount > dailyLimit) return notify("Daily limit reached");
+
+  pendingTransfer = {
+    amount,
+    note: el("description").value,
+    category: el("category").value
+  };
+
+  generatedOTP = Math.floor(100000 + Math.random()*900000);
+  notify("OTP: " + generatedOTP);
+};
+
+window.confirmOTP = async function(){
+  const input = prompt("Enter OTP");
+
+  if(input != generatedOTP) return notify("Wrong OTP");
+
+  const newTx = {
+    amount: -pendingTransfer.amount,
+    note: pendingTransfer.note || "Transfer Sent",
+    category: pendingTransfer.category,
+    date: new Date().toISOString(),
+    reference: genRef()
+  };
+
+  balance -= pendingTransfer.amount;
+  dailyUsed += pendingTransfer.amount;
+
+  await updateDoc(userRef,{
+    balance,
+    transactions:[...tx,newTx]
+  });
+
+  showReceipt(newTx);
+  pendingTransfer = null;
+};
+
+// ===== RECEIPT =====
+function showReceipt(t){
+  alert(
+    `✅ SUCCESS\n\nAmount: €${formatMoney(Math.abs(t.amount))}\nRef: ${t.reference}`
+  );
+}
+
+// ===== BILLS =====
+window.payBill = function(name,amount){
+  processQuick("Bill: "+name,amount);
+};
+
+// ===== GIFT =====
+window.buyGiftCard = function(name,amount){
+  processQuick("Gift: "+name,amount);
+};
+
+async function processQuick(title,amount){
+  if(amount > balance) return notify("Insufficient funds");
+
+  const newTx = {
+    amount:-amount,
+    note:title,
+    date:new Date().toISOString(),
+    reference:genRef()
+  };
+
+  balance -= amount;
+
+  await updateDoc(userRef,{
+    balance,
+    transactions:[...tx,newTx]
+  });
+
+  notify("Payment successful");
 }
 
 // ===== INIT =====
-async function initDashboard(){
+async function init(){
 
   const username = localStorage.getItem("user");
-  if(!username) return location.replace("index.html");
+  if(!username) return location.href="index.html";
 
   userRef = doc(db,"users",username);
   const snap = await getDoc(userRef);
-  if(!snap.exists()) return location.replace("index.html");
 
   const data = snap.data();
 
-  applyTier(data.accountTier || "Tier 1");
-  balance = Number(data.balance ?? 0);
+  balance = Number(data.balance || 0);
   tx = getTx(data);
   frozen = data.cardFrozen || false;
 
-  updateFreezeUI();
+  applyTier(data.accountTier || "Tier 1");
 
-  setText("welcome","Hi, Welcome " + (data.fullName || "User"));
-  setText("nameProfile", data.fullName);
-  setText("emailProfile", data.email);
+  setText("welcome","Hi, "+data.fullName);
+  setText("nameProfile",data.fullName);
+  setText("emailProfile",data.email);
 
-  setText("accountTier","Account: " + tier);
-  setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
+  setText("accountNumberDisplay",data.accountNumber);
+  setText("iban",data.iban);
+  setText("routingDisplay",data.routingNumber);
+  setText("swift",data.swift);
 
-  // ACCOUNT DETAILS
-  setText("accountNumberDisplay", data.accountNumber);
-  setText("iban", data.iban);
-  setText("routingDisplay", data.routingNumber);
-  setText("swift", data.swift);
-
-  // CARD
-  setText("cardNumber", maskCard(data.card?.cardNumber));
-  setText("cardExpiry", data.card?.expiry);
-  setText("cardName", data.fullName);
+  setText("cardName",data.fullName);
+  setText("cardNumber","**** **** **** "+(data.card?.cardNumber || "0000").slice(-4));
+  setText("cardExpiry",data.card?.expiry);
 
   realCVV = data.cvv;
   window._realCVV = realCVV;
 
-  renderAll();
+  renderBalance();
+  renderTransactions();
   fetchRates();
 
-  // REALTIME
   onSnapshot(userRef,(snap)=>{
     const d = snap.data();
-    if(!d) return;
-
-    balance = Number(d.balance ?? 0);
+    balance = Number(d.balance || 0);
     tx = getTx(d);
-    frozen = d.cardFrozen || false;
-
-    updateFreezeUI();
-    applyTier(d.accountTier || "Tier 1");
-
-    renderAll();
+    renderBalance();
+    renderTransactions();
+    updateWallet();
   });
 }
 
 // START
-initDashboard();
+init();

@@ -21,6 +21,11 @@ background:#111827;
 padding:15px;
 border-radius:15px;
 margin-bottom:15px;
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-2px);
 }
 
 .balance-card{
@@ -41,9 +46,7 @@ text-align:center;
 box-shadow:0 10px 25px rgba(0,0,0,0.3);
 }
 
-.greeting{font-size:14px;opacity:0.9;}
 .time{font-size:32px;font-weight:bold;}
-.date{font-size:14px;opacity:0.8;}
 
 .bank-card{perspective:1000px;margin-top:10px;}
 
@@ -91,15 +94,20 @@ font-weight:bold;
 
 .card-bottom{display:flex;justify-content:space-between;}
 
-#cardBtn{
-margin-top:20px;
-padding:14px;
-border-radius:12px;
-background:linear-gradient(135deg,#ef4444,#dc2626);
+button{
+margin-top:10px;
+padding:12px;
+border:none;
+border-radius:10px;
+background:linear-gradient(135deg,#2563eb,#0ea5e9);
 color:white;
 font-weight:bold;
 width:100%;
-border:none;
+cursor:pointer;
+}
+
+button:active{
+transform:scale(0.96);
 }
 
 .bottomNav{
@@ -114,9 +122,7 @@ padding:10px;
 
 .bottomNav button{
 background:none;
-color:white;
 font-size:12px;
-border:none;
 }
 
 .hidden{display:none;}
@@ -129,18 +135,6 @@ background:#1f2937;
 color:white;
 margin-top:10px;
 width:100%;
-}
-
-button{
-margin-top:10px;
-padding:12px;
-border:none;
-border-radius:10px;
-background:linear-gradient(135deg,#2563eb,#0ea5e9);
-color:white;
-font-weight:bold;
-width:100%;
-cursor:pointer;
 }
 
 .profile-avatar{
@@ -160,6 +154,26 @@ font-size:28px;
 padding:10px;
 border-bottom:1px solid #1f2937;
 margin-top:10px;
+cursor:pointer;
+}
+
+/* WhatsApp Button */
+.whatsapp-btn{
+position:fixed;
+bottom:90px;
+right:15px;
+width:55px;
+height:55px;
+border-radius:50%;
+background:#25D366;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:26px;
+text-decoration:none;
+color:white;
+box-shadow:0 8px 20px rgba(0,0,0,0.3);
+z-index:999;
 }
 </style>
 </head>
@@ -172,7 +186,7 @@ margin-top:10px;
 <div class="time-card">
 <div id="greeting"></div>
 <div id="time" class="time"></div>
-<div id="date" class="date"></div>
+<div id="date"></div>
 </div>
 
 <h3 id="welcome"></h3>
@@ -183,7 +197,7 @@ margin-top:10px;
 <div class="balance-card">
 <div>Total Balance</div>
 <div id="balance" class="balance"></div>
-<div id="toggleBalance">👁 Hide</div>
+<div id="toggleBalance" onclick="toggleBalance()">👁 Hide</div>
 </div>
 
 <div class="card">
@@ -220,10 +234,7 @@ CVV: <span id="cardCVV">***</span>
 </div>
 </div>
 
-<!-- FIXED BUTTON POSITION -->
-<div style="margin-top:15px;">
 <button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
-</div>
 
 <!-- WALLET -->
 <div class="card">
@@ -265,7 +276,6 @@ SWIFT: <span id="swift"></span>
 <div id="paymentsPage" class="hidden">
 <div class="card">
 <b>💸 Send Money</b>
-
 <input id="ibanInput" placeholder="Recipient IBAN">
 <input id="swiftInput" placeholder="SWIFT">
 <input id="description" placeholder="Reference">
@@ -277,7 +287,6 @@ SWIFT: <span id="swift"></span>
 </select>
 
 <input id="amount" placeholder="€ Amount">
-
 <button onclick="openPinModal()">Send Transfer</button>
 </div>
 </div>
@@ -323,6 +332,9 @@ SWIFT: <span id="swift"></span>
 <button onclick="openPage('profilePage')">Profile</button>
 </div>
 
+<!-- WhatsApp -->
+<a href="https://wa.me/1234567890" class="whatsapp-btn">💬</a>
+
 <script>
 function openPage(p){
 ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
@@ -350,7 +362,7 @@ setInterval(updateTime,1000);
 updateTime();
 </script>
 
-<script type="module" src="dashboard.js?v=FINAL-STABLE"></script>
+<script type="module" src="dashboard.js"></script>
 
 </body>
 </html>

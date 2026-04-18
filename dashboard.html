@@ -361,10 +361,27 @@ SWIFT: <span id="swift"></span>
 
 <script>
 function openPage(p){
-["homePage","paymentsPage","billsPage","giftPage","profilePage"]
-.forEach(x=>document.getElementById(x).classList.add("hidden"));
-document.getElementById(p).classList.remove("hidden");
+  ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
+  .forEach(x=>{
+    const el = document.getElementById(x);
+    if(el) el.classList.add("hidden");
+  });
+
+  const page = document.getElementById(p);
+  if(page) page.classList.remove("hidden");
 }
+// ✅ PRELOAD WALLET (FIX BLANK VALUES)
+window.addEventListener("DOMContentLoaded", () => {
+  const ids = [
+    "usdWallet","eurWallet","gbpWallet",
+    "convertedEUR","convertedUSD","convertedGBP"
+  ];
+
+  ids.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.innerText = "...";
+  });
+});
 
 function flipCard(){
 const card = document.getElementById("cardInner");

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Secure Lock</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#020617;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.box{
+  background:#111827;
+  padding:30px;
+  border-radius:16px;
+  width:320px;
+  text-align:center;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  margin-top:15px;
+  border:none;
+  border-radius:10px;
+  background:#1f2937;
+  color:white;
+}
+
+button{
+  margin-top:15px;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#2563eb;
+  color:white;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>🔒 Session Locked</h2>
+  <p>Enter PIN to continue</p>
+
+  <input id="pin" type="password" placeholder="Enter PIN">
+  <button onclick="unlock()">Unlock</button>
+</div>
+
+<script>
+function unlock(){
+  const pin = document.getElementById("pin").value;
+
+  // 🔥 DEMO PIN (replace with real later)
+  const correctPin = "1234";
+
+  if(pin === correctPin){
+    localStorage.removeItem("appLocked");
+    window.location.href = "dashboard.html";
+  }else{
+    alert("Incorrect PIN");
+  }
+}
+</script>
+
+</body>
+</html>

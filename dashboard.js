@@ -1,14 +1,14 @@
 // ===== FIREBASE =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-getFirestore, doc, getDoc, updateDoc,
-collection, addDoc, onSnapshot
+  getFirestore, doc, getDoc, updateDoc,
+  collection, addDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-apiKey: "AIzaSy...",
-authDomain: "dechase-bank.firebaseapp.com",
-projectId: "dechase-bank"
+  apiKey: "AIzaSy...",
+  authDomain: "dechase-bank.firebaseapp.com",
+  projectId: "dechase-bank"
 });
 
 const db = getFirestore(app);
@@ -166,6 +166,111 @@ function renderAll(){
   updateWalletUI();
 }
 
+// ===== SUCCESS =====
+function goToSuccess(type, amount, ref, category){
+  localStorage.setItem("lastReceipt", JSON.stringify({
+    type, amount, reference: ref, category,
+    date: new Date().toLocaleString()
+  }));
+  window.location.href = "success.html";
+}
+
+// ===== BILL =====
+window.payBill = async (name, amount)=>{
+  if(frozen) return alert("Card is frozen");
+  if(amount > balance) return alert("Insufficient funds");
+
+  balance -= amount;
+
+  const ref = genRef();
+
+  tx.unshift({
+    amount:-amount,
+    note:name + " Bill",
+    reference:ref,
+    category:"Bills",
+    date:new Date().toISOString()
+  });
+
+  await updateDoc(userRef,{ balance, transactions: tx });
+
+  renderAll();
+  goToSuccess(name, amount, ref, "Bills");
+};
+
+// ===== GIFT =====
+window.buyGiftCard = async (name, amount)=>{
+  if(frozen) return alert("Card is frozen");
+  if(amount > balance) return alert("Insufficient funds");
+
+  balance -= amount;
+
+  const ref = genRef();
+
+  tx.unshift({
+    amount:-amount,
+    note:name + " Gift Card",
+    reference:ref,
+    category:"Personal",
+    date:new Date().toISOString()
+  });
+
+  await updateDoc(userRef,{ balance, transactions: tx });
+
+  renderAll();
+  goToSuccess(name, amount, ref, "Personal");
+};
+
+// ===== TRANSFER =====
+window.openPinModal = async ()=>{
+  if(processing) return;
+  processing = true;
+
+  if(frozen){ processing=false; return alert("Card is frozen"); }
+
+  const amount = parseFloat(el("amount")?.value);
+
+  if(isNaN(amount) || amount <= 0){
+    processing=false;
+    return alert("Enter valid amount");
+  }
+
+  if(amount > maxTransfer){
+    processing=false;
+    return alert(`Your ${tier} limit is €${maxTransfer}`);
+  }
+
+  if(amount > balance){
+    processing=false;
+    return alert("Insufficient funds");
+  }
+
+  calculateDailyUsed();
+  if(dailyUsed + amount > dailyLimit){
+    processing=false;
+    return alert(`Daily limit exceeded (€${dailyLimit})`);
+  }
+
+  balance -= amount;
+
+  const ref = genRef();
+
+  tx.unshift({
+    amount: -amount,
+    note: el("description")?.value || "Transfer",
+    reference: ref,
+    category: el("category")?.value || "Personal",
+    date: new Date().toISOString()
+  });
+
+  await updateDoc(userRef,{ balance, transactions: tx });
+
+  renderAll();
+  goToSuccess("Transfer", amount, ref, "Transfer");
+
+  processing = false;
+};
+
 // ===== INIT =====
 async function initDashboard(){
 
@@ -180,18 +285,15 @@ async function initDashboard(){
   let data = snap.data() || {};
 
   applyTier(data.accountTier || "Tier 1");
-  balance = Number(data.balance ?? data.usdBalance ?? 0);
+  balance = Number(data.balance ?? 0);
   tx = getTx(data);
   frozen = data.cardFrozen || false;
 
-  // ===== INITIAL LOAD =====
+  // PROFILE
   setText("welcome","Hi, Welcome " + (data.fullName || "User"));
   setText("nameProfile", data.fullName || "User");
-
-  // ✅ FIXED EMAIL (always fallback if missing)
   setText("emailProfile", data.email || "dechasebank@gmail.com");
 
-  // ✅ FIXED ADDRESS
   const addrEl = el("addressProfile");
   if(addrEl){
     addrEl.innerHTML = data.address
@@ -210,45 +312,22 @@ async function initDashboard(){
   setText("cardNumber", maskCard(data.card?.cardNumber));
   setText("cardExpiry", data.card?.expiry || "07/27");
 
-  realCVV = data.cvv || Math.floor(100 + Math.random()*900).toString();
+  realCVV = data.cvv || "123";
   window._realCVV = realCVV;
-  setText("cardCVV","***");
-
-  // TOGGLE BALANCE
-  const toggle = el("toggleBalance");
-  if(toggle){
-    toggle.onclick = ()=>{
-      hidden = !hidden;
-      renderBalance();
-    };
-  }
-
-  // FREEZE CARD
-  window.toggleCard = async ()=>{
-    frozen = !frozen;
-    await updateDoc(userRef,{ cardFrozen: frozen });
-
-    if(el("cardBtn")){
-      el("cardBtn").innerText = frozen ? "Unfreeze Card" : "Freeze Card";
-    }
-  };
 
   renderAll();
-
   fetchRates();
-  setInterval(fetchRates, 1000 * 60 * 30);
 
-  // ===== REALTIME =====
+  // REALTIME
   onSnapshot(userRef,(snap)=>{
     let d = snap.data();
     if(!d) return;
 
-    balance = Number(d.balance ?? d.usdBalance ?? 0);
+    balance = Number(d.balance ?? 0);
     tx = getTx(d);
 
     applyTier(d.accountTier || "Tier 1");
 
-    // PROFILE
     setText("nameProfile", d.fullName || "User");
     setText("emailProfile", d.email || "dechasebank@gmail.com");
 
@@ -259,13 +338,11 @@ async function initDashboard(){
         : "No address set";
     }
 
-    // LIMIT FIX
     setText("accountTier","Account: " + tier);
     setText("accountLimit","Limit: €" + maxTransfer.toLocaleString());
 
     renderAll();
- });
-
+  });
 }
 
 initDashboard();

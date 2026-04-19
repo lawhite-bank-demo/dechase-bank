@@ -4,9 +4,6 @@ import {
   getFirestore, doc, getDoc, updateDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-console.log("Dashboard JS Loaded");
-
-// ===== FIREBASE INIT =====
 const app = initializeApp({
   apiKey: "AIzaSy...",
   authDomain: "dechase-bank.firebaseapp.com",
@@ -28,9 +25,11 @@ let maxTransfer = 10000;
 let dailyLimit = 20000;
 let dailyUsed = 0;
 
+// OTP
 let pendingTransfer = null;
 let generatedOTP = null;
 
+// Currency
 let eurToUsd = 1.08;
 let eurToGbp = 0.86;
 
@@ -42,47 +41,34 @@ function setText(id,val){
   if(e) e.innerText = val ?? "";
 }
 
-function setAccountField(id, value){
-  const element = el(id);
-  if(!element) return;
-
-  if(!value){
-    element.parentElement.style.display = "none";
-  } else {
-    element.innerText = value;
-  }
-}
-
 function genRef(){
   return "TRX-" + Math.floor(Math.random()*1000000000);
 }
 
 function formatMoney(v){
-  return Number(v).toLocaleString(undefined,{
+  return Number(v || 0).toLocaleString(undefined,{
     minimumFractionDigits:2,
     maximumFractionDigits:2
   });
 }
 
-// ===== RECEIPT SYSTEM =====
+// ===== RECEIPT =====
 window.showReceipt = function(t){
-
   setText("rAmount",
     (t.amount < 0 ? "-€" : "+€") +
-    formatMoney(Math.abs(t.amount || 0))
+    formatMoney(Math.abs(t.amount))
   );
 
   setText("rType", t.amount < 0 ? "Debit" : "Credit");
-
-  setText("rNote", t.note || "No description");
-
-  setText("rDate",
-    t.date ? new Date(t.date).toLocaleString() : "N/A"
-  );
-
+  setText("rNote", t.note || "Transaction");
+  setText("rDate", t.date ? new Date(t.date).toLocaleString() : "N/A");
   setText("rRef", t.reference || "N/A");
 
   el("receiptModal").classList.remove("hidden");
+};
+
+window.closeReceipt = function(){
+  el("receiptModal").classList.add("hidden");
 };
 
 // ===== NOTIFY =====
@@ -112,7 +98,10 @@ function renderBalance(){
   const bal = el("balance");
   if(!bal) return;
 
-  bal.innerText = hidden ? "••••••" : "€" + formatMoney(balance);
+  bal.innerText = hidden
+    ? "••••••"
+    : "€" + formatMoney(balance);
+
   setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 
@@ -132,7 +121,8 @@ window.toggleCard = async function(){
 
 function updateFreezeUI(){
   const btn = el("cardBtn");
-  if(btn) btn.innerText = frozen ? "Unfreeze Card" : "Freeze Card";
+  if(!btn) return;
+  btn.innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 }
 
 // ===== TRANSACTIONS =====
@@ -151,9 +141,19 @@ function renderTransactions(){
 
   tx.slice().reverse().forEach(t => {
 
+    // 🔥 FIX OLD DATA
+    t = {
+      amount: t.amount ?? 0,
+      note: t.note || "Transaction",
+      date: t.date || new Date().toISOString(),
+      reference: t.reference || genRef(),
+      ...t
+    };
+
     const div = document.createElement("div");
     div.className = "tx";
-    div.onclick = () => showReceipt(t); // 🔥 CLICK = RECEIPT
+
+    div.onclick = () => showReceipt(t); // ✅ ONLY ON CLICK
 
     const left = document.createElement("div");
     left.className = "tx-left";
@@ -178,29 +178,6 @@ function renderTransactions(){
   });
 }
 
-// ===== CURRENCY =====
-async function fetchRates(){
-  try{
-    const res = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
-    const data = await res.json();
-
-    eurToUsd = data.rates.USD || eurToUsd;
-    eurToGbp = data.rates.GBP || eurToGbp;
-  }catch{}
-
-  updateWallet();
-}
-
-function updateWallet(){
-  setText("usdWallet","$"+formatMoney(balance * eurToUsd));
-  setText("eurWallet","€"+formatMoney(balance));
-  setText("gbpWallet","£"+formatMoney(balance * eurToGbp));
-
-  setText("convertedUSD","$"+formatMoney(balance * eurToUsd));
-  setText("convertedGBP","£"+formatMoney(balance * eurToGbp));
-  setText("convertedEUR","€"+formatMoney(balance));
-}
-
 // ===== TRANSFER =====
 window.openPinModal = function(){
   const amount = Number(el("amount").value);
@@ -210,8 +187,7 @@ window.openPinModal = function(){
 
   pendingTransfer = {
     amount,
-    note: el("description").value,
-    category: el("category").value
+    note: el("description").value
   };
 
   generatedOTP = Math.floor(100000 + Math.random()*900000);
@@ -241,8 +217,33 @@ window.confirmOTP = async function(){
   notify("Transfer successful");
 };
 
+// ===== BILLS =====
+window.payBill = async function(name, amount){
+  if(frozen) return notify("Card is frozen");
+  if(amount > balance) return notify("Insufficient balance");
+
+  const newTx = {
+    note: name + " Bill",
+    amount: -amount,
+    date: new Date().toISOString(),
+    reference: genRef()
+  };
+
+  balance -= amount;
+
+  await updateDoc(userRef,{
+    balance,
+    transactions: [...tx, newTx]
+  });
+
+  notify(name + " paid successfully");
+};
+
 // ===== INIT =====
 async function init(){
+
+  // 🔒 FORCE HIDE RECEIPT
+  el("receiptModal")?.classList.add("hidden");
 
   const username = localStorage.getItem("user");
   if(!username) return location.href="index.html";
@@ -257,18 +258,12 @@ async function init(){
   tx = getTx(data);
   frozen = data.cardFrozen || false;
 
-  // PROFILE
   setText("welcome","Hi, "+data.fullName);
   setText("nameProfile",data.fullName);
+
+  // ✅ ALWAYS SHOW EMAIL
   setText("emailProfile", data.email || "dechasebank@gmail.com");
 
-  // ACCOUNT
-  setAccountField("iban", data.iban);
-  setAccountField("swift", data.swift);
-  setAccountField("accountNumberDisplay", data.accountNumber);
-  setAccountField("routingDisplay", data.routingNumber);
-
-  // CARD
   setText("cardName",data.fullName);
   setText("cardNumber","**** **** **** "+(data.card?.cardNumber || "0000").slice(-4));
   setText("cardExpiry",data.card?.expiry);
@@ -279,8 +274,8 @@ async function init(){
   updateFreezeUI();
   renderBalance();
   renderTransactions();
-  fetchRates();
 
+  // 🔄 LIVE UPDATE
   onSnapshot(userRef,(snap)=>{
     const d = snap.data();
     if(!d) return;
@@ -294,7 +289,6 @@ async function init(){
     updateFreezeUI();
     renderBalance();
     renderTransactions();
-    updateWallet();
   });
 }
 

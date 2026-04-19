@@ -5,227 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DeChase Bank</title>
 
-<style>
-body{
-margin:0;
-font-family:Arial;
-background:#020617;
-color:white;
-padding-bottom:80px;
-}
-
-.container{max-width:420px;margin:auto;padding:20px;}
-
-.card{
-background:#111827;
-padding:15px;
-border-radius:15px;
-margin-bottom:15px;
-transition:0.3s;
-}
-
-.card:hover{
-transform:translateY(-2px);
-}
-
-.balance-card{
-background:linear-gradient(135deg,#2563eb,#0ea5e9);
-padding:25px;
-border-radius:20px;
-text-align:center;
-}
-
-.balance{font-size:28px;font-weight:bold;}
-
-.time-card{
-background:linear-gradient(135deg,#0ea5e9,#2563eb);
-padding:20px;
-border-radius:18px;
-margin-bottom:15px;
-text-align:center;
-box-shadow:0 10px 25px rgba(0,0,0,0.3);
-}
-
-.time{font-size:32px;font-weight:bold;}
-
-.bank-card{perspective:1000px;margin-top:10px;}
-
-.card-inner{
-width:100%;
-height:200px;
-position:relative;
-transition:.6s;
-transform-style:preserve-3d;
-}
-
-.card-inner.flipped{transform:rotateY(180deg);}
-
-.card-front,.card-back{
-position:absolute;
-width:100%;
-height:100%;
-border-radius:16px;
-padding:18px;
-backface-visibility:hidden;
-}
-
-.card-front{
-background:linear-gradient(135deg,#1e3a8a,#2563eb,#0ea5e9);
-display:flex;
-flex-direction:column;
-justify-content:space-between;
-}
-
-.card-back{
-background:#0f172a;
-transform:rotateY(180deg);
-}
-
-.chip{
-width:50px;height:36px;border-radius:8px;
-background:linear-gradient(135deg,#ffd700,#bfa100);
-}
-
-.card-number{
-font-size:20px;
-letter-spacing:3px;
-font-weight:bold;
-}
-
-.card-bottom{display:flex;justify-content:space-between;}
-
-button{
-margin-top:10px;
-padding:12px;
-border:none;
-border-radius:10px;
-background:linear-gradient(135deg,#2563eb,#0ea5e9);
-color:white;
-font-weight:bold;
-width:100%;
-cursor:pointer;
-}
-
-button:active{
-transform:scale(0.96);
-}
-
-.bottomNav{
-position:fixed;
-bottom:0;
-width:100%;
-display:flex;
-justify-content:space-around;
-background:#021a35;
-padding:10px;
-}
-
-.bottomNav button{
-background:none;
-font-size:12px;
-}
-
-.hidden{display:none;}
-
-input, select{
-padding:12px;
-border-radius:10px;
-border:none;
-background:#1f2937;
-color:white;
-margin-top:10px;
-width:100%;
-}
-
-.profile-avatar{
-width:70px;height:70px;
-border-radius:50%;
-background:linear-gradient(135deg,#2563eb,#0ea5e9);
-display:flex;
-align-items:center;
-justify-content:center;
-margin:auto;
-font-size:28px;
-}
-
-.center{text-align:center;}
-
-.tx{
-padding:10px;
-border-bottom:1px solid #1f2937;
-margin-top:10px;
-cursor:pointer;
-}
-
-/* WhatsApp Button */
-.whatsapp-btn{
-position:fixed;
-bottom:90px;
-right:15px;
-width:55px;
-height:55px;
-border-radius:50%;
-background:#25D366;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:26px;
-text-decoration:none;
-color:white;
-box-shadow:0 8px 20px rgba(0,0,0,0.3);
-z-index:999;
-}
-/* Logout Button */
-.logoutBtn{
-width:100%;
-padding:14px;
-border:none;
-border-radius:12px;
-background:linear-gradient(135deg,#ef4444,#dc2626) !important;
-color:white;
-font-size:15px;
-font-weight:bold;
-cursor:pointer;
-margin-top:10px;
-}
-
-.logoutBtn:active{
-transform:scale(0.96);
-}
-/* ===== ACCOUNT DETAILS UI ===== */
-.acc-section{
-  margin-top:12px;
-  padding:10px;
-  background:#0f172a;
-  border-radius:12px;
-}
-
-.acc-label{
-  opacity:0.6;
-  font-size:12px;
-  display:block;
-  margin-bottom:6px;
-}
-
-.acc-item{
-  display:flex;
-  justify-content:space-between;
-  padding:8px 0;
-  border-bottom:1px solid #1f2937;
-  font-size:14px;
-}
-
-.acc-item:last-child{
-  border-bottom:none;
-}
-
-.acc-note{
-  margin-top:10px;
-  font-size:12px;
-  opacity:0.5;
-  text-align:center;
-}
-</style>
+<!-- ✅ External CSS -->
+<link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -307,14 +88,14 @@ CVV: <span id="cardCVV">***</span>
 <button onclick="openPage('giftPage')">Gift Cards</button>
 </div>
 
+<!-- ACCOUNT DETAILS -->
 <div class="card">
 
 <b style="font-size:16px;">🏦 Account Details</b>
 
-<!-- INTERNATIONAL -->
 <div class="acc-section">
   <small class="acc-label">🌍 International (SEPA)</small>
-  
+
   <div class="acc-item">
     <span>IBAN</span>
     <span id="iban"></span>
@@ -326,10 +107,9 @@ CVV: <span id="cardCVV">***</span>
   </div>
 </div>
 
-<!-- LOCAL -->
 <div class="acc-section">
   <small class="acc-label">🇺🇸 Local (US)</small>
-  
+
   <div class="acc-item">
     <span>Account Number</span>
     <span id="accountNumberDisplay"></span>
@@ -346,6 +126,14 @@ CVV: <span id="cardCVV">***</span>
 </div>
 
 </div>
+
+<!-- ✅ TRANSACTIONS (FIXED POSITION) -->
+<div class="card">
+  <b>📄 Transactions</b>
+  <div id="transactions"></div>
+</div>
+
+</div> <!-- END HOME -->
 
 <!-- SEND -->
 <div id="paymentsPage" class="hidden">
@@ -383,10 +171,7 @@ CVV: <span id="cardCVV">***</span>
 <button onclick="buyGiftCard('Steam',25)">Steam €25</button>
 </div>
 </div>
-<div class="card">
-  <b>📄 Transactions</b>
-  <div id="transactions"></div>
-</div>
+
 <!-- PROFILE -->
 <div id="profilePage" class="hidden">
 
@@ -399,7 +184,6 @@ CVV: <span id="cardCVV">***</span>
 <p id="accountLimit"></p>
 </div>
 
-<!-- ✅ Logout Button inside profile -->
 <div class="card">
 <button onclick="logoutUser()" class="logoutBtn">
 🚪 Logout
@@ -417,9 +201,10 @@ CVV: <span id="cardCVV">***</span>
 <button onclick="openPage('profilePage')">Profile</button>
 </div>
 
-<!-- WhatsApp -->
+<!-- WHATSAPP -->
 <a href="https://wa.me/13312016202" class="whatsapp-btn">💬</a>
 
+<!-- BASIC JS -->
 <script>
 function openPage(p){
   ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
@@ -431,39 +216,28 @@ function openPage(p){
   const page = document.getElementById(p);
   if(page) page.classList.remove("hidden");
 }
-// ✅ PRELOAD WALLET (FIX BLANK VALUES)
-window.addEventListener("DOMContentLoaded", () => {
-  const ids = [
-    "usdWallet","eurWallet","gbpWallet",
-    "convertedEUR","convertedUSD","convertedGBP"
-  ];
-
-  ids.forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.innerText = "...";
-  });
-});
 
 function flipCard(){
-const card = document.getElementById("cardInner");
-const cvv = document.getElementById("cardCVV");
+  const card = document.getElementById("cardInner");
+  const cvv = document.getElementById("cardCVV");
 
-card.classList.toggle("flipped");
-cvv.innerText = card.classList.contains("flipped") ? window._realCVV : "***";
+  card.classList.toggle("flipped");
+  cvv.innerText = card.classList.contains("flipped") ? window._realCVV : "***";
 }
 
 function updateTime(){
-const now = new Date();
-document.getElementById("time").innerText = now.toLocaleTimeString();
-document.getElementById("date").innerText = now.toDateString();
-document.getElementById("greeting").innerText =
-now.getHours()<12?"Good Morning":
-now.getHours()<18?"Good Afternoon":"Good Evening";
+  const now = new Date();
+  document.getElementById("time").innerText = now.toLocaleTimeString();
+  document.getElementById("date").innerText = now.toDateString();
+  document.getElementById("greeting").innerText =
+    now.getHours()<12?"Good Morning":
+    now.getHours()<18?"Good Afternoon":"Good Evening";
 }
 setInterval(updateTime,1000);
 updateTime();
 </script>
 
+<!-- MAIN JS -->
 <script type="module" src="dashboard.js"></script>
 
 </body>

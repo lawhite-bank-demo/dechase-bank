@@ -66,17 +66,23 @@ function formatMoney(v){
 
 // ===== RECEIPT SYSTEM =====
 window.showReceipt = function(t){
-  setText("rAmount", (t.amount < 0 ? "-€" : "+€") + formatMoney(Math.abs(t.amount)));
+
+  setText("rAmount",
+    (t.amount < 0 ? "-€" : "+€") +
+    formatMoney(Math.abs(t.amount || 0))
+  );
+
   setText("rType", t.amount < 0 ? "Debit" : "Credit");
-  setText("rNote", t.note || "-");
-  setText("rDate", new Date(t.date).toLocaleString());
-  setText("rRef", t.reference || "-");
+
+  setText("rNote", t.note || "No description");
+
+  setText("rDate",
+    t.date ? new Date(t.date).toLocaleString() : "N/A"
+  );
+
+  setText("rRef", t.reference || "N/A");
 
   el("receiptModal").classList.remove("hidden");
-};
-
-window.closeReceipt = function(){
-  el("receiptModal").classList.add("hidden");
 };
 
 // ===== NOTIFY =====

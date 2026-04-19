@@ -47,6 +47,17 @@ function setText(id,val){
   if(e) e.innerText = val ?? "";
 }
 
+function setAccountField(id, value){
+  const element = el(id);
+  if(!element) return;
+
+  if(!value){
+    element.parentElement.style.display = "none";
+  } else {
+    element.innerText = value;
+  }
+}
+
 function genRef(){
   return "TRX-" + Math.floor(Math.random()*1000000000);
 }
@@ -137,7 +148,7 @@ function getTx(data){
 }
 
 function renderTransactions(){
-  const container = document.getElementById("transactions");
+  const container = el("transactions");
   if(!container) return;
 
   container.innerHTML = "";
@@ -212,14 +223,11 @@ window.openPinModal = function(){
   generatedOTP = Math.floor(100000 + Math.random()*900000);
   notify("OTP: " + generatedOTP);
 
-  setTimeout(()=> {
-    window.confirmOTP();
-  }, 500);
+  setTimeout(()=> window.confirmOTP(), 500);
 };
 
 window.confirmOTP = async function(){
   const input = prompt("Enter OTP");
-
   if(input != generatedOTP) return notify("Wrong OTP");
 
   const newTx = {
@@ -275,16 +283,6 @@ async function init(){
   if(!snap.exists()) return location.href="index.html";
 
   const data = snap.data();
-function setAccountField(id, value){
-  const el = document.getElementById(id);
-  if(!el) return;
-
-  if(!value){
-    el.parentElement.style.display = "none";
-  } else {
-    el.innerText = value;
-  }
-}
 
   balance = Number(data.balance || 0);
   tx = getTx(data);
@@ -292,16 +290,20 @@ function setAccountField(id, value){
 
   applyTier(data.accountTier || "Tier 1");
 
+  // ✅ PROFILE
   setText("welcome","Hi, "+data.fullName);
   setText("nameProfile",data.fullName);
-  setText("emailProfile",data.email);
 
+  // 🔥 FIXED EMAIL (ALWAYS SHOWS)
+  setText("emailProfile", data.email || "dechasebank@gmail.com");
+
+  // ACCOUNT DETAILS
   setAccountField("iban", data.iban);
-setAccountField("swift", data.swift);
-setAccountField("accountNumberDisplay", data.accountNumber);
-setAccountField("routingDisplay", data.routingNumber);
-  
+  setAccountField("swift", data.swift);
+  setAccountField("accountNumberDisplay", data.accountNumber);
+  setAccountField("routingDisplay", data.routingNumber);
 
+  // CARD
   setText("cardName",data.fullName);
   setText("cardNumber","**** **** **** "+(data.card?.cardNumber || "0000").slice(-4));
   setText("cardExpiry",data.card?.expiry);
@@ -314,6 +316,7 @@ setAccountField("routingDisplay", data.routingNumber);
   renderTransactions();
   fetchRates();
 
+  // 🔄 LIVE UPDATE
   onSnapshot(userRef,(snap)=>{
     const d = snap.data();
     if(!d) return;
@@ -321,6 +324,9 @@ setAccountField("routingDisplay", data.routingNumber);
     balance = Number(d.balance || 0);
     tx = getTx(d);
     frozen = d.cardFrozen || false;
+
+    // 🔥 KEEP EMAIL UPDATED LIVE
+    setText("emailProfile", d.email || "dechasebank@gmail.com");
 
     updateFreezeUI();
     renderBalance();

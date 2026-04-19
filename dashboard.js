@@ -1,5 +1,8 @@
 // ===== FIREBASE =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+window.onerror = function(msg){
+  console.error("App crashed:", msg);
+};
 import {
   getFirestore, doc, getDoc, updateDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";

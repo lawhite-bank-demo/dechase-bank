@@ -129,42 +129,21 @@ function getTx(data){
     : Object.values(data.transactions);
 }
 
-function renderTransactions(){
-  const box = el("transactions");
-  if(!box) return;
+function renderBalance(){
+  const bal = document.getElementById("balance");
+  if(!bal) return;
 
-  box.innerHTML = "";
-
-  if(!tx.length){
-    box.innerHTML = "<p style='opacity:0.6;'>No transactions yet</p>";
-    return;
+  if(hidden){
+    bal.innerText = "••••••";
+  }else{
+    bal.innerText = "€" + Number(balance).toLocaleString(undefined,{
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    });
   }
 
-  tx.sort((a,b)=> new Date(b.date) - new Date(a.date));
-
-  tx.forEach(t=>{
-    const amt = Number(t.amount);
-
-    const div = document.createElement("div");
-    div.className = "tx";
-
-    div.innerHTML = `
-      <div>
-        <strong>${t.note || "Transaction"}</strong><br>
-        <small>${new Date(t.date).toLocaleString()}</small>
-      </div>
-
-      <div style="color:${amt>=0?"#22c55e":"#ef4444"};font-weight:bold;">
-        ${amt>=0?"+":"-"}€${formatMoney(Math.abs(amt))}
-      </div>
-    `;
-
-    div.onclick = ()=>{
-      notify(`Ref: ${t.reference}`);
-    };
-
-    box.appendChild(div);
-  });
+  document.getElementById("toggleBalance").innerText =
+    hidden ? "👁 Show" : "🙈 Hide";
 }
 
 // ===== CURRENCY =====

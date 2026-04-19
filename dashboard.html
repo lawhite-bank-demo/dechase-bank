@@ -237,6 +237,45 @@ function updateTime(){
 }
 setInterval(updateTime,1000);
 updateTime();
+<!-- RECEIPT MODAL -->
+<div id="receiptModal" class="hidden receipt-modal">
+  <div class="receipt-card">
+
+    <h3>Transaction Receipt</h3>
+
+    <div class="receipt-row">
+      <span>Status</span>
+      <span style="color:#22c55e;">Completed</span>
+    </div>
+
+    <div class="receipt-row">
+      <span>Amount</span>
+      <span id="rAmount"></span>
+    </div>
+
+    <div class="receipt-row">
+      <span>Type</span>
+      <span id="rType"></span>
+    </div>
+
+    <div class="receipt-row">
+      <span>Description</span>
+      <span id="rNote"></span>
+    </div>
+
+    <div class="receipt-row">
+      <span>Date</span>
+      <span id="rDate"></span>
+    </div>
+
+    <div class="receipt-row">
+      <span>Reference</span>
+      <span id="rRef"></span>
+    </div>
+
+    <button onclick="closeReceipt()">Close</button>
+  </div>
+</div>
 </script>
 
 <!-- MAIN JS -->

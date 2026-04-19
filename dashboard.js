@@ -137,23 +137,36 @@ function getTx(data){
 }
 
 function renderTransactions(){
-  const box = document.getElementById("transactions");
-  if(!box) return;
+  const container = document.getElementById("transactions");
+  if(!container) return;
+
+  container.innerHTML = "";
 
   if(!tx.length){
-    box.innerHTML = "<p>No transactions yet</p>";
+    container.innerHTML = "<p>No transactions yet</p>";
     return;
   }
 
-  box.innerHTML = tx.slice().reverse().map(t => `
-    <div class="tx">
-      <div><b>${t.note || "Transaction"}</b></div>
-      <div>${new Date(t.date).toLocaleString()}</div>
-      <div style="color:${t.amount < 0 ? '#ef4444' : '#22c55e'}">
+  tx.slice().reverse().forEach(t => {
+
+    const div = document.createElement("div");
+    div.className = "tx";
+
+    const amountClass = t.amount < 0 ? "tx-negative" : "tx-positive";
+
+    div.innerHTML = `
+      <div class="tx-left">
+        <b>${t.note}</b>
+        <small>${new Date(t.date).toLocaleString()}</small>
+      </div>
+
+      <div class="tx-amount ${amountClass}">
         ${t.amount < 0 ? "-" : "+"}€${Math.abs(t.amount).toLocaleString()}
       </div>
-    </div>
-  `).join("");
+    `;
+
+    container.appendChild(div);
+  });
 }
 
 // ===== CURRENCY =====

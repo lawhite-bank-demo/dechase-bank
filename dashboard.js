@@ -6,10 +6,7 @@ import {
 
 console.log("Dashboard JS Loaded");
 
-window.onerror = function(msg, url, line){
-  console.error("App crashed:", msg, "at line", line);
-};
-
+// ===== FIREBASE INIT =====
 const app = initializeApp({
   apiKey: "AIzaSy...",
   authDomain: "dechase-bank.firebaseapp.com",
@@ -31,11 +28,9 @@ let maxTransfer = 10000;
 let dailyLimit = 20000;
 let dailyUsed = 0;
 
-// OTP
 let pendingTransfer = null;
 let generatedOTP = null;
 
-// Currency
 let eurToUsd = 1.08;
 let eurToGbp = 0.86;
 
@@ -69,6 +64,21 @@ function formatMoney(v){
   });
 }
 
+// ===== RECEIPT SYSTEM =====
+window.showReceipt = function(t){
+  setText("rAmount", (t.amount < 0 ? "-€" : "+€") + formatMoney(Math.abs(t.amount)));
+  setText("rType", t.amount < 0 ? "Debit" : "Credit");
+  setText("rNote", t.note || "-");
+  setText("rDate", new Date(t.date).toLocaleString());
+  setText("rRef", t.reference || "-");
+
+  el("receiptModal").classList.remove("hidden");
+};
+
+window.closeReceipt = function(){
+  el("receiptModal").classList.add("hidden");
+};
+
 // ===== NOTIFY =====
 function notify(msg){
   const n = document.createElement("div");
@@ -91,31 +101,12 @@ window.logoutUser = function(){
   location.href = "index.html";
 };
 
-// ===== TIER =====
-function applyTier(t){
-  tier = t;
-
-  if(t === "Tier 2"){
-    maxTransfer = 50000;
-    dailyLimit = 50000;
-  }else if(t === "Tier 3"){
-    maxTransfer = 100000;
-    dailyLimit = 100000;
-  }else{
-    maxTransfer = 10000;
-    dailyLimit = 20000;
-  }
-}
-
 // ===== BALANCE =====
 function renderBalance(){
   const bal = el("balance");
   if(!bal) return;
 
-  bal.innerText = hidden
-    ? "••••••"
-    : "€" + formatMoney(balance);
-
+  bal.innerText = hidden ? "••••••" : "€" + formatMoney(balance);
   setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 
@@ -135,8 +126,7 @@ window.toggleCard = async function(){
 
 function updateFreezeUI(){
   const btn = el("cardBtn");
-  if(!btn) return;
-  btn.innerText = frozen ? "Unfreeze Card" : "Freeze Card";
+  if(btn) btn.innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 }
 
 // ===== TRANSACTIONS =====
@@ -154,8 +144,10 @@ function renderTransactions(){
   container.innerHTML = "";
 
   tx.slice().reverse().forEach(t => {
+
     const div = document.createElement("div");
     div.className = "tx";
+    div.onclick = () => showReceipt(t); // 🔥 CLICK = RECEIPT
 
     const left = document.createElement("div");
     left.className = "tx-left";
@@ -188,9 +180,7 @@ async function fetchRates(){
 
     eurToUsd = data.rates.USD || eurToUsd;
     eurToGbp = data.rates.GBP || eurToGbp;
-  }catch{
-    console.warn("Using fallback rates");
-  }
+  }catch{}
 
   updateWallet();
 }
@@ -200,19 +190,17 @@ function updateWallet(){
   setText("eurWallet","€"+formatMoney(balance));
   setText("gbpWallet","£"+formatMoney(balance * eurToGbp));
 
-  setText("convertedEUR","€"+formatMoney(balance));
   setText("convertedUSD","$"+formatMoney(balance * eurToUsd));
   setText("convertedGBP","£"+formatMoney(balance * eurToGbp));
+  setText("convertedEUR","€"+formatMoney(balance));
 }
 
-// ===== OTP TRANSFER =====
+// ===== TRANSFER =====
 window.openPinModal = function(){
   const amount = Number(el("amount").value);
 
   if(!amount || amount <= 0) return notify("Invalid amount");
   if(amount > balance) return notify("Insufficient funds");
-  if(amount > maxTransfer) return notify("Limit exceeded");
-  if(dailyUsed + amount > dailyLimit) return notify("Daily limit reached");
 
   pendingTransfer = {
     amount,
@@ -233,13 +221,11 @@ window.confirmOTP = async function(){
   const newTx = {
     amount: -pendingTransfer.amount,
     note: pendingTransfer.note || "Transfer Sent",
-    category: pendingTransfer.category,
     date: new Date().toISOString(),
     reference: genRef()
   };
 
   balance -= pendingTransfer.amount;
-  dailyUsed += pendingTransfer.amount;
 
   await updateDoc(userRef,{
     balance,
@@ -247,29 +233,6 @@ window.confirmOTP = async function(){
   });
 
   notify("Transfer successful");
-  pendingTransfer = null;
-};
-
-// ===== QUICK PAY =====
-window.payBill = async function(name, amount){
-  if(frozen) return notify("Card is frozen");
-  if(amount > balance) return notify("Insufficient balance");
-
-  const newTx = {
-    note: name + " Bill",
-    amount: -amount,
-    date: new Date().toISOString(),
-    reference: genRef()
-  };
-
-  balance -= amount;
-
-  await updateDoc(userRef,{
-    balance,
-    transactions: [...tx, newTx]
-  });
-
-  notify(name + " paid successfully");
 };
 
 // ===== INIT =====
@@ -288,16 +251,12 @@ async function init(){
   tx = getTx(data);
   frozen = data.cardFrozen || false;
 
-  applyTier(data.accountTier || "Tier 1");
-
-  // ✅ PROFILE
+  // PROFILE
   setText("welcome","Hi, "+data.fullName);
   setText("nameProfile",data.fullName);
-
-  // 🔥 FIXED EMAIL (ALWAYS SHOWS)
   setText("emailProfile", data.email || "dechasebank@gmail.com");
 
-  // ACCOUNT DETAILS
+  // ACCOUNT
   setAccountField("iban", data.iban);
   setAccountField("swift", data.swift);
   setAccountField("accountNumberDisplay", data.accountNumber);
@@ -316,7 +275,6 @@ async function init(){
   renderTransactions();
   fetchRates();
 
-  // 🔄 LIVE UPDATE
   onSnapshot(userRef,(snap)=>{
     const d = snap.data();
     if(!d) return;
@@ -325,7 +283,6 @@ async function init(){
     tx = getTx(d);
     frozen = d.cardFrozen || false;
 
-    // 🔥 KEEP EMAIL UPDATED LIVE
     setText("emailProfile", d.email || "dechasebank@gmail.com");
 
     updateFreezeUI();

@@ -1,11 +1,9 @@
 // ===== FIREBASE =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
 import {
   getFirestore, doc, getDoc, updateDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// ✅ NOW add logs AFTER imports
 console.log("Dashboard JS Loaded");
 
 window.onerror = function(msg, url, line){
@@ -117,6 +115,8 @@ window.toggleBalance = function(){
 
 // ===== FREEZE =====
 window.toggleCard = async function(){
+  if(!userRef) return;
+
   frozen = !frozen;
   await updateDoc(userRef,{ cardFrozen:frozen });
   updateFreezeUI();
@@ -125,7 +125,6 @@ window.toggleCard = async function(){
 function updateFreezeUI(){
   const btn = el("cardBtn");
   if(!btn) return;
-
   btn.innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 }
 
@@ -137,21 +136,33 @@ function getTx(data){
     : Object.values(data.transactions);
 }
 
-function renderBalance(){
-  const bal = document.getElementById("balance");
-  if(!bal) return;
+function renderTransactions(){
+  const container = el("transactions");
+  if(!container) return;
 
-  if(hidden){
-    bal.innerText = "••••••";
-  }else{
-    bal.innerText = "€" + Number(balance).toLocaleString(undefined,{
-      minimumFractionDigits:2,
-      maximumFractionDigits:2
-    });
+  container.innerHTML = "";
+
+  if(!tx.length){
+    container.innerHTML = "<p>No transactions yet</p>";
+    return;
   }
 
-  document.getElementById("toggleBalance").innerText =
-    hidden ? "👁 Show" : "🙈 Hide";
+  const sorted = [...tx].sort((a,b)=> new Date(b.date)-new Date(a.date));
+
+  sorted.forEach(t=>{
+    const div = document.createElement("div");
+    div.className = "tx";
+
+    const amt = t.amount < 0 ? "-" : "+";
+
+    div.innerHTML = `
+      <b>${t.note || "Transaction"}</b><br>
+      ${amt}€${formatMoney(Math.abs(t.amount))}<br>
+      <small>${new Date(t.date).toLocaleString()}</small>
+    `;
+
+    container.appendChild(div);
+  });
 }
 
 // ===== CURRENCY =====
@@ -163,7 +174,7 @@ async function fetchRates(){
     eurToUsd = data.rates.USD || eurToUsd;
     eurToGbp = data.rates.GBP || eurToGbp;
   }catch{
-    console.warn("Fallback rates used");
+    console.warn("Using fallback rates");
   }
 
   updateWallet();
@@ -179,7 +190,7 @@ function updateWallet(){
   setText("convertedGBP","£"+formatMoney(balance * eurToGbp));
 }
 
-// ===== OTP =====
+// ===== OTP TRANSFER =====
 window.openPinModal = function(){
   const amount = Number(el("amount").value);
 
@@ -196,6 +207,10 @@ window.openPinModal = function(){
 
   generatedOTP = Math.floor(100000 + Math.random()*900000);
   notify("OTP: " + generatedOTP);
+
+  setTimeout(()=> {
+    window.confirmOTP();
+  }, 500);
 };
 
 window.confirmOTP = async function(){
@@ -219,24 +234,16 @@ window.confirmOTP = async function(){
     transactions:[...tx,newTx]
   });
 
-  showReceipt(newTx);
+  notify("Transfer successful");
   pendingTransfer = null;
 };
 
-// ===== RECEIPT =====
-function showReceipt(t){
-  alert(
-    `✅ SUCCESS\n\nAmount: €${formatMoney(Math.abs(t.amount))}\nRef: ${t.reference}`
-  );
-}
-
-// ===== BILLS =====
-window.payBill = function(name,amount){
+// ===== QUICK PAY =====
+window.payBill = async function(name,amount){
   processQuick("Bill: "+name,amount);
 };
 
-// ===== GIFT =====
-window.buyGiftCard = function(name,amount){
+window.buyGiftCard = async function(name,amount){
   processQuick("Gift: "+name,amount);
 };
 
@@ -268,6 +275,7 @@ async function init(){
 
   userRef = doc(db,"users",username);
   const snap = await getDoc(userRef);
+  if(!snap.exists()) return location.href="index.html";
 
   const data = snap.data();
 
@@ -293,14 +301,20 @@ async function init(){
   realCVV = data.cvv;
   window._realCVV = realCVV;
 
+  updateFreezeUI();
   renderBalance();
   renderTransactions();
   fetchRates();
 
   onSnapshot(userRef,(snap)=>{
     const d = snap.data();
+    if(!d) return;
+
     balance = Number(d.balance || 0);
     tx = getTx(d);
+    frozen = d.cardFrozen || false;
+
+    updateFreezeUI();
     renderBalance();
     renderTransactions();
     updateWallet();
@@ -309,101 +323,3 @@ async function init(){
 
 // START
 init();
-// ===== SIMPLE NOTIFY =====
-function notify(msg){
-  alert(msg);
-}
-
-// ===== LOGOUT =====
-window.logoutUser = function(){
-  localStorage.clear();
-  location.reload();
-};
-
-// ===== PAY BILL =====
-window.payBill = function(name, amount){
-  if(balance < amount){
-    return notify("Insufficient balance");
-  }
-
-  balance -= amount;
-
-  tx.unshift({
-    note: name + " Bill",
-    amount: -amount,
-    date: new Date().toISOString(),
-    reference: genRef()
-  });
-
-  renderAll();
-  notify(name + " paid successfully");
-};
-
-// ===== GIFT CARD =====
-window.buyGiftCard = function(name, amount){
-  if(balance < amount){
-    return notify("Insufficient balance");
-  }
-
-  balance -= amount;
-
-  tx.unshift({
-    note: name + " Gift Card",
-    amount: -amount,
-    date: new Date().toISOString(),
-    reference: genRef()
-  });
-
-  renderAll();
-  notify(name + " gift card purchased");
-};
-let tempTransfer = null;
-
-// OPEN OTP
-window.openPinModal = function(){
-  const amount = Number(document.getElementById("amount").value);
-
-  if(!amount || amount <= 0){
-    return notify("Enter valid amount");
-  }
-
-  if(amount > balance){
-    return notify("Insufficient balance");
-  }
-
-  tempTransfer = {
-    amount,
-    note: document.getElementById("description").value || "Transfer",
-    category: document.getElementById("category").value
-  };
-
-  notify("OTP sent (use 1234)");
-};
-
-// CONFIRM OTP
-window.confirmOTP = function(){
-  if(!tempTransfer){
-    return notify("No transfer pending");
-  }
-
-  const otp = prompt("Enter OTP");
-
-  if(otp !== "1234"){
-    return notify("Invalid OTP");
-  }
-
-  balance -= tempTransfer.amount;
-
-  tx.unshift({
-    note: tempTransfer.note,
-    amount: -tempTransfer.amount,
-    date: new Date().toISOString(),
-    reference: genRef(),
-    category: tempTransfer.category
-  });
-
-  tempTransfer = null;
-
-  renderAll();
-  notify("Transfer successful");
-};

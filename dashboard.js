@@ -20,18 +20,13 @@ let userRef = null;
 let hidden = false;
 let realCVV = "";
 
-let tier = "Tier 1";
-let maxTransfer = 10000;
-let dailyLimit = 20000;
-let dailyUsed = 0;
+// Currency
+let eurToUsd = 1.08;
+let eurToGbp = 0.86;
 
 // OTP
 let pendingTransfer = null;
 let generatedOTP = null;
-
-// Currency
-let eurToUsd = 1.08;
-let eurToGbp = 0.86;
 
 // ===== HELPERS =====
 function el(id){ return document.getElementById(id); }
@@ -39,6 +34,17 @@ function el(id){ return document.getElementById(id); }
 function setText(id,val){
   const e = el(id);
   if(e) e.innerText = val ?? "";
+}
+
+function setAccountField(id, value){
+  const element = el(id);
+  if(!element) return;
+
+  if(!value){
+    element.parentElement.style.display = "none";
+  } else {
+    element.innerText = value;
+  }
 }
 
 function genRef(){
@@ -54,6 +60,7 @@ function formatMoney(v){
 
 // ===== RECEIPT =====
 window.showReceipt = function(t){
+
   setText("rAmount",
     (t.amount < 0 ? "-€" : "+€") +
     formatMoney(Math.abs(t.amount))
@@ -141,7 +148,6 @@ function renderTransactions(){
 
   tx.slice().reverse().forEach(t => {
 
-    // 🔥 FIX OLD DATA
     t = {
       amount: t.amount ?? 0,
       note: t.note || "Transaction",
@@ -153,7 +159,7 @@ function renderTransactions(){
     const div = document.createElement("div");
     div.className = "tx";
 
-    div.onclick = () => showReceipt(t); // ✅ ONLY ON CLICK
+    div.onclick = () => showReceipt(t); // ✅ ONLY when clicked
 
     const left = document.createElement("div");
     left.className = "tx-left";
@@ -176,6 +182,31 @@ function renderTransactions(){
 
     container.appendChild(div);
   });
+}
+
+// ===== CURRENCY =====
+async function fetchRates(){
+  try{
+    const res = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
+    const data = await res.json();
+
+    eurToUsd = data.rates.USD || eurToUsd;
+    eurToGbp = data.rates.GBP || eurToGbp;
+  }catch{
+    console.warn("Fallback rates used");
+  }
+
+  updateWallet();
+}
+
+function updateWallet(){
+  setText("usdWallet","$"+formatMoney(balance * eurToUsd));
+  setText("eurWallet","€"+formatMoney(balance));
+  setText("gbpWallet","£"+formatMoney(balance * eurToGbp));
+
+  setText("convertedEUR","€"+formatMoney(balance));
+  setText("convertedUSD","$"+formatMoney(balance * eurToUsd));
+  setText("convertedGBP","£"+formatMoney(balance * eurToGbp));
 }
 
 // ===== TRANSFER =====
@@ -242,7 +273,7 @@ window.payBill = async function(name, amount){
 // ===== INIT =====
 async function init(){
 
-  // 🔒 FORCE HIDE RECEIPT
+  // ✅ ALWAYS HIDE RECEIPT ON LOAD
   el("receiptModal")?.classList.add("hidden");
 
   const username = localStorage.getItem("user");
@@ -258,12 +289,18 @@ async function init(){
   tx = getTx(data);
   frozen = data.cardFrozen || false;
 
+  // PROFILE
   setText("welcome","Hi, "+data.fullName);
   setText("nameProfile",data.fullName);
-
-  // ✅ ALWAYS SHOW EMAIL
   setText("emailProfile", data.email || "dechasebank@gmail.com");
 
+  // ACCOUNT DETAILS ✅ RESTORED
+  setAccountField("iban", data.iban);
+  setAccountField("swift", data.swift);
+  setAccountField("accountNumberDisplay", data.accountNumber);
+  setAccountField("routingDisplay", data.routingNumber);
+
+  // CARD
   setText("cardName",data.fullName);
   setText("cardNumber","**** **** **** "+(data.card?.cardNumber || "0000").slice(-4));
   setText("cardExpiry",data.card?.expiry);
@@ -274,6 +311,7 @@ async function init(){
   updateFreezeUI();
   renderBalance();
   renderTransactions();
+  fetchRates();
 
   // 🔄 LIVE UPDATE
   onSnapshot(userRef,(snap)=>{
@@ -286,9 +324,16 @@ async function init(){
 
     setText("emailProfile", d.email || "dechasebank@gmail.com");
 
+    // ACCOUNT LIVE UPDATE
+    setAccountField("iban", d.iban);
+    setAccountField("swift", d.swift);
+    setAccountField("accountNumberDisplay", d.accountNumber);
+    setAccountField("routingDisplay", d.routingNumber);
+
     updateFreezeUI();
     renderBalance();
     renderTransactions();
+    updateWallet();
   });
 }
 

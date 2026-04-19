@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DeChase Bank</title>
 
-<!-- ✅ External CSS -->
 <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -90,50 +89,48 @@ CVV: <span id="cardCVV">***</span>
 
 <!-- ACCOUNT DETAILS -->
 <div class="card">
-
 <b style="font-size:16px;">🏦 Account Details</b>
 
 <div class="acc-section">
-  <small class="acc-label">🌍 International (SEPA)</small>
+<small class="acc-label">🌍 International (SEPA)</small>
 
-  <div class="acc-item">
-    <span>IBAN</span>
-    <span id="iban"></span>
-  </div>
+<div class="acc-item">
+<span>IBAN</span>
+<span id="iban"></span>
+</div>
 
-  <div class="acc-item">
-    <span>SWIFT / BIC</span>
-    <span id="swift"></span>
-  </div>
+<div class="acc-item">
+<span>SWIFT / BIC</span>
+<span id="swift"></span>
+</div>
 </div>
 
 <div class="acc-section">
-  <small class="acc-label">🇺🇸 Local (US)</small>
+<small class="acc-label">🇺🇸 Local (US)</small>
 
-  <div class="acc-item">
-    <span>Account Number</span>
-    <span id="accountNumberDisplay"></span>
-  </div>
+<div class="acc-item">
+<span>Account Number</span>
+<span id="accountNumberDisplay"></span>
+</div>
 
-  <div class="acc-item">
-    <span>Routing Number</span>
-    <span id="routingDisplay"></span>
-  </div>
+<div class="acc-item">
+<span>Routing Number</span>
+<span id="routingDisplay"></span>
+</div>
 </div>
 
 <div class="acc-note">
-  🔒 Only share these details with trusted parties
+🔒 Only share these details with trusted parties
+</div>
 </div>
 
-</div>
-
-<!-- ✅ TRANSACTIONS (FIXED POSITION) -->
+<!-- TRANSACTIONS -->
 <div class="card">
-  <b>📄 Transactions</b>
-  <div id="transactions"></div>
+<b>📄 Transactions</b>
+<div id="transactions"></div>
 </div>
 
-</div> <!-- END HOME -->
+</div>
 
 <!-- SEND -->
 <div id="paymentsPage" class="hidden">
@@ -178,9 +175,11 @@ CVV: <span id="cardCVV">***</span>
 <div class="card center">
 <div class="profile-avatar">👤</div>
 <h3 id="nameProfile"></h3>
+
 <div style="margin-top:8px; opacity:0.8;">
 📧 <span id="emailProfile"></span>
 </div>
+
 <p id="addressProfile"></p>
 <p id="accountTier"></p>
 <p id="accountLimit"></p>
@@ -190,6 +189,8 @@ CVV: <span id="cardCVV">***</span>
 <button onclick="logoutUser()" class="logoutBtn">
 🚪 Logout
 </button>
+</div>
+
 </div>
 
 </div>
@@ -206,38 +207,7 @@ CVV: <span id="cardCVV">***</span>
 <!-- WHATSAPP -->
 <a href="https://wa.me/13312016202" class="whatsapp-btn">💬</a>
 
-<!-- BASIC JS -->
-<script>
-function openPage(p){
-  ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
-  .forEach(x=>{
-    const el = document.getElementById(x);
-    if(el) el.classList.add("hidden");
-  });
-
-  const page = document.getElementById(p);
-  if(page) page.classList.remove("hidden");
-}
-
-function flipCard(){
-  const card = document.getElementById("cardInner");
-  const cvv = document.getElementById("cardCVV");
-
-  card.classList.toggle("flipped");
-  cvv.innerText = card.classList.contains("flipped") ? window._realCVV : "***";
-}
-
-function updateTime(){
-  const now = new Date();
-  document.getElementById("time").innerText = now.toLocaleTimeString();
-  document.getElementById("date").innerText = now.toDateString();
-  document.getElementById("greeting").innerText =
-    now.getHours()<12?"Good Morning":
-    now.getHours()<18?"Good Afternoon":"Good Evening";
-}
-setInterval(updateTime,1000);
-updateTime();
-<!-- RECEIPT MODAL -->
+<!-- ✅ RECEIPT MODAL (CORRECT POSITION) -->
 <div id="receiptModal" class="hidden receipt-modal">
   <div class="receipt-card">
 
@@ -276,9 +246,39 @@ updateTime();
     <button onclick="closeReceipt()">Close</button>
   </div>
 </div>
+
+<!-- BASIC JS -->
+<script>
+function openPage(p){
+  ["homePage","paymentsPage","billsPage","giftPage","profilePage"]
+  .forEach(x=>{
+    const el = document.getElementById(x);
+    if(el) el.classList.add("hidden");
+  });
+
+  document.getElementById(p).classList.remove("hidden");
+}
+
+function flipCard(){
+  const card = document.getElementById("cardInner");
+  const cvv = document.getElementById("cardCVV");
+
+  card.classList.toggle("flipped");
+  cvv.innerText = card.classList.contains("flipped") ? window._realCVV : "***";
+}
+
+function updateTime(){
+  const now = new Date();
+  document.getElementById("time").innerText = now.toLocaleTimeString();
+  document.getElementById("date").innerText = now.toDateString();
+  document.getElementById("greeting").innerText =
+    now.getHours()<12?"Good Morning":
+    now.getHours()<18?"Good Afternoon":"Good Evening";
+}
+setInterval(updateTime,1000);
+updateTime();
 </script>
 
-<!-- MAIN JS -->
 <script type="module" src="dashboard.js"></script>
 
 </body>

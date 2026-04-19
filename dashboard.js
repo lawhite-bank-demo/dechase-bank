@@ -137,32 +137,23 @@ function getTx(data){
 }
 
 function renderTransactions(){
-  const container = el("transactions");
-  if(!container) return;
-
-  container.innerHTML = "";
+  const box = document.getElementById("transactions");
+  if(!box) return;
 
   if(!tx.length){
-    container.innerHTML = "<p>No transactions yet</p>";
+    box.innerHTML = "<p>No transactions yet</p>";
     return;
   }
 
-  const sorted = [...tx].sort((a,b)=> new Date(b.date)-new Date(a.date));
-
-  sorted.forEach(t=>{
-    const div = document.createElement("div");
-    div.className = "tx";
-
-    const amt = t.amount < 0 ? "-" : "+";
-
-    div.innerHTML = `
-      <b>${t.note || "Transaction"}</b><br>
-      ${amt}€${formatMoney(Math.abs(t.amount))}<br>
-      <small>${new Date(t.date).toLocaleString()}</small>
-    `;
-
-    container.appendChild(div);
-  });
+  box.innerHTML = tx.slice().reverse().map(t => `
+    <div class="tx">
+      <div><b>${t.note || "Transaction"}</b></div>
+      <div>${new Date(t.date).toLocaleString()}</div>
+      <div style="color:${t.amount < 0 ? '#ef4444' : '#22c55e'}">
+        ${t.amount < 0 ? "-" : "+"}€${Math.abs(t.amount).toLocaleString()}
+      </div>
+    </div>
+  `).join("");
 }
 
 // ===== CURRENCY =====
@@ -239,33 +230,26 @@ window.confirmOTP = async function(){
 };
 
 // ===== QUICK PAY =====
-window.payBill = async function(name,amount){
-  processQuick("Bill: "+name,amount);
-};
-
-window.buyGiftCard = async function(name,amount){
-  processQuick("Gift: "+name,amount);
-};
-
-async function processQuick(title,amount){
-  if(amount > balance) return notify("Insufficient funds");
+window.payBill = async function(name, amount){
+  if(frozen) return notify("Card is frozen");
+  if(amount > balance) return notify("Insufficient balance");
 
   const newTx = {
-    amount:-amount,
-    note:title,
-    date:new Date().toISOString(),
-    reference:genRef()
+    note: name + " Bill",
+    amount: -amount,
+    date: new Date().toISOString(),
+    reference: genRef()
   };
 
   balance -= amount;
 
   await updateDoc(userRef,{
     balance,
-    transactions:[...tx,newTx]
+    transactions: [...tx, newTx]
   });
 
-  notify("Payment successful");
-}
+  notify(name + " paid successfully");
+};
 
 // ===== INIT =====
 async function init(){

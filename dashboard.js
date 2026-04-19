@@ -137,14 +137,14 @@ function getTx(data){
 }
 
 function renderTransactions(){
-  const box = document.getElementById("transactions");
-  if(!box) return;
+  const container = document.getElementById("transactions");
+  if(!container) return;
 
-  box.innerHTML = "";
+  container.innerHTML = "";
 
   tx.slice().reverse().forEach(t => {
-    const row = document.createElement("div");
-    row.className = "tx";
+    const div = document.createElement("div");
+    div.className = "tx";
 
     const left = document.createElement("div");
     left.className = "tx-left";
@@ -160,12 +160,12 @@ function renderTransactions(){
 
     const amount = document.createElement("div");
     amount.className = "tx-amount " + (t.amount < 0 ? "tx-negative" : "tx-positive");
-    amount.innerText = (t.amount < 0 ? "-" : "+") + "€" + Math.abs(t.amount);
+    amount.innerText = (t.amount < 0 ? "-€" : "+€") + formatMoney(Math.abs(t.amount));
 
-    row.appendChild(left);
-    row.appendChild(amount);
+    div.appendChild(left);
+    div.appendChild(amount);
 
-    box.appendChild(row);
+    container.appendChild(div);
   });
 }
 
@@ -275,6 +275,16 @@ async function init(){
   if(!snap.exists()) return location.href="index.html";
 
   const data = snap.data();
+function setAccountField(id, value){
+  const el = document.getElementById(id);
+  if(!el) return;
+
+  if(!value){
+    el.parentElement.style.display = "none";
+  } else {
+    el.innerText = value;
+  }
+}
 
   balance = Number(data.balance || 0);
   tx = getTx(data);
@@ -286,10 +296,11 @@ async function init(){
   setText("nameProfile",data.fullName);
   setText("emailProfile",data.email);
 
-  setText("accountNumberDisplay",data.accountNumber);
-  setText("iban",data.iban);
-  setText("routingDisplay",data.routingNumber);
-  setText("swift",data.swift);
+  setAccountField("iban", data.iban);
+setAccountField("swift", data.swift);
+setAccountField("accountNumberDisplay", data.accountNumber);
+setAccountField("routingDisplay", data.routingNumber);
+  
 
   setText("cardName",data.fullName);
   setText("cardNumber","**** **** **** "+(data.card?.cardNumber || "0000").slice(-4));

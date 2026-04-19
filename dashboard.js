@@ -137,35 +137,35 @@ function getTx(data){
 }
 
 function renderTransactions(){
-  const container = document.getElementById("transactions");
-  if(!container) return;
+  const box = document.getElementById("transactions");
+  if(!box) return;
 
-  container.innerHTML = "";
-
-  if(!tx.length){
-    container.innerHTML = "<p>No transactions yet</p>";
-    return;
-  }
+  box.innerHTML = "";
 
   tx.slice().reverse().forEach(t => {
+    const row = document.createElement("div");
+    row.className = "tx";
 
-    const div = document.createElement("div");
-    div.className = "tx";
+    const left = document.createElement("div");
+    left.className = "tx-left";
 
-    const amountClass = t.amount < 0 ? "tx-negative" : "tx-positive";
+    const title = document.createElement("div");
+    title.innerText = t.note;
 
-    div.innerHTML = `
-      <div class="tx-left">
-        <b>${t.note}</b>
-        <small>${new Date(t.date).toLocaleString()}</small>
-      </div>
+    const date = document.createElement("small");
+    date.innerText = new Date(t.date).toLocaleString();
 
-      <div class="tx-amount ${amountClass}">
-        ${t.amount < 0 ? "-" : "+"}€${Math.abs(t.amount).toLocaleString()}
-      </div>
-    `;
+    left.appendChild(title);
+    left.appendChild(date);
 
-    container.appendChild(div);
+    const amount = document.createElement("div");
+    amount.className = "tx-amount " + (t.amount < 0 ? "tx-negative" : "tx-positive");
+    amount.innerText = (t.amount < 0 ? "-" : "+") + "€" + Math.abs(t.amount);
+
+    row.appendChild(left);
+    row.appendChild(amount);
+
+    box.appendChild(row);
   });
 }
 

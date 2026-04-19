@@ -66,7 +66,11 @@ window.showReceipt = function(t){
     formatMoney(Math.abs(t.amount))
   );
 
-  setText("rType", t.amount < 0 ? "Debit" : "Credit");
+  setText("rType",
+  t.type === "transfer" ? "Transfer" :
+  t.type === "bill" ? "Bill Payment" :
+  t.amount < 0 ? "Debit" : "Credit"
+);
   setText("rNote", t.note || "Transaction");
   setText("rDate", t.date ? new Date(t.date).toLocaleString() : "N/A");
   setText("rRef", t.reference || "N/A");
@@ -231,12 +235,15 @@ window.confirmOTP = async function(){
   const input = prompt("Enter OTP");
   if(input != generatedOTP) return notify("Wrong OTP");
 
+  const reference = genRef(); // ✅ generate once
+
   const newTx = {
-    amount: -pendingTransfer.amount,
-    note: pendingTransfer.note || "Transfer Sent",
-    date: new Date().toISOString(),
-    reference: genRef()
-  };
+  amount: -pendingTransfer.amount,
+  note: pendingTransfer.note || "Transfer Sent",
+  date: new Date().toISOString(),
+  reference: genRef(),
+  type: "transfer" // ✅ ADD THIS
+};
 
   balance -= pendingTransfer.amount;
 
@@ -246,6 +253,11 @@ window.confirmOTP = async function(){
   });
 
   notify("Transfer successful");
+
+  // ✅ SHOW RECEIPT IMMEDIATELY
+  showReceipt(newTx);
+
+  pendingTransfer = null;
 };
 
 // ===== BILLS =====
@@ -254,11 +266,12 @@ window.payBill = async function(name, amount){
   if(amount > balance) return notify("Insufficient balance");
 
   const newTx = {
-    note: name + " Bill",
-    amount: -amount,
-    date: new Date().toISOString(),
-    reference: genRef()
-  };
+  note: name + " Bill",
+  amount: -amount,
+  date: new Date().toISOString(),
+  reference: genRef(),
+  type: "bill" // ✅ ADD THIS
+};
 
   balance -= amount;
 

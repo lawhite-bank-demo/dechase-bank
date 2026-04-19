@@ -304,3 +304,101 @@ async function init(){
 
 // START
 init();
+// ===== SIMPLE NOTIFY =====
+function notify(msg){
+  alert(msg);
+}
+
+// ===== LOGOUT =====
+window.logoutUser = function(){
+  localStorage.clear();
+  location.reload();
+};
+
+// ===== PAY BILL =====
+window.payBill = function(name, amount){
+  if(balance < amount){
+    return notify("Insufficient balance");
+  }
+
+  balance -= amount;
+
+  tx.unshift({
+    note: name + " Bill",
+    amount: -amount,
+    date: new Date().toISOString(),
+    reference: genRef()
+  });
+
+  renderAll();
+  notify(name + " paid successfully");
+};
+
+// ===== GIFT CARD =====
+window.buyGiftCard = function(name, amount){
+  if(balance < amount){
+    return notify("Insufficient balance");
+  }
+
+  balance -= amount;
+
+  tx.unshift({
+    note: name + " Gift Card",
+    amount: -amount,
+    date: new Date().toISOString(),
+    reference: genRef()
+  });
+
+  renderAll();
+  notify(name + " gift card purchased");
+};
+let tempTransfer = null;
+
+// OPEN OTP
+window.openPinModal = function(){
+  const amount = Number(document.getElementById("amount").value);
+
+  if(!amount || amount <= 0){
+    return notify("Enter valid amount");
+  }
+
+  if(amount > balance){
+    return notify("Insufficient balance");
+  }
+
+  tempTransfer = {
+    amount,
+    note: document.getElementById("description").value || "Transfer",
+    category: document.getElementById("category").value
+  };
+
+  notify("OTP sent (use 1234)");
+};
+
+// CONFIRM OTP
+window.confirmOTP = function(){
+  if(!tempTransfer){
+    return notify("No transfer pending");
+  }
+
+  const otp = prompt("Enter OTP");
+
+  if(otp !== "1234"){
+    return notify("Invalid OTP");
+  }
+
+  balance -= tempTransfer.amount;
+
+  tx.unshift({
+    note: tempTransfer.note,
+    amount: -tempTransfer.amount,
+    date: new Date().toISOString(),
+    reference: genRef(),
+    category: tempTransfer.category
+  });
+
+  tempTransfer = null;
+
+  renderAll();
+  notify("Transfer successful");
+};

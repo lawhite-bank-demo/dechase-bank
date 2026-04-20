@@ -44,6 +44,7 @@ function setAccountField(id, value){
   if(!value){
     element.parentElement.style.display = "none";
   } else {
+    element.parentElement.style.display = "flex";
     element.innerText = value;
   }
 }
@@ -61,10 +62,7 @@ function formatMoney(v){
 
 // ===== RECEIPT =====
 window.showReceipt = function(t){
-  setText("rAmount",
-    (t.amount < 0 ? "-€" : "+€") +
-    formatMoney(Math.abs(t.amount))
-  );
+  setText("rAmount",(t.amount < 0 ? "-€" : "+€") + formatMoney(Math.abs(t.amount)));
 
   setText("rType",
     t.type === "transfer" ? "Transfer" :
@@ -99,21 +97,12 @@ function notify(msg){
   setTimeout(()=> n.remove(), 2500);
 }
 
-// ===== LOGOUT =====
-window.logoutUser = function(){
-  localStorage.clear();
-  location.href = "index.html";
-};
-
 // ===== BALANCE =====
 function renderBalance(){
   const bal = el("balance");
   if(!bal) return;
 
-  bal.innerText = hidden
-    ? "••••••"
-    : "€" + formatMoney(balance);
-
+  bal.innerText = hidden ? "••••••" : "€" + formatMoney(balance);
   setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 
@@ -122,7 +111,7 @@ window.toggleBalance = function(){
   renderBalance();
 };
 
-// ===== CARD TOGGLE =====
+// ===== CARD =====
 window.toggleCardNumber = function(){
   const elNum = el("cardNumber");
   if(!fullCardNumber) return;
@@ -145,8 +134,7 @@ window.toggleCard = async function(){
 
 function updateFreezeUI(){
   const btn = el("cardBtn");
-  if(!btn) return;
-  btn.innerText = frozen ? "Unfreeze Card" : "Freeze Card";
+  if(btn) btn.innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 }
 
 // ===== TRANSACTIONS =====
@@ -164,17 +152,9 @@ function renderTransactions(){
   container.innerHTML = "";
 
   tx.slice().reverse().forEach(t => {
-
-    t = {
-      amount: t.amount ?? 0,
-      note: t.note || "Transaction",
-      date: t.date || new Date().toISOString(),
-      reference: t.reference || genRef(),
-      ...t
-    };
-
     const div = document.createElement("div");
     div.className = "tx";
+
     div.onclick = () => showReceipt(t);
 
     div.innerHTML = `
@@ -230,29 +210,26 @@ window.openPinModal = function(){
 
   generatedOTP = Math.floor(100000 + Math.random()*900000);
 
-  // ✅ SEND OTP TO USER EMAIL
   emailjs.send("YOUR_SERVICE_ID","YOUR_TEMPLATE_ID",{
     to_email: window._userEmail,
     otp: generatedOTP
   }).then(()=>{
     notify("OTP sent to your email");
+    setTimeout(()=> window.confirmOTP(), 300); // ✅ STEP 2 FIX
   }).catch(()=>{
     notify("Failed to send OTP");
   });
 };
 
-// ===== CONFIRM OTP =====
 window.confirmOTP = async function(){
   const input = prompt("Enter OTP");
   if(input != generatedOTP) return notify("Wrong OTP");
-
-  const reference = genRef();
 
   const newTx = {
     amount: -pendingTransfer.amount,
     note: pendingTransfer.note || "Transfer Sent",
     date: new Date().toISOString(),
-    reference,
+    reference: genRef(),
     type: "transfer"
   };
 
@@ -265,6 +242,7 @@ window.confirmOTP = async function(){
 
   notify("Transfer successful");
   showReceipt(newTx);
+
   pendingTransfer = null;
 };
 
@@ -273,13 +251,11 @@ window.payBill = async function(name, amount){
   if(frozen) return notify("Card is frozen");
   if(amount > balance) return notify("Insufficient balance");
 
-  const reference = genRef();
-
   const newTx = {
     note: name + " Bill",
     amount: -amount,
     date: new Date().toISOString(),
-    reference,
+    reference: genRef(),
     type: "bill"
   };
 
@@ -324,15 +300,13 @@ async function init(){
   setAccountField("accountNumberDisplay", data.accountNumber);
   setAccountField("routingDisplay", data.routingNumber);
 
-  // ===== CARD FIX =====
+  // CARD
   fullCardNumber = data.card?.cardNumber || "";
-  const last4 = fullCardNumber ? fullCardNumber.slice(-4) : "••••";
-
-  setText("cardNumber","**** **** **** " + last4);
+  setText("cardNumber","**** **** **** " + (fullCardNumber.slice(-4) || "••••"));
   setText("cardName",data.fullName);
   setText("cardExpiry",data.card?.expiry);
 
-  realCVV = data.card?.cvv || data.cvv || "•••";
+  realCVV = data.card?.cvv || data.cvv || "***";
   window._realCVV = realCVV;
 
   updateFreezeUI();
@@ -356,10 +330,10 @@ async function init(){
     setAccountField("accountNumberDisplay", d.accountNumber);
     setAccountField("routingDisplay", d.routingNumber);
 
-    updateFreezeUI();
     renderBalance();
     renderTransactions();
     updateWallet();
+    updateFreezeUI();
   });
 }
 

@@ -20,13 +20,14 @@ let userRef = null;
 let hidden = false;
 let realCVV = "";
 
-// Currency
 let eurToUsd = 1.08;
 let eurToGbp = 0.86;
 
-// OTP
 let pendingTransfer = null;
 let generatedOTP = null;
+
+let fullCardNumber = "";
+let showFullCard = false;
 
 // ===== HELPERS =====
 function el(id){ return document.getElementById(id); }
@@ -60,7 +61,6 @@ function formatMoney(v){
 
 // ===== RECEIPT =====
 window.showReceipt = function(t){
-
   setText("rAmount",
     (t.amount < 0 ? "-€" : "+€") +
     formatMoney(Math.abs(t.amount))
@@ -73,7 +73,7 @@ window.showReceipt = function(t){
   );
 
   setText("rNote", t.note || "Transaction");
-  setText("rDate", t.date ? new Date(t.date).toLocaleString() : "N/A");
+  setText("rDate", new Date(t.date).toLocaleString());
   setText("rRef", t.reference || "N/A");
 
   el("receiptModal").classList.remove("hidden");
@@ -122,6 +122,18 @@ window.toggleBalance = function(){
   renderBalance();
 };
 
+// ===== CARD TOGGLE =====
+window.toggleCardNumber = function(){
+  const elNum = el("cardNumber");
+  if(!fullCardNumber) return;
+
+  showFullCard = !showFullCard;
+
+  elNum.innerText = showFullCard
+    ? fullCardNumber
+    : "**** **** **** " + fullCardNumber.slice(-4);
+};
+
 // ===== FREEZE =====
 window.toggleCard = async function(){
   if(!userRef) return;
@@ -163,27 +175,17 @@ function renderTransactions(){
 
     const div = document.createElement("div");
     div.className = "tx";
-
     div.onclick = () => showReceipt(t);
 
-    const left = document.createElement("div");
-    left.className = "tx-left";
-
-    const title = document.createElement("div");
-    title.innerText = t.note;
-
-    const date = document.createElement("small");
-    date.innerText = new Date(t.date).toLocaleString();
-
-    left.appendChild(title);
-    left.appendChild(date);
-
-    const amount = document.createElement("div");
-    amount.className = "tx-amount " + (t.amount < 0 ? "tx-negative" : "tx-positive");
-    amount.innerText = (t.amount < 0 ? "-€" : "+€") + formatMoney(Math.abs(t.amount));
-
-    div.appendChild(left);
-    div.appendChild(amount);
+    div.innerHTML = `
+      <div class="tx-left">
+        <div>${t.note}</div>
+        <small>${new Date(t.date).toLocaleString()}</small>
+      </div>
+      <div class="tx-amount ${t.amount < 0 ? "tx-negative" : "tx-positive"}">
+        ${(t.amount < 0 ? "-€" : "+€") + formatMoney(Math.abs(t.amount))}
+      </div>
+    `;
 
     container.appendChild(div);
   });
@@ -228,35 +230,29 @@ window.openPinModal = function(){
 
   generatedOTP = Math.floor(100000 + Math.random()*900000);
 
-  // ✅ SEND OTP TO EMAIL
+  // ✅ SEND OTP TO USER EMAIL
   emailjs.send("YOUR_SERVICE_ID","YOUR_TEMPLATE_ID",{
-  to_email: window._userEmail,
-  otp: generatedOTP
-}).then(()=>{
-  notify("OTP sent to your email");
-}).catch(()=>{
-  notify("Failed to send OTP");
-});
-  then(()=>{
-    notify("OTP sent to email");
+    to_email: window._userEmail,
+    otp: generatedOTP
+  }).then(()=>{
+    notify("OTP sent to your email");
   }).catch(()=>{
     notify("Failed to send OTP");
   });
-
-  setTimeout(()=> window.confirmOTP(), 500);
 };
 
+// ===== CONFIRM OTP =====
 window.confirmOTP = async function(){
   const input = prompt("Enter OTP");
   if(input != generatedOTP) return notify("Wrong OTP");
 
-  const reference = genRef(); // ✅ FIXED
+  const reference = genRef();
 
   const newTx = {
     amount: -pendingTransfer.amount,
     note: pendingTransfer.note || "Transfer Sent",
     date: new Date().toISOString(),
-    reference: reference,
+    reference,
     type: "transfer"
   };
 
@@ -268,9 +264,7 @@ window.confirmOTP = async function(){
   });
 
   notify("Transfer successful");
-
   showReceipt(newTx);
-
   pendingTransfer = null;
 };
 
@@ -285,7 +279,7 @@ window.payBill = async function(name, amount){
     note: name + " Bill",
     amount: -amount,
     date: new Date().toISOString(),
-    reference: reference,
+    reference,
     type: "bill"
   };
 
@@ -299,25 +293,31 @@ window.payBill = async function(name, amount){
   notify(name + " paid successfully");
 };
 
-// ===== CARD SETUP =====
-fullCardNumber = data.card?.cardNumber || "";
+// ===== INIT =====
+async function init(){
 
-// format helper
-function formatCard(num){
-  return num.replace(/(.{4})/g, "$1 ").trim();
-}
+  el("receiptModal")?.classList.add("hidden");
 
-// masked by default
-const last4 = fullCardNumber ? fullCardNumber.slice(-4) : "••••";
-setText("cardNumber", "**** **** **** " + last4);
+  const username = localStorage.getItem("user");
+  if(!username) return location.href="index.html";
 
+  userRef = doc(db,"users",username);
+  const snap = await getDoc(userRef);
+  if(!snap.exists()) return location.href="index.html";
+
+  const data = snap.data();
+
+  balance = Number(data.balance || 0);
+  tx = getTx(data);
+  frozen = data.cardFrozen || false;
 
   // PROFILE
   setText("welcome","Hi, "+data.fullName);
   setText("nameProfile",data.fullName);
   setText("emailProfile", data.email || "dechasebank@gmail.com");
-let userEmail = data.email;
-window._userEmail = userEmail; // make it global
+
+  window._userEmail = data.email;
+
   // ACCOUNT DETAILS
   setAccountField("iban", data.iban);
   setAccountField("swift", data.swift);
@@ -325,20 +325,22 @@ window._userEmail = userEmail; // make it global
   setAccountField("routingDisplay", data.routingNumber);
 
   // ===== CARD FIX =====
-const cardNumber = data.card?.cardNumber || "";
-const last4 = cardNumber ? cardNumber.slice(-4) : "••••";
+  fullCardNumber = data.card?.cardNumber || "";
+  const last4 = fullCardNumber ? fullCardNumber.slice(-4) : "••••";
 
-setText("cardNumber", "**** **** **** " + last4);
+  setText("cardNumber","**** **** **** " + last4);
+  setText("cardName",data.fullName);
+  setText("cardExpiry",data.card?.expiry);
 
-// CVV FIX
-realCVV = data.card?.cvv || data.cvv || "•••";
-window._realCVV = realCVV;
+  realCVV = data.card?.cvv || data.cvv || "•••";
+  window._realCVV = realCVV;
 
   updateFreezeUI();
   renderBalance();
   renderTransactions();
   fetchRates();
 
+  // LIVE UPDATE
   onSnapshot(userRef,(snap)=>{
     const d = snap.data();
     if(!d) return;

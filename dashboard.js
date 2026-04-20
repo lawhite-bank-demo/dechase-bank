@@ -230,9 +230,14 @@ window.openPinModal = function(){
 
   // ✅ SEND OTP TO EMAIL
   emailjs.send("YOUR_SERVICE_ID","YOUR_TEMPLATE_ID",{
-    to_email: "dechasebank@gmail.com",
-    otp: generatedOTP
-  }).then(()=>{
+  to_email: window._userEmail,
+  otp: generatedOTP
+}).then(()=>{
+  notify("OTP sent to your email");
+}).catch(()=>{
+  notify("Failed to send OTP");
+});
+  then(()=>{
     notify("OTP sent to email");
   }).catch(()=>{
     notify("Failed to send OTP");

@@ -96,7 +96,23 @@ function notify(msg){
   document.body.appendChild(n);
   setTimeout(()=> n.remove(), 2500);
 }
+// ===== LOGOUT =====
+window.logoutUser = function(){
+  const confirmLogout = confirm("Are you sure you want to logout?");
+  if(!confirmLogout) return;
 
+  // clear session
+  localStorage.removeItem("user");
+
+  // optional: clear everything
+  localStorage.clear();
+
+  notify("Logging out...");
+
+  setTimeout(()=>{
+    window.location.href = "index.html";
+  }, 800);
+};
 // ===== BALANCE =====
 function renderBalance(){
   const bal = el("balance");

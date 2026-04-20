@@ -316,7 +316,8 @@ async function init(){
   setText("welcome","Hi, "+data.fullName);
   setText("nameProfile",data.fullName);
   setText("emailProfile", data.email || "dechasebank@gmail.com");
-
+let userEmail = data.email;
+window._userEmail = userEmail; // make it global
   // ACCOUNT DETAILS
   setAccountField("iban", data.iban);
   setAccountField("swift", data.swift);

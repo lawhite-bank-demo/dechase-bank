@@ -1,3 +1,4 @@
+/* ===== BASE ===== */
 body{
   margin:0;
   font-family:Arial;
@@ -12,7 +13,7 @@ body{
   padding:20px;
 }
 
-/* CARDS */
+/* ===== CARD BOXES ===== */
 .card{
   background:#111827;
   padding:15px;
@@ -20,13 +21,14 @@ body{
   margin-bottom:15px;
   transition:0.25s;
   box-shadow:0 8px 20px rgba(0,0,0,0.25);
+  overflow:hidden;
 }
 
 .card:hover{
   transform:translateY(-3px);
 }
 
-/* BALANCE */
+/* ===== BALANCE ===== */
 .balance-card{
   background:linear-gradient(135deg,#2563eb,#0ea5e9);
   padding:25px;
@@ -40,7 +42,7 @@ body{
   font-weight:bold;
 }
 
-/* TIME */
+/* ===== TIME ===== */
 .time-card{
   background:linear-gradient(135deg,#0ea5e9,#2563eb);
   padding:20px;
@@ -55,34 +57,40 @@ body{
   font-weight:bold;
 }
 
-/* ================= CARD ================= */
+/* ================= CARD (FIXED PERFECT) ================= */
 .bank-card{
   perspective:1000px;
   margin-top:10px;
+  position:relative;
+  height:200px;
 }
 
 .card-inner{
   width:100%;
-  height:200px;
+  height:100%;
   position:relative;
-  transition:.6s;
   transform-style:preserve-3d;
+  transition:transform 0.6s ease;
 }
 
 .card-inner.flipped{
   transform:rotateY(180deg);
 }
 
-.card-front,.card-back{
+.card-front,
+.card-back{
   position:absolute;
+  top:0;
+  left:0;
   width:100%;
   height:100%;
   border-radius:18px;
   padding:18px;
   backface-visibility:hidden;
+  overflow:hidden;
 }
 
-/* PREMIUM FRONT */
+/* FRONT */
 .card-front{
   background:linear-gradient(135deg,#1e3a8a,#2563eb,#0ea5e9);
   display:flex;
@@ -90,10 +98,9 @@ body{
   justify-content:space-between;
   box-shadow:0 15px 40px rgba(37,99,235,0.5);
   position:relative;
-  overflow:hidden;
 }
 
-/* subtle shine */
+/* SHINE EFFECT */
 .card-front::after{
   content:"";
   position:absolute;
@@ -110,12 +117,28 @@ body{
   100%{left:100%;}
 }
 
+/* BACK */
 .card-back{
   background:#0f172a;
   transform:rotateY(180deg);
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding-right:20px;
 }
 
-/* CHIP (REALISTIC) */
+/* MAGNETIC STRIP */
+.card-back::before{
+  content:"";
+  position:absolute;
+  top:25px;
+  left:0;
+  width:100%;
+  height:40px;
+  background:#000;
+}
+
+/* CHIP */
 .chip{
   width:55px;
   height:38px;
@@ -145,16 +168,12 @@ body{
   top:10%;
 }
 
-/* CARD NUMBER */
+/* CARD TEXT */
 .card-number{
   font-size:20px;
   letter-spacing:3px;
   font-weight:bold;
   cursor:pointer;
-}
-
-.card-number:active{
-  transform:scale(0.98);
 }
 
 .card-bottom{
@@ -164,7 +183,7 @@ body{
   opacity:0.85;
 }
 
-/* BUTTON */
+/* ===== BUTTON ===== */
 button{
   margin-top:10px;
   padding:12px;
@@ -182,7 +201,7 @@ button:active{
   transform:scale(0.96);
 }
 
-/* NAV */
+/* ===== NAV ===== */
 .bottomNav{
   position:fixed;
   bottom:0;
@@ -200,7 +219,7 @@ button:active{
   color:white;
 }
 
-/* INPUT */
+/* ===== INPUT ===== */
 input, select{
   padding:12px;
   border-radius:10px;
@@ -211,7 +230,7 @@ input, select{
   width:100%;
 }
 
-/* PROFILE */
+/* ===== PROFILE ===== */
 .profile-avatar{
   width:70px;
   height:70px;
@@ -226,7 +245,7 @@ input, select{
 
 .center{text-align:center;}
 
-/* TRANSACTIONS */
+/* ===== TRANSACTIONS ===== */
 .tx{
   display:flex;
   justify-content:space-between;
@@ -234,7 +253,6 @@ input, select{
   padding:14px 0;
   border-bottom:1px solid #1f2937;
   cursor:pointer;
-  transition:0.2s;
 }
 
 .tx:hover{
@@ -256,7 +274,7 @@ input, select{
 .tx-negative{ color:#ef4444; }
 .tx-positive{ color:#22c55e; }
 
-/* WHATSAPP */
+/* ===== WHATSAPP ===== */
 .whatsapp-btn{
   position:fixed;
   bottom:90px;
@@ -275,7 +293,7 @@ input, select{
   z-index:999;
 }
 
-/* LOGOUT */
+/* ===== LOGOUT ===== */
 .logoutBtn{
   width:100%;
   padding:14px;
@@ -287,7 +305,7 @@ input, select{
   font-weight:bold;
 }
 
-/* ACCOUNT */
+/* ===== ACCOUNT ===== */
 .acc-section{
   margin-top:12px;
   padding:10px;
@@ -320,7 +338,7 @@ input, select{
   text-align:center;
 }
 
-/* ================= RECEIPT ================= */
+/* ===== RECEIPT ===== */
 .hidden{
   display:none !important;
 }
@@ -346,7 +364,6 @@ input, select{
   padding:20px;
   border-radius:18px;
   animation:pop 0.25s ease;
-  box-shadow:0 20px 40px rgba(0,0,0,0.5);
 }
 
 @keyframes pop{
@@ -354,29 +371,13 @@ input, select{
   to{ transform:scale(1); opacity:1; }
 }
 
-.receipt-card h3{
-  margin-bottom:15px;
-  text-align:center;
-}
-
 .receipt-row{
   display:flex;
   justify-content:space-between;
   padding:12px 0;
   border-bottom:1px solid #1f2937;
-  font-size:14px;
-}
-
-.receipt-row span:first-child{
-  opacity:0.6;
 }
 
 .receipt-row:last-child{
   border-bottom:none;
-}
-
-.receipt-card button{
-  margin-top:18px;
-  padding:14px;
-  border-radius:12px;
 }

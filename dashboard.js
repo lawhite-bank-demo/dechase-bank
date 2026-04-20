@@ -67,10 +67,11 @@ window.showReceipt = function(t){
   );
 
   setText("rType",
-  t.type === "transfer" ? "Transfer" :
-  t.type === "bill" ? "Bill Payment" :
-  t.amount < 0 ? "Debit" : "Credit"
-);
+    t.type === "transfer" ? "Transfer" :
+    t.type === "bill" ? "Bill Payment" :
+    t.amount < 0 ? "Debit" : "Credit"
+  );
+
   setText("rNote", t.note || "Transaction");
   setText("rDate", t.date ? new Date(t.date).toLocaleString() : "N/A");
   setText("rRef", t.reference || "N/A");
@@ -163,7 +164,7 @@ function renderTransactions(){
     const div = document.createElement("div");
     div.className = "tx";
 
-    div.onclick = () => showReceipt(t); // ✅ ONLY when clicked
+    div.onclick = () => showReceipt(t);
 
     const left = document.createElement("div");
     left.className = "tx-left";
@@ -226,7 +227,16 @@ window.openPinModal = function(){
   };
 
   generatedOTP = Math.floor(100000 + Math.random()*900000);
-  notify("OTP: " + generatedOTP);
+
+  // ✅ SEND OTP TO EMAIL
+  emailjs.send("YOUR_SERVICE_ID","YOUR_TEMPLATE_ID",{
+    to_email: "dechasebank@gmail.com",
+    otp: generatedOTP
+  }).then(()=>{
+    notify("OTP sent to email");
+  }).catch(()=>{
+    notify("Failed to send OTP");
+  });
 
   setTimeout(()=> window.confirmOTP(), 500);
 };
@@ -235,15 +245,15 @@ window.confirmOTP = async function(){
   const input = prompt("Enter OTP");
   if(input != generatedOTP) return notify("Wrong OTP");
 
-  const reference = genRef(); // ✅ generate once
+  const reference = genRef(); // ✅ FIXED
 
   const newTx = {
-  amount: -pendingTransfer.amount,
-  note: pendingTransfer.note || "Transfer Sent",
-  date: new Date().toISOString(),
-  reference: genRef(),
-  type: "transfer" // ✅ ADD THIS
-};
+    amount: -pendingTransfer.amount,
+    note: pendingTransfer.note || "Transfer Sent",
+    date: new Date().toISOString(),
+    reference: reference,
+    type: "transfer"
+  };
 
   balance -= pendingTransfer.amount;
 
@@ -254,7 +264,6 @@ window.confirmOTP = async function(){
 
   notify("Transfer successful");
 
-  // ✅ SHOW RECEIPT IMMEDIATELY
   showReceipt(newTx);
 
   pendingTransfer = null;
@@ -265,13 +274,15 @@ window.payBill = async function(name, amount){
   if(frozen) return notify("Card is frozen");
   if(amount > balance) return notify("Insufficient balance");
 
+  const reference = genRef();
+
   const newTx = {
-  note: name + " Bill",
-  amount: -amount,
-  date: new Date().toISOString(),
-  reference: genRef(),
-  type: "bill" // ✅ ADD THIS
-};
+    note: name + " Bill",
+    amount: -amount,
+    date: new Date().toISOString(),
+    reference: reference,
+    type: "bill"
+  };
 
   balance -= amount;
 
@@ -286,7 +297,6 @@ window.payBill = async function(name, amount){
 // ===== INIT =====
 async function init(){
 
-  // ✅ ALWAYS HIDE RECEIPT ON LOAD
   el("receiptModal")?.classList.add("hidden");
 
   const username = localStorage.getItem("user");
@@ -307,7 +317,7 @@ async function init(){
   setText("nameProfile",data.fullName);
   setText("emailProfile", data.email || "dechasebank@gmail.com");
 
-  // ACCOUNT DETAILS ✅ RESTORED
+  // ACCOUNT DETAILS
   setAccountField("iban", data.iban);
   setAccountField("swift", data.swift);
   setAccountField("accountNumberDisplay", data.accountNumber);
@@ -326,7 +336,6 @@ async function init(){
   renderTransactions();
   fetchRates();
 
-  // 🔄 LIVE UPDATE
   onSnapshot(userRef,(snap)=>{
     const d = snap.data();
     if(!d) return;
@@ -337,7 +346,6 @@ async function init(){
 
     setText("emailProfile", d.email || "dechasebank@gmail.com");
 
-    // ACCOUNT LIVE UPDATE
     setAccountField("iban", d.iban);
     setAccountField("swift", d.swift);
     setAccountField("accountNumberDisplay", d.accountNumber);

@@ -329,13 +329,15 @@ window._userEmail = userEmail; // make it global
   setAccountField("accountNumberDisplay", data.accountNumber);
   setAccountField("routingDisplay", data.routingNumber);
 
-  // CARD
-  setText("cardName",data.fullName);
-  setText("cardNumber","**** **** **** "+(data.card?.cardNumber || "0000").slice(-4));
-  setText("cardExpiry",data.card?.expiry);
+  // ===== CARD FIX =====
+const cardNumber = data.card?.cardNumber || "";
+const last4 = cardNumber ? cardNumber.slice(-4) : "••••";
 
-  realCVV = data.cvv;
-  window._realCVV = realCVV;
+setText("cardNumber", "**** **** **** " + last4);
+
+// CVV FIX
+realCVV = data.card?.cvv || data.cvv || "•••";
+window._realCVV = realCVV;
 
   updateFreezeUI();
   renderBalance();

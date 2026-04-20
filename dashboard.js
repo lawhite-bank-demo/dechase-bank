@@ -29,6 +29,9 @@ let generatedOTP = null;
 let fullCardNumber = "";
 let showFullCard = false;
 
+// ✅ AUTO LOGOUT TIMER
+let logoutTimer;
+
 // ===== HELPERS =====
 function el(id){ return document.getElementById(id); }
 
@@ -96,23 +99,40 @@ function notify(msg){
   document.body.appendChild(n);
   setTimeout(()=> n.remove(), 2500);
 }
+
 // ===== LOGOUT =====
 window.logoutUser = function(){
-  const confirmLogout = confirm("Are you sure you want to logout?");
-  if(!confirmLogout) return;
-
-  // clear session
   localStorage.removeItem("user");
 
-  // optional: clear everything
-  localStorage.clear();
-
-  notify("Logging out...");
+  notify("Logged out");
 
   setTimeout(()=>{
     window.location.href = "index.html";
-  }, 800);
+  }, 500);
 };
+
+// ===== AUTO LOGOUT (1 MIN) =====
+function startAutoLogout(){
+  clearTimeout(logoutTimer);
+
+  logoutTimer = setTimeout(()=>{
+    notify("Session expired");
+    logoutUser();
+  }, 60000); // 1 minute
+}
+
+// Track activity
+["click","touchstart","keypress"].forEach(evt=>{
+  document.addEventListener(evt, startAutoLogout);
+});
+
+// Logout when minimized
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){
+    logoutUser();
+  }
+});
+
 // ===== BALANCE =====
 function renderBalance(){
   const bal = el("balance");
@@ -168,6 +188,12 @@ function renderTransactions(){
   container.innerHTML = "";
 
   tx.slice().reverse().forEach(t => {
+
+    // ✅ ENSURE REFERENCE ALWAYS EXISTS
+    if(!t.reference){
+      t.reference = genRef();
+    }
+
     const div = document.createElement("div");
     div.className = "tx";
 
@@ -231,7 +257,7 @@ window.openPinModal = function(){
     otp: generatedOTP
   }).then(()=>{
     notify("OTP sent to your email");
-    setTimeout(()=> window.confirmOTP(), 300); // ✅ STEP 2 FIX
+    setTimeout(()=> window.confirmOTP(), 300);
   }).catch(()=>{
     notify("Failed to send OTP");
   });
@@ -303,20 +329,17 @@ async function init(){
   tx = getTx(data);
   frozen = data.cardFrozen || false;
 
-  // PROFILE
   setText("welcome","Hi, "+data.fullName);
   setText("nameProfile",data.fullName);
   setText("emailProfile", data.email || "dechasebank@gmail.com");
 
   window._userEmail = data.email;
 
-  // ACCOUNT DETAILS
   setAccountField("iban", data.iban);
   setAccountField("swift", data.swift);
   setAccountField("accountNumberDisplay", data.accountNumber);
   setAccountField("routingDisplay", data.routingNumber);
 
-  // CARD
   fullCardNumber = data.card?.cardNumber || "";
   setText("cardNumber","**** **** **** " + (fullCardNumber.slice(-4) || "••••"));
   setText("cardName",data.fullName);
@@ -329,8 +352,8 @@ async function init(){
   renderBalance();
   renderTransactions();
   fetchRates();
+  startAutoLogout(); // ✅ START TIMER
 
-  // LIVE UPDATE
   onSnapshot(userRef,(snap)=>{
     const d = snap.data();
     if(!d) return;

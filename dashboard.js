@@ -299,23 +299,18 @@ window.payBill = async function(name, amount){
   notify(name + " paid successfully");
 };
 
-// ===== INIT =====
-async function init(){
+// ===== CARD SETUP =====
+fullCardNumber = data.card?.cardNumber || "";
 
-  el("receiptModal")?.classList.add("hidden");
+// format helper
+function formatCard(num){
+  return num.replace(/(.{4})/g, "$1 ").trim();
+}
 
-  const username = localStorage.getItem("user");
-  if(!username) return location.href="index.html";
+// masked by default
+const last4 = fullCardNumber ? fullCardNumber.slice(-4) : "••••";
+setText("cardNumber", "**** **** **** " + last4);
 
-  userRef = doc(db,"users",username);
-  const snap = await getDoc(userRef);
-  if(!snap.exists()) return location.href="index.html";
-
-  const data = snap.data();
-
-  balance = Number(data.balance || 0);
-  tx = getTx(data);
-  frozen = data.cardFrozen || false;
 
   // PROFILE
   setText("welcome","Hi, "+data.fullName);

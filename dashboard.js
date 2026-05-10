@@ -182,28 +182,78 @@ function getTx(data){
 }
 
 function renderTransactions(){
+
   const container = el("transactions");
   if(!container) return;
 
   container.innerHTML = "";
 
-  tx.slice().reverse().forEach(t => {
+  // SORT BY NEWEST DATE
+  const sortedTx = [...tx].sort((a,b)=>{
+    return new Date(b.date) - new Date(a.date);
+  });
 
-    // ✅ ENSURE REFERENCE ALWAYS EXISTS
-    if(!t.reference){
-      t.reference = genRef();
+  let lastDate = "";
+
+  sortedTx.forEach(t => {
+
+    const txDate = new Date(t.date);
+
+    // FORMAT DATE HEADER
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    let dateLabel = txDate.toLocaleDateString();
+
+    if(txDate.toDateString() === today.toDateString()){
+      dateLabel = "Today";
+    }
+    else if(txDate.toDateString() === yesterday.toDateString()){
+      dateLabel = "Yesterday";
     }
 
+    // ADD DATE HEADER
+    if(lastDate !== dateLabel){
+
+      const header = document.createElement("div");
+
+      header.style.margin = "18px 0 10px";
+      header.style.fontSize = "13px";
+      header.style.opacity = "0.6";
+      header.style.fontWeight = "bold";
+
+      header.innerText = dateLabel;
+
+      container.appendChild(header);
+
+      lastDate = dateLabel;
+    }
+
+    // TRANSACTION ITEM
     const div = document.createElement("div");
+
     div.className = "tx";
 
     div.onclick = () => showReceipt(t);
 
     div.innerHTML = `
       <div class="tx-left">
-        <div>${t.note}</div>
-        <small>${new Date(t.date).toLocaleString()}</small>
+
+        <div style="font-weight:600;">
+          ${t.note || "Transaction"}
+        </div>
+
+        <small style="opacity:0.7;">
+          ${txDate.toLocaleTimeString()}
+        </small>
+
+        <small style="opacity:0.5;">
+          Ref: ${t.reference || "N/A"}
+        </small>
+
       </div>
+
       <div class="tx-amount ${t.amount < 0 ? "tx-negative" : "tx-positive"}">
         ${(t.amount < 0 ? "-€" : "+€") + formatMoney(Math.abs(t.amount))}
       </div>

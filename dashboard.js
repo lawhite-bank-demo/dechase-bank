@@ -363,6 +363,39 @@ transactions: [...tx, newTx]
 notify(name + " paid successfully");
 };
 
+// ===== ADD MONEY =====
+window.addMoney = async function(){
+
+  const amount = Number(el("addMoneyAmount").value);
+
+  if(!amount || amount <= 0){
+    return notify("Invalid amount");
+  }
+
+  const method = el("fundMethod").value;
+
+  const newTx = {
+    note: "Deposit via " + method,
+    amount: amount,
+    date: new Date().toISOString(),
+    reference: genRef(),
+    type: "deposit"
+  };
+
+  balance += amount;
+
+  await updateDoc(userRef,{
+    balance,
+    transactions:[...tx,newTx]
+  });
+
+  notify("Funds added successfully");
+
+  showReceipt(newTx);
+
+  el("addMoneyAmount").value = "";
+};
+
 // ===== INIT =====
 async function init(){
 

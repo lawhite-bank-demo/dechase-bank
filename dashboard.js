@@ -413,6 +413,25 @@ async function init(){
     frozen = d.cardFrozen || false;
 
     setText("emailProfile", d.email || "dechasebank@gmail.com");
+setText(
+  "bankAddress",
+  data.bankAddress || "24 Bishopsgate, London EC2N 4BQ, United Kingdom"
+);
+
+setText(
+  "addressProfile",
+  data.address || "Bucharest, Romania"
+);
+
+setText(
+  "accountTier",
+  data.accountTier || "Premium Account"
+);
+
+setText(
+  "accountLimit",
+  data.accountLimit || "Daily Limit: €250,000"
+);
 
     setAccountField("iban", d.iban);
     setAccountField("swift", d.swift);

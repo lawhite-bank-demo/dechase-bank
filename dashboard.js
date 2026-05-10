@@ -369,81 +369,108 @@ async function init(){
   const username = localStorage.getItem("user");
   if(!username) return location.href="index.html";
 
-  userRef = doc(db,"users",username);
-  const snap = await getDoc(userRef);
-  if(!snap.exists()) return location.href="index.html";
+   // LIVE UPDATE
+onSnapshot(userRef, (snap) => {
 
-  const data = snap.data();
+  const d = snap.data();
 
-  balance = Number(data.balance || 0);
-  tx = getTx(data);
-  frozen = data.cardFrozen || false;
+  if(!d) return;
 
-  setText("welcome","Hi, "+data.fullName);
-  setText("nameProfile",data.fullName);
-  setText("emailProfile", data.email || "dechasebank@gmail.com");
+  // UPDATE VALUES
+  balance = Number(d.balance || 0);
 
-  window._userEmail = data.email;
+  tx = getTx(d);
 
-  setAccountField("iban", data.iban);
-  setAccountField("swift", data.swift);
-  setAccountField("accountNumberDisplay", data.accountNumber);
-  setAccountField("routingDisplay", data.routingNumber);
+  frozen = d.cardFrozen || false;
 
-  fullCardNumber = data.card?.cardNumber || "";
-  setText("cardNumber","**** **** **** " + (fullCardNumber.slice(-4) || "••••"));
-  setText("cardName",data.fullName);
-  setText("cardExpiry",data.card?.expiry);
+  // PROFILE
+  setText("welcome", "Hi, " + d.fullName);
 
-  realCVV = data.card?.cvv || data.cvv || "***";
+  setText("nameProfile", d.fullName);
+
+  setText(
+    "emailProfile",
+    d.email || "dechasebank@gmail.com"
+  );
+
+  // EXTRA PROFILE DETAILS
+  setText(
+    "bankAddress",
+    d.bankAddress ||
+    "24 Bishopsgate, London EC2N 4BQ, United Kingdom"
+  );
+
+  setText(
+    "addressProfile",
+    d.address ||
+    "Bucharest, Romania"
+  );
+
+  setText(
+    "accountTier",
+    d.accountTier ||
+    "Premium Account"
+  );
+
+  setText(
+    "accountLimit",
+    d.accountLimit ||
+    "Daily Limit: €250,000"
+  );
+
+  // ACCOUNT DETAILS
+  setAccountField("iban", d.iban);
+
+  setAccountField("swift", d.swift);
+
+  setAccountField(
+    "accountNumberDisplay",
+    d.accountNumber
+  );
+
+  setAccountField(
+    "routingDisplay",
+    d.routingNumber
+  );
+
+  // CARD
+  fullCardNumber = d.card?.cardNumber || "";
+
+  setText(
+    "cardNumber",
+    "**** **** **** " +
+    (fullCardNumber.slice(-4) || "••••")
+  );
+
+  setText(
+    "cardName",
+    d.fullName
+  );
+
+  setText(
+    "cardExpiry",
+    d.card?.expiry || "--/--"
+  );
+
+  // CVV
+  realCVV =
+    d.card?.cvv ||
+    d.cvv ||
+    "***";
+
   window._realCVV = realCVV;
 
-  updateFreezeUI();
+  // RENDER UI
   renderBalance();
+
   renderTransactions();
-  fetchRates();
-  startAutoLogout(); // ✅ START TIMER
 
-  onSnapshot(userRef,(snap)=>{
-    const d = snap.data();
-    if(!d) return;
+  updateWallet();
 
-    balance = Number(d.balance || 0);
-    tx = getTx(d);
-    frozen = d.cardFrozen || false;
+  updateFreezeUI();
 
-    setText("emailProfile", d.email || "dechasebank@gmail.com");
-setText(
-  "bankAddress",
-  data.bankAddress || "24 Bishopsgate, London EC2N 4BQ, United Kingdom"
-);
+});
 
-setText(
-  "addressProfile",
-  data.address || "Bucharest, Romania"
-);
-
-setText(
-  "accountTier",
-  data.accountTier || "Premium Account"
-);
-
-setText(
-  "accountLimit",
-  data.accountLimit || "Daily Limit: €250,000"
-);
-
-    setAccountField("iban", d.iban);
-    setAccountField("swift", d.swift);
-    setAccountField("accountNumberDisplay", d.accountNumber);
-    setAccountField("routingDisplay", d.routingNumber);
-
-    renderBalance();
-    renderTransactions();
-    updateWallet();
-    updateFreezeUI();
-  });
 }
-
 // START
 init();

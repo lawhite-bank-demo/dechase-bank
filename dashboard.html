@@ -182,6 +182,26 @@ CVV: <span id="cardCVV">***</span>
 <button onclick="buyGiftCard('Steam',25)">Steam €25</button>
 </div>
 </div>
+<!-- ADD MONEY -->
+<div id="addMoneyPage" class="hidden">
+
+<div class="card">
+<b>💳 Add Money</b>
+
+<select id="fundMethod">
+<option>Debit Card</option>
+<option>Bank Transfer</option>
+<option>Crypto Deposit</option>
+</select>
+
+<input id="addMoneyAmount" placeholder="€ Amount">
+
+<button onclick="addMoney()">
+Add Funds
+</button>
+
+</div>
+</div>
 
 <!-- PROFILE -->
 <div id="profilePage" class="hidden">

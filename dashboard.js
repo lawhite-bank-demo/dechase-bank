@@ -1,18 +1,13 @@
 // ===== FIREBASE =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
 import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  onSnapshot
+getFirestore, doc, getDoc, updateDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSy...",
-  authDomain: "dechase-bank.firebaseapp.com",
-  projectId: "dechase-bank"
+apiKey: "AIzaSy...",
+authDomain: "dechase-bank.firebaseapp.com",
+projectId: "dechase-bank"
 });
 
 const db = getFirestore(app);
@@ -23,6 +18,7 @@ let tx = [];
 let frozen = false;
 let userRef = null;
 let hidden = false;
+let realCVV = "";
 
 let eurToUsd = 1.08;
 let eurToGbp = 0.86;
@@ -32,659 +28,427 @@ let generatedOTP = null;
 
 let fullCardNumber = "";
 let showFullCard = false;
+
+// ✅ AUTO LOGOUT TIMER
 let logoutTimer;
 
 // ===== HELPERS =====
-function el(id){
-  return document.getElementById(id);
-}
+function el(id){ return document.getElementById(id); }
 
 function setText(id,val){
-  const e = el(id);
-  if(e){
-    e.innerText = val ?? "";
-  }
+const e = el(id);
+if(e) e.innerText = val ?? "";
 }
 
-function setAccountField(id,value){
-  const element = el(id);
+function setAccountField(id, value){
+const element = el(id);
+if(!element) return;
 
-  if(!element) return;
-
-  if(!value){
-    element.parentElement.style.display = "none";
-  }else{
-    element.parentElement.style.display = "flex";
-    element.innerText = value;
-  }
+if(!value){
+element.parentElement.style.display = "none";
+} else {
+element.parentElement.style.display = "flex";
+element.innerText = value;
+}
 }
 
 function genRef(){
-  return "TRX-" + Math.floor(Math.random()*1000000000);
+return "TRX-" + Math.floor(Math.random()*1000000000);
 }
 
 function formatMoney(v){
-  return Number(v || 0).toLocaleString(undefined,{
-    minimumFractionDigits:2,
-    maximumFractionDigits:2
-  });
+return Number(v || 0).toLocaleString(undefined,{
+minimumFractionDigits:2,
+maximumFractionDigits:2
+});
 }
 
 // ===== RECEIPT =====
 window.showReceipt = function(t){
+setText("rAmount",(t.amount < 0 ? "-€" : "+€") + formatMoney(Math.abs(t.amount)));
 
-  setText(
-    "rAmount",
-    (t.amount < 0 ? "-€" : "+€") +
-    formatMoney(Math.abs(t.amount))
-  );
+setText("rType",
+t.type === "transfer" ? "Transfer" :
+t.type === "bill" ? "Bill Payment" :
+t.amount < 0 ? "Debit" : "Credit"
+);
 
-  setText(
-    "rType",
-    t.type === "transfer"
-      ? "Transfer"
-      : t.type === "bill"
-      ? "Bill Payment"
-      : t.amount < 0
-      ? "Debit"
-      : "Credit"
-  );
+setText("rNote", t.note || "Transaction");
+setText("rDate", new Date(t.date).toLocaleString());
+setText("rRef", t.reference || "N/A");
 
-  setText("rNote", t.note || "Transaction");
-
-  setText(
-    "rDate",
-    new Date(t.date).toLocaleString()
-  );
-
-  setText(
-    "rRef",
-    t.reference || "N/A"
-  );
-
-  el("receiptModal").classList.remove("hidden");
+el("receiptModal").classList.remove("hidden");
 };
 
 window.closeReceipt = function(){
-  el("receiptModal").classList.add("hidden");
+el("receiptModal").classList.add("hidden");
 };
 
 // ===== NOTIFY =====
 function notify(msg){
-
-  const n = document.createElement("div");
-
-  n.innerText = msg;
-
-  n.style.position = "fixed";
-  n.style.bottom = "100px";
-  n.style.left = "50%";
-  n.style.transform = "translateX(-50%)";
-  n.style.background = "#111827";
-  n.style.color = "white";
-  n.style.padding = "12px 18px";
-  n.style.borderRadius = "10px";
-  n.style.zIndex = "9999";
-
-  document.body.appendChild(n);
-
-  setTimeout(()=>{
-    n.remove();
-  },2500);
+const n = document.createElement("div");
+n.innerText = msg;
+n.style.position = "fixed";
+n.style.bottom = "100px";
+n.style.left = "50%";
+n.style.transform = "translateX(-50%)";
+n.style.background = "#111827";
+n.style.padding = "12px 18px";
+n.style.borderRadius = "10px";
+n.style.zIndex = "9999";
+document.body.appendChild(n);
+setTimeout(()=> n.remove(), 2500);
 }
 
 // ===== LOGOUT =====
 window.logoutUser = function(){
+localStorage.removeItem("user");
 
-  localStorage.removeItem("user");
+notify("Logged out");
 
-  notify("Logged out");
-
-  setTimeout(()=>{
-    window.location.href = "index.html";
-  },500);
+setTimeout(()=>{
+window.location.href = "index.html";
+}, 500);
 };
 
-// ===== AUTO LOGOUT =====
+// ===== AUTO LOGOUT (1 MIN) =====
 function startAutoLogout(){
+clearTimeout(logoutTimer);
 
-  clearTimeout(logoutTimer);
-
-  logoutTimer = setTimeout(()=>{
-
-    notify("Session expired");
-
-    logoutUser();
-
-  },60000);
+logoutTimer = setTimeout(()=>{
+notify("Session expired");
+logoutUser();
+}, 60000); // 1 minute
 }
 
+// Track activity
 ["click","touchstart","keypress"].forEach(evt=>{
-  document.addEventListener(evt,startAutoLogout);
+document.addEventListener(evt, startAutoLogout);
 });
 
+// Logout when minimized
 document.addEventListener("visibilitychange",()=>{
-
-  if(document.hidden){
-    logoutUser();
-  }
-
+if(document.hidden){
+logoutUser();
+}
 });
 
 // ===== BALANCE =====
 function renderBalance(){
+const bal = el("balance");
+if(!bal) return;
 
-  const bal = el("balance");
-
-  if(!bal) return;
-
-  bal.innerText = hidden
-    ? "••••••"
-    : "€" + formatMoney(balance);
-
-  setText(
-    "toggleBalance",
-    hidden ? "👁 Show" : "🙈 Hide"
-  );
+bal.innerText = hidden ? "••••••" : "€" + formatMoney(balance);
+setText("toggleBalance", hidden ? "👁 Show" : "🙈 Hide");
 }
 
 window.toggleBalance = function(){
-
-  hidden = !hidden;
-
-  renderBalance();
+hidden = !hidden;
+renderBalance();
 };
 
-// ===== CARD NUMBER =====
+// ===== CARD =====
 window.toggleCardNumber = function(){
+const elNum = el("cardNumber");
+if(!fullCardNumber) return;
 
-  const num = el("cardNumber");
+showFullCard = !showFullCard;
 
-  if(!fullCardNumber) return;
-
-  showFullCard = !showFullCard;
-
-  num.innerText = showFullCard
-    ? fullCardNumber
-    : "**** **** **** " +
-      fullCardNumber.slice(-4);
+elNum.innerText = showFullCard
+? fullCardNumber
+: "**** **** **** " + fullCardNumber.slice(-4);
 };
 
-// ===== FREEZE CARD =====
+// ===== FREEZE =====
 window.toggleCard = async function(){
+if(!userRef) return;
 
-  if(!userRef) return;
-
-  frozen = !frozen;
-
-  await updateDoc(userRef,{
-    cardFrozen:frozen
-  });
-
-  updateFreezeUI();
+frozen = !frozen;
+await updateDoc(userRef,{ cardFrozen:frozen });
+updateFreezeUI();
 };
 
 function updateFreezeUI(){
-
-  const btn = el("cardBtn");
-
-  if(btn){
-    btn.innerText = frozen
-      ? "Unfreeze Card"
-      : "Freeze Card";
-  }
+const btn = el("cardBtn");
+if(btn) btn.innerText = frozen ? "Unfreeze Card" : "Freeze Card";
 }
 
 // ===== TRANSACTIONS =====
 function getTx(data){
-
-  if(!data?.transactions){
-    return [];
-  }
-
-  return Array.isArray(data.transactions)
-    ? data.transactions
-    : Object.values(data.transactions);
+if(!data?.transactions) return [];
+return Array.isArray(data.transactions)
+? data.transactions
+: Object.values(data.transactions);
 }
 
 function renderTransactions(){
 
-  const container = el("transactions");
+const container = el("transactions");
+if(!container) return;
 
-  if(!container) return;
+container.innerHTML = "";
 
-  container.innerHTML = "";
+// SORT BY NEWEST DATE
+const sortedTx = [...tx].sort((a,b)=>{
+return new Date(b.date) - new Date(a.date);
+});
 
-  const sortedTx = [...tx].sort((a,b)=>{
-    return new Date(b.date) - new Date(a.date);
-  });
+let lastDate = "";
 
-  let lastDate = "";
+sortedTx.forEach(t => {
 
-  sortedTx.forEach(t=>{
+const txDate = new Date(t.date);  
 
-    const txDate = new Date(t.date);
+// FORMAT DATE HEADER  
+const today = new Date();  
+const yesterday = new Date();  
+yesterday.setDate(today.getDate() - 1);  
 
-    const today = new Date();
+let dateLabel = txDate.toLocaleDateString();  
 
-    const yesterday = new Date();
+if(txDate.toDateString() === today.toDateString()){  
+  dateLabel = "Today";  
+}  
+else if(txDate.toDateString() === yesterday.toDateString()){  
+  dateLabel = "Yesterday";  
+}  
 
-    yesterday.setDate(today.getDate() - 1);
+// ADD DATE HEADER  
+if(lastDate !== dateLabel){  
 
-    let dateLabel = txDate.toLocaleDateString();
+  const header = document.createElement("div");  
 
-    if(txDate.toDateString() === today.toDateString()){
-      dateLabel = "Today";
-    }
-    else if(
-      txDate.toDateString() ===
-      yesterday.toDateString()
-    ){
-      dateLabel = "Yesterday";
-    }
+  header.style.margin = "18px 0 10px";  
+  header.style.fontSize = "13px";  
+  header.style.opacity = "0.6";  
+  header.style.fontWeight = "bold";  
 
-    if(lastDate !== dateLabel){
+  header.innerText = dateLabel;  
 
-      const header = document.createElement("div");
+  container.appendChild(header);  
 
-      header.style.margin = "18px 0 10px";
-      header.style.fontSize = "13px";
-      header.style.opacity = "0.6";
-      header.style.fontWeight = "bold";
+  lastDate = dateLabel;  
+}  
 
-      header.innerText = dateLabel;
+// TRANSACTION ITEM  
+const div = document.createElement("div");  
 
-      container.appendChild(header);
+div.className = "tx";  
 
-      lastDate = dateLabel;
-    }
+div.onclick = () => showReceipt(t);  
 
-    const div = document.createElement("div");
+div.innerHTML = `  
+  <div class="tx-left">  
 
-    div.className = "tx";
+    <div style="font-weight:600;">  
+      ${t.note || "Transaction"}  
+    </div>  
 
-    div.onclick = ()=> showReceipt(t);
+    <small style="opacity:0.7;">  
+      ${txDate.toLocaleTimeString()}  
+    </small>  
 
-    div.innerHTML = `
-      <div class="tx-left">
+    <small style="opacity:0.5;">  
+      Ref: ${t.reference || "N/A"}  
+    </small>  
 
-        <div style="font-weight:600;">
-          ${t.note || "Transaction"}
-        </div>
+  </div>  
 
-        <small style="opacity:0.7;">
-          ${txDate.toLocaleTimeString()}
-        </small>
+  <div class="tx-amount ${t.amount < 0 ? "tx-negative" : "tx-positive"}">  
+    ${(t.amount < 0 ? "-€" : "+€") + formatMoney(Math.abs(t.amount))}  
+  </div>  
+`;  
 
-        <small style="opacity:0.5;">
-          Ref: ${t.reference || "N/A"}
-        </small>
+container.appendChild(div);
 
-      </div>
-
-      <div class="tx-amount ${
-        t.amount < 0
-        ? "tx-negative"
-        : "tx-positive"
-      }">
-
-        ${
-          t.amount < 0
-          ? "-€"
-          : "+€"
-        }${formatMoney(Math.abs(t.amount))}
-
-      </div>
-    `;
-
-    container.appendChild(div);
-  });
+});
 }
 
 // ===== CURRENCY =====
 async function fetchRates(){
+try{
+const res = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
+const data = await res.json();
 
-  try{
+eurToUsd = data.rates.USD || eurToUsd;  
+eurToGbp = data.rates.GBP || eurToGbp;
 
-    const res = await fetch(
-      "https://api.exchangerate-api.com/v4/latest/EUR"
-    );
+}catch{
+console.warn("Fallback rates used");
+}
 
-    const data = await res.json();
-
-    eurToUsd = data.rates.USD || eurToUsd;
-    eurToGbp = data.rates.GBP || eurToGbp;
-
-  }catch{
-
-    console.warn("Fallback rates used");
-  }
-
-  updateWallet();
+updateWallet();
 }
 
 function updateWallet(){
+setText("usdWallet","$"+formatMoney(balance * eurToUsd));
+setText("eurWallet","€"+formatMoney(balance));
+setText("gbpWallet","£"+formatMoney(balance * eurToGbp));
 
-  setText(
-    "usdWallet",
-    "$" + formatMoney(balance * eurToUsd)
-  );
-
-  setText(
-    "eurWallet",
-    "€" + formatMoney(balance)
-  );
-
-  setText(
-    "gbpWallet",
-    "£" + formatMoney(balance * eurToGbp)
-  );
-
-  setText(
-    "convertedEUR",
-    "€" + formatMoney(balance)
-  );
-
-  setText(
-    "convertedUSD",
-    "$" + formatMoney(balance * eurToUsd)
-  );
-
-  setText(
-    "convertedGBP",
-    "£" + formatMoney(balance * eurToGbp)
-  );
+setText("convertedEUR","€"+formatMoney(balance));
+setText("convertedUSD","$"+formatMoney(balance * eurToUsd));
+setText("convertedGBP","£"+formatMoney(balance * eurToGbp));
 }
 
 // ===== TRANSFER =====
 window.openPinModal = function(){
+const amount = Number(el("amount").value);
 
-  const amount = Number(el("amount").value);
+if(!amount || amount <= 0) return notify("Invalid amount");
+if(amount > balance) return notify("Insufficient funds");
 
-  if(!amount || amount <= 0){
-    return notify("Invalid amount");
-  }
+pendingTransfer = {
+amount,
+note: el("description").value
+};
 
-  if(amount > balance){
-    return notify("Insufficient funds");
-  }
+generatedOTP = Math.floor(100000 + Math.random()*900000);
 
-  pendingTransfer = {
-    amount,
-    note: el("description").value
-  };
-
-  generatedOTP = Math.floor(
-    100000 + Math.random()*900000
-  );
-
-  emailjs.send(
-    "YOUR_SERVICE_ID",
-    "YOUR_TEMPLATE_ID",
-    {
-      to_email: window._userEmail,
-      otp: generatedOTP
-    }
-  )
-  .then(()=>{
-
-    notify("OTP sent to your email");
-
-    setTimeout(()=>{
-      window.confirmOTP();
-    },300);
-
-  })
-  .catch(()=>{
-
-    notify("Failed to send OTP");
-
-  });
+emailjs.send("YOUR_SERVICE_ID","YOUR_TEMPLATE_ID",{
+to_email: window._userEmail,
+otp: generatedOTP
+}).then(()=>{
+notify("OTP sent to your email");
+setTimeout(()=> window.confirmOTP(), 300);
+}).catch(()=>{
+notify("Failed to send OTP");
+});
 };
 
 window.confirmOTP = async function(){
+const input = prompt("Enter OTP");
+if(input != generatedOTP) return notify("Wrong OTP");
 
-  const input = prompt("Enter OTP");
-
-  if(input != generatedOTP){
-    return notify("Wrong OTP");
-  }
-
-  const newTx = {
-
-    amount: -pendingTransfer.amount,
-
-    note:
-      pendingTransfer.note ||
-      "Transfer Sent",
-
-    date: new Date().toISOString(),
-
-    reference: genRef(),
-
-    type: "transfer"
-  };
-
-  balance -= pendingTransfer.amount;
-
-  await updateDoc(userRef,{
-    balance,
-    transactions:[...tx,newTx]
-  });
-
-  notify("Transfer successful");
-
-  showReceipt(newTx);
-
-  pendingTransfer = null;
+const newTx = {
+amount: -pendingTransfer.amount,
+note: pendingTransfer.note || "Transfer Sent",
+date: new Date().toISOString(),
+reference: genRef(),
+type: "transfer"
 };
 
-// ===== BILL PAYMENT =====
-window.payBill = async function(name,amount){
+balance -= pendingTransfer.amount;
 
-  if(frozen){
-    return notify("Card is frozen");
-  }
+await updateDoc(userRef,{
+balance,
+transactions:[...tx,newTx]
+});
 
-  if(amount > balance){
-    return notify("Insufficient balance");
-  }
+notify("Transfer successful");
+showReceipt(newTx);
 
-  const newTx = {
-
-    note: name + " Bill",
-
-    amount: -amount,
-
-    date: new Date().toISOString(),
-
-    reference: genRef(),
-
-    type: "bill"
-  };
-
-  balance -= amount;
-
-  await updateDoc(userRef,{
-    balance,
-    transactions:[...tx,newTx]
-  });
-
-  notify(name + " paid successfully");
+pendingTransfer = null;
 };
 
-// ===== GIFT CARDS =====
-window.buyGiftCard = async function(name,amount){
+// ===== BILLS =====
+window.payBill = async function(name, amount){
+if(frozen) return notify("Card is frozen");
+if(amount > balance) return notify("Insufficient balance");
 
-  if(amount > balance){
-    return notify("Insufficient balance");
-  }
+const newTx = {
+note: name + " Bill",
+amount: -amount,
+date: new Date().toISOString(),
+reference: genRef(),
+type: "bill"
+};
 
-  const newTx = {
+balance -= amount;
 
-    note: name + " Gift Card",
+await updateDoc(userRef,{
+balance,
+transactions: [...tx, newTx]
+});
 
-    amount: -amount,
-
-    date: new Date().toISOString(),
-
-    reference: genRef(),
-
-    type: "giftcard"
-  };
-
-  balance -= amount;
-
-  await updateDoc(userRef,{
-    balance,
-    transactions:[...tx,newTx]
-  });
-
-  notify(name + " gift card purchased");
+notify(name + " paid successfully");
 };
 
 // ===== INIT =====
 async function init(){
 
-  el("receiptModal")?.classList.add("hidden");
+el("receiptModal")?.classList.add("hidden");
 
-  const username = localStorage.getItem("user");
+const username = localStorage.getItem("user");
+if(!username) return location.href="index.html";
 
-  if(!username){
-    return location.href = "index.html";
-  }
+userRef = doc(db,"users",username);
+const snap = await getDoc(userRef);
+if(!snap.exists()) return location.href="index.html";
 
-  userRef = doc(db,"users",username);
+const data = snap.data();
 
-  const snap = await getDoc(userRef);
+balance = Number(data.balance || 0);
+tx = getTx(data);
+frozen = data.cardFrozen || false;
 
-  if(!snap.exists()){
-    return location.href = "index.html";
-  }
+setText("welcome","Hi, "+data.fullName);
+setText("nameProfile",data.fullName);
+setText("emailProfile", data.email || "dechasebank@gmail.com");
 
-  const data = snap.data();
+window._userEmail = data.email;
 
-  balance = Number(data.balance || 0);
+setAccountField("iban", data.iban);
+setAccountField("swift", data.swift);
+setAccountField("accountNumberDisplay", data.accountNumber);
+setAccountField("routingDisplay", data.routingNumber);
 
-  tx = getTx(data);
+fullCardNumber = data.card?.cardNumber || "";
+setText("cardNumber","**** **** **** " + (fullCardNumber.slice(-4) || "••••"));
+setText("cardName",data.fullName);
+setText("cardExpiry",data.card?.expiry);
 
-  frozen = data.cardFrozen || false;
+realCVV = data.card?.cvv || data.cvv || "***";
+window._realCVV = realCVV;
 
-  // ===== PROFILE =====
-  setText(
-    "welcome",
-    "Hi, " + data.fullName
-  );
+updateFreezeUI();
+renderBalance();
+renderTransactions();
+fetchRates();
+startAutoLogout(); // ✅ START TIMER
 
-  setText(
-    "nameProfile",
-    data.fullName
-  );
+onSnapshot(userRef,(snap)=>{
+const d = snap.data();
+if(!d) return;
 
-  setText(
-    "emailProfile",
-    data.email || "dechasebank@gmail.com"
-  );
+balance = Number(d.balance || 0);  
+tx = getTx(d);  
+frozen = d.cardFrozen || false;  
 
-  setText(
-    "bankAddress",
-    data.bankAddress ||
-    "24 Bishopsgate, London EC2N 4BQ, United Kingdom"
-  );
+setText("emailProfile", d.email || "dechasebank@gmail.com");
 
-  setText(
-    "addressProfile",
-    data.address ||
-    "Bucharest, Romania"
-  );
+setText(
+"bankAddress",
+data.bankAddress || "24 Bishopsgate, London EC2N 4BQ, United Kingdom"
+);
 
-  setText(
-    "accountTier",
-    data.accountTier ||
-    "Premium Account"
-  );
+setText(
+"addressProfile",
+data.address || "Bucharest, Romania"
+);
 
-  setText(
-    "accountLimit",
-    data.accountLimit ||
-    "Daily Limit: €250,000"
-  );
+setText(
+"accountTier",
+data.accountTier || "Premium Account"
+);
 
-  window._userEmail = data.email;
+setText(
+"accountLimit",
+data.accountLimit || "Daily Limit: €250,000"
+);
 
-  // ===== ACCOUNT =====
-  setAccountField("iban",data.iban);
+setAccountField("iban", d.iban);  
+setAccountField("swift", d.swift);  
+setAccountField("accountNumberDisplay", d.accountNumber);  
+setAccountField("routingDisplay", d.routingNumber);  
 
-  setAccountField("swift",data.swift);
+renderBalance();  
+renderTransactions();  
+updateWallet();  
+updateFreezeUI();
 
-  setAccountField(
-    "accountNumberDisplay",
-    data.accountNumber
-  );
-
-  setAccountField(
-    "routingDisplay",
-    data.routingNumber
-  );
-
-  // ===== CARD =====
-  fullCardNumber =
-    data.card?.cardNumber || "";
-
-  setText(
-    "cardNumber",
-    "**** **** **** " +
-    (fullCardNumber.slice(-4) || "••••")
-  );
-
-  setText(
-    "cardName",
-    data.fullName
-  );
-
-  setText(
-    "cardExpiry",
-    data.card?.expiry
-  );
-
-  window._realCVV =
-    data.card?.cvv ||
-    data.cvv ||
-    "***";
-
-  // ===== RENDER =====
-  updateFreezeUI();
-
-  renderBalance();
-
-  renderTransactions();
-
-  fetchRates();
-
-  startAutoLogout();
-
-  // ===== LIVE UPDATE =====
-  onSnapshot(userRef,(snap)=>{
-
-    const d = snap.data();
-
-    if(!d) return;
-
-    balance = Number(d.balance || 0);
-
-    tx = getTx(d);
-
-    frozen = d.cardFrozen || false;
-
-    renderBalance();
-
-    renderTransactions();
-
-    updateWallet();
-
-    updateFreezeUI();
-  });
+});
 }
 
-// ===== START =====
+// START
 init();
+

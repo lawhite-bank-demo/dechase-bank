@@ -148,21 +148,119 @@ CVV: <span id="cardCVV">***</span>
 
 <!-- SEND -->
 <div id="paymentsPage" class="hidden">
-<div class="card">
-<b>💸 Send Money</b>
-<input id="ibanInput" placeholder="Recipient IBAN">
-<input id="swiftInput" placeholder="SWIFT">
-<input id="description" placeholder="Reference">
 
-<select id="category">
-<option>Personal</option>
-<option>Bills</option>
-<option>Business</option>
+<div class="card">
+
+<b>💸 Send Money</b>
+
+<!-- TRANSFER TYPE -->
+<select id="transferType" onchange="switchTransferType()">
+
+<option value="sepa">
+SEPA Transfer
+</option>
+
+<option value="wire">
+US Wire Transfer
+</option>
+
 </select>
 
-<input id="amount" placeholder="€ Amount">
-<button onclick="openPinModal()">Send Transfer</button>
+<!-- SEPA FIELDS -->
+<div id="sepaFields">
+
+<input
+id="ibanInput"
+placeholder="Recipient IBAN"
+>
+
+<input
+id="swiftInput"
+placeholder="SWIFT / BIC"
+>
+
 </div>
+
+<!-- US WIRE FIELDS -->
+<div id="wireFields" class="hidden">
+
+<input
+id="recipientName"
+placeholder="Recipient Name"
+>
+
+<input
+id="bankName"
+placeholder="Bank Name"
+>
+
+<input
+id="accountNumber"
+placeholder="Account Number"
+>
+
+<input
+id="routingNumber"
+placeholder="Routing Number"
+>
+
+<input
+id="bankAddressInput"
+placeholder="Bank Address"
+>
+
+</div>
+
+<!-- COMMON -->
+<input
+id="description"
+placeholder="Reference / Description"
+>
+
+<select id="category">
+
+<option>Personal</option>
+
+<option>Bills</option>
+
+<option>Business</option>
+
+<option>Family Support</option>
+
+</select>
+
+<input
+id="amount"
+placeholder="€ Amount"
+>
+
+<!-- FEES -->
+<div
+id="transferFee"
+style="
+margin-top:10px;
+opacity:0.7;
+font-size:13px;
+"
+>
+Fee: €0
+</div>
+
+<button onclick="openPinModal()">
+Send Transfer
+</button>
+
+</div>
+
+<!-- ADD MONEY QUICK BUTTON -->
+<div class="card">
+
+<button onclick="openPage('addMoneyPage')">
+➕ Add Money
+</button>
+
+</div>
+
 </div>
 
 <!-- BILLS -->
@@ -307,7 +405,39 @@ function openPage(p){
   });
   document.getElementById(p).classList.remove("hidden");
 }
+<script>
+window.switchTransferType = function(){
 
+  const type =
+  document.getElementById("transferType").value;
+
+  const sepa =
+  document.getElementById("sepaFields");
+
+  const wire =
+  document.getElementById("wireFields");
+
+  const fee =
+  document.getElementById("transferFee");
+
+  if(type === "wire"){
+
+    sepa.classList.add("hidden");
+
+    wire.classList.remove("hidden");
+
+    fee.innerText = "Fee: €15";
+
+  }else{
+
+    wire.classList.add("hidden");
+
+    sepa.classList.remove("hidden");
+
+    fee.innerText = "Fee: €0";
+  }
+};
+</script>
 function flipCard(){
   const card = document.getElementById("cardInner");
   const cvv = document.getElementById("cardCVV");

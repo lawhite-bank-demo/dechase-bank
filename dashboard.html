@@ -397,15 +397,35 @@ Add Funds
 
 <!-- BASIC JS -->
 <script>
+
 function openPage(p){
-  ["homePage","paymentsPage","billsPage","giftPage","profilePage","addMoneyPage"]
+
+  [
+    "homePage",
+    "paymentsPage",
+    "billsPage",
+    "giftPage",
+    "profilePage",
+    "addMoneyPage"
+  ]
+
   .forEach(x=>{
-    const el = document.getElementById(x);
-    if(el) el.classList.add("hidden");
+
+    const el =
+    document.getElementById(x);
+
+    if(el){
+      el.classList.add("hidden");
+    }
+
   });
-  document.getElementById(p).classList.remove("hidden");
+
+  document.getElementById(p)
+  .classList.remove("hidden");
 }
-<script>
+
+
+// ✅ TRANSFER SWITCH
 window.switchTransferType = function(){
 
   const type =
@@ -437,6 +457,53 @@ window.switchTransferType = function(){
     fee.innerText = "Fee: €0";
   }
 };
+
+
+// ✅ CARD FLIP
+function flipCard(){
+
+  const card =
+  document.getElementById("cardInner");
+
+  const cvv =
+  document.getElementById("cardCVV");
+
+  card.classList.toggle("flipped");
+
+  cvv.innerText =
+  card.classList.contains("flipped")
+  ? window._realCVV
+  : "***";
+}
+
+
+// ✅ LIVE TIME
+function updateTime(){
+
+  const now = new Date();
+
+  document.getElementById("time")
+  .innerText = now.toLocaleTimeString();
+
+  document.getElementById("date")
+  .innerText = now.toDateString();
+
+  document.getElementById("greeting")
+  .innerText =
+
+    now.getHours() < 12
+    ? "Good Morning"
+
+    : now.getHours() < 18
+    ? "Good Afternoon"
+
+    : "Good Evening";
+}
+
+setInterval(updateTime,1000);
+
+updateTime();
+
 </script>
 function flipCard(){
   const card = document.getElementById("cardInner");
@@ -461,4 +528,4 @@ updateTime();
 <script type="module" src="dashboard.js"></script>
 
 </body>
-</html>
+</html>1

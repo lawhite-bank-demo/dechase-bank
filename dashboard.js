@@ -292,52 +292,194 @@ setText("convertedGBP","£"+formatMoney(balance * eurToGbp));
 
 // ===== TRANSFER =====
 window.openPinModal = function(){
+
 const amount = Number(el("amount").value);
 
-if(!amount || amount <= 0) return notify("Invalid amount");
-if(amount > balance) return notify("Insufficient funds");
+if(!amount || amount <= 0){
+  return notify("Invalid amount");
+}
 
+if(amount > balance){
+  return notify("Insufficient funds");
+}
+
+const transferType =
+el("transferType")?.value || "sepa";
+
+// ===== SEPA VALIDATION =====
+if(transferType === "sepa"){
+
+  const iban = el("ibanInput").value.trim();
+  const swift = el("swiftInput").value.trim();
+
+  if(!iban || !swift){
+    return notify("Enter IBAN and SWIFT");
+  }
+}
+
+// ===== WIRE VALIDATION =====
+if(transferType === "wire"){
+
+  const recipient =
+  el("recipientName").value.trim();
+
+  const bank =
+  el("bankName").value.trim();
+
+  const acc =
+  el("accountNumber").value.trim();
+
+  const routing =
+  el("routingNumber").value.trim();
+
+  if(!recipient || !bank || !acc || !routing){
+    return notify("Complete wire transfer details");
+  }
+}
+
+// ===== FEES =====
+let fee = 0;
+
+if(transferType === "wire"){
+  fee = 15;
+}
+
+const total = amount + fee;
+
+if(total > balance){
+  return notify("Insufficient balance including fee");
+}
+
+// ===== STORE TRANSFER =====
 pendingTransfer = {
-amount,
-note: el("description").value
+
+  amount,
+  fee,
+  total,
+
+  type: transferType,
+
+  note:
+  transferType === "wire"
+  ? "US Wire Transfer"
+  : "SEPA Transfer"
 };
 
-generatedOTP = Math.floor(100000 + Math.random()*900000);
+// ===== GENERATE OTP =====
+generatedOTP =
+Math.floor(100000 + Math.random()*900000);
 
-emailjs.send("YOUR_SERVICE_ID","YOUR_TEMPLATE_ID",{
-to_email: window._userEmail,
-otp: generatedOTP
-}).then(()=>{
-notify("OTP sent to your email");
-setTimeout(()=> window.confirmOTP(), 300);
-}).catch(()=>{
-notify("Failed to send OTP");
+// ===== SEND EMAIL =====
+emailjs.send(
+  "YOUR_SERVICE_ID",
+  "YOUR_TEMPLATE_ID",
+{
+  to_email: window._userEmail,
+  otp: generatedOTP
+})
+
+.then(()=>{
+
+  notify("OTP sent to your email");
+
+  setTimeout(()=>{
+
+    window.confirmOTP();
+
+  },300);
+
+})
+
+.catch(()=>{
+
+  notify("Failed to send OTP");
+
 });
+
 };
 
+// ===== CONFIRM OTP =====
 window.confirmOTP = async function(){
+
 const input = prompt("Enter OTP");
-if(input != generatedOTP) return notify("Wrong OTP");
+
+if(input != generatedOTP){
+  return notify("Wrong OTP");
+}
+
+// ===== PROCESSING =====
+notify("Processing transfer...");
+
+setTimeout(async()=>{
+
+const transferType =
+pendingTransfer.type;
+
+const fee =
+pendingTransfer.fee || 0;
 
 const newTx = {
-amount: -pendingTransfer.amount,
-note: pendingTransfer.note || "Transfer Sent",
-date: new Date().toISOString(),
-reference: genRef(),
-type: "transfer"
+
+  amount: -pendingTransfer.total,
+
+  note:
+  transferType === "wire"
+  ? "🇺🇸 US Wire Transfer"
+  : "🌍 SEPA Transfer",
+
+  date: new Date().toISOString(),
+
+  reference: genRef(),
+
+  type: "transfer",
+
+  fee: fee
 };
 
-balance -= pendingTransfer.amount;
+// ===== UPDATE BALANCE =====
+balance -= pendingTransfer.total;
 
+// ===== SAVE =====
 await updateDoc(userRef,{
-balance,
-transactions:[...tx,newTx]
+
+  balance,
+
+  transactions:[...tx,newTx]
+
 });
 
+// ===== SUCCESS =====
 notify("Transfer successful");
+
 showReceipt(newTx);
 
+// ===== CLEAR INPUTS =====
+[
+"ibanInput",
+"swiftInput",
+"description",
+"amount",
+"recipientName",
+"bankName",
+"accountNumber",
+"routingNumber",
+"bankAddressInput"
+]
+
+.forEach(id=>{
+
+  const input = el(id);
+
+  if(input){
+    input.value = "";
+  }
+
+});
+
 pendingTransfer = null;
+
+},2000);
+
 };
 
 // ===== BILLS =====

@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>DeChase Bank</title>
 
 <link rel="stylesheet" href="styles.css">
 
-<!-- ✅ EMAILJS -->
+<!-- EMAILJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
 <script>
 (function(){
-  emailjs.init("YOUR_PUBLIC_KEY"); // 🔴 PUT YOUR REAL KEY
+  emailjs.init("YOUR_PUBLIC_KEY");
 })();
 </script>
 
@@ -23,9 +27,9 @@
 
 <!-- TIME -->
 <div class="time-card">
-<div id="greeting"></div>
-<div id="time" class="time"></div>
-<div id="date"></div>
+  <div id="greeting"></div>
+  <div id="time" class="time"></div>
+  <div id="date"></div>
 </div>
 
 <h3 id="welcome"></h3>
@@ -33,369 +37,572 @@
 <!-- HOME -->
 <div id="homePage">
 
-<div class="balance-card">
-<div>Total Balance</div>
-<div id="balance" class="balance"></div>
-<div id="toggleBalance" onclick="toggleBalance()">👁 Hide</div>
+  <!-- BALANCE -->
+  <div class="balance-card">
+
+    <div>Total Balance</div>
+
+    <div id="balance" class="balance"></div>
+
+    <div id="toggleBalance" onclick="toggleBalance()">
+      👁 Hide
+    </div>
+
+  </div>
+
+  <!-- CARD -->
+  <div class="card">
+
+    <div class="bank-card" onclick="flipCard()">
+
+      <div class="card-inner" id="cardInner">
+
+        <!-- FRONT -->
+        <div class="card-front">
+
+          <div style="display:flex;justify-content:space-between;">
+
+            <div class="chip"></div>
+
+            <div>VISA</div>
+
+          </div>
+
+          <div
+            id="cardNumber"
+            class="card-number"
+            onclick="event.stopPropagation(); toggleCardNumber()"
+          ></div>
+
+          <small style="opacity:0.6;font-size:12px;">
+            Tap to reveal
+          </small>
+
+          <div class="card-bottom">
+
+            <div>
+
+              <div>CARD HOLDER</div>
+
+              <div id="cardName"></div>
+
+            </div>
+
+            <div>
+
+              <div>EXPIRES</div>
+
+              <div id="cardExpiry"></div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- BACK -->
+        <div class="card-back">
+
+          <div style="margin-top:40px;text-align:right;">
+
+            CVV:
+            <span id="cardCVV">***</span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <button id="cardBtn" onclick="toggleCard()">
+    Freeze Card
+  </button>
+
+  <!-- WALLET -->
+  <div class="card">
+
+    <b>🌍 Multi Currency Wallet</b>
+
+    <div>
+      USD:
+      <span id="usdWallet"></span>
+    </div>
+
+    <div>
+      EUR:
+      <span id="eurWallet"></span>
+    </div>
+
+    <div>
+      GBP:
+      <span id="gbpWallet"></span>
+    </div>
+
+  </div>
+
+  <!-- CONVERTED -->
+  <div class="card">
+
+    <b>💱 Converted Balance</b>
+
+    <div>
+      EUR:
+      <span id="convertedEUR"></span>
+    </div>
+
+    <div>
+      USD:
+      <span id="convertedUSD"></span>
+    </div>
+
+    <div>
+      GBP:
+      <span id="convertedGBP"></span>
+    </div>
+
+  </div>
+
+  <!-- QUICK BUTTONS -->
+  <div class="card">
+
+    <button onclick="openPage('paymentsPage')">
+      Send Money
+    </button>
+
+    <button onclick="openPage('billsPage')">
+      Pay Bills
+    </button>
+
+    <button onclick="openPage('giftPage')">
+      Gift Cards
+    </button>
+
+  </div>
+
+  <!-- ACCOUNT DETAILS -->
+  <div class="card">
+
+    <b style="font-size:16px;">
+      🏦 Account Details
+    </b>
+
+    <div class="acc-section">
+
+      <small class="acc-label">
+        🌍 International (SEPA)
+      </small>
+
+      <div class="acc-item">
+
+        <span>IBAN</span>
+
+        <span id="iban"></span>
+
+      </div>
+
+      <div class="acc-item">
+
+        <span>SWIFT / BIC</span>
+
+        <span id="swift"></span>
+
+      </div>
+
+    </div>
+
+    <div class="acc-section">
+
+      <small class="acc-label">
+        🇺🇸 Local (US)
+      </small>
+
+      <div class="acc-item">
+
+        <span>Account Number</span>
+
+        <span id="accountNumberDisplay"></span>
+
+      </div>
+
+      <div class="acc-item">
+
+        <span>Routing Number</span>
+
+        <span id="routingDisplay"></span>
+
+      </div>
+
+    </div>
+
+    <div class="acc-note">
+      🔒 Only share these details with trusted parties
+    </div>
+
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div class="card">
+
+    <b>📄 Transactions</b>
+
+    <div id="transactions"></div>
+
+  </div>
+
 </div>
 
-<!-- CARD -->
-<div class="card">
-<div class="bank-card" onclick="flipCard()">
-<div class="card-inner" id="cardInner">
-
-<!-- FRONT -->
-<div class="card-front">
-<div style="display:flex;justify-content:space-between;">
-<div class="chip"></div>
-<div>VISA</div>
-</div>
-
-<!-- ✅ FIX: STOP PROPAGATION -->
-<div id="cardNumber" class="card-number" onclick="event.stopPropagation(); toggleCardNumber()"></div>
-<small style="opacity:0.6;font-size:12px;">Tap to reveal</small>
-
-<div class="card-bottom">
-<div>
-<div>CARD HOLDER</div>
-<div id="cardName"></div>
-</div>
-<div>
-<div>EXPIRES</div>
-<div id="cardExpiry"></div>
-</div>
-</div>
-</div>
-
-<!-- BACK -->
-<div class="card-back">
-<div style="margin-top:40px;text-align:right;">
-CVV: <span id="cardCVV">***</span>
-</div>
-</div>
-
-</div>
-</div>
-</div>
-
-<button id="cardBtn" onclick="toggleCard()">Freeze Card</button>
-
-<!-- WALLET -->
-<div class="card">
-<b>🌍 Multi Currency Wallet</b>
-<div>USD: <span id="usdWallet"></span></div>
-<div>EUR: <span id="eurWallet"></span></div>
-<div>GBP: <span id="gbpWallet"></span></div>
-</div>
-
-<div class="card">
-<b>💱 Converted Balance</b>
-<div>EUR: <span id="convertedEUR"></span></div>
-<div>USD: <span id="convertedUSD"></span></div>
-<div>GBP: <span id="convertedGBP"></span></div>
-</div>
-
-<div class="card">
-<button onclick="openPage('paymentsPage')">Send Money</button>
-<button onclick="openPage('billsPage')">Pay Bills</button>
-<button onclick="openPage('giftPage')">Gift Cards</button>
-</div>
-
-<!-- ACCOUNT DETAILS -->
-<div class="card">
-<b style="font-size:16px;">🏦 Account Details</b>
-
-<div class="acc-section">
-<small class="acc-label">🌍 International (SEPA)</small>
-
-<div class="acc-item">
-<span>IBAN</span>
-<span id="iban"></span>
-</div>
-
-<div class="acc-item">
-<span>SWIFT / BIC</span>
-<span id="swift"></span>
-</div>
-</div>
-
-<div class="acc-section">
-<small class="acc-label">🇺🇸 Local (US)</small>
-
-<div class="acc-item">
-<span>Account Number</span>
-<span id="accountNumberDisplay"></span>
-</div>
-
-<div class="acc-item">
-<span>Routing Number</span>
-<span id="routingDisplay"></span>
-</div>
-</div>
-
-<div class="acc-note">
-🔒 Only share these details with trusted parties
-</div>
-</div>
-
-<!-- TRANSACTIONS -->
-<div class="card">
-<b>📄 Transactions</b>
-<div id="transactions"></div>
-</div>
-
-</div>
-
-<!-- SEND -->
+<!-- PAYMENTS -->
 <div id="paymentsPage" class="hidden">
 
-<div class="card">
+  <div class="card">
 
-<b>💸 Send Money</b>
+    <b>💸 Send Money</b>
 
-<!-- TRANSFER TYPE -->
-<select id="transferType" onchange="switchTransferType()">
+    <!-- TRANSFER TYPE -->
+    <select id="transferType" onchange="switchTransferType()">
 
-<option value="sepa">
-SEPA Transfer
-</option>
+      <option value="sepa">
+        SEPA Transfer
+      </option>
 
-<option value="wire">
-US Wire Transfer
-</option>
+      <option value="wire">
+        US Wire Transfer
+      </option>
 
-</select>
+    </select>
 
-<!-- SEPA FIELDS -->
-<div id="sepaFields">
+    <!-- SEPA -->
+    <div id="sepaFields">
 
-<input
-id="ibanInput"
-placeholder="Recipient IBAN"
->
+      <input
+        id="ibanInput"
+        placeholder="Recipient IBAN"
+      >
 
-<input
-id="swiftInput"
-placeholder="SWIFT / BIC"
->
+      <input
+        id="swiftInput"
+        placeholder="SWIFT / BIC"
+      >
 
-</div>
+    </div>
 
-<!-- US WIRE FIELDS -->
-<div id="wireFields" class="hidden">
+    <!-- WIRE -->
+    <div id="wireFields" class="hidden">
 
-<input
-id="recipientName"
-placeholder="Recipient Name"
->
+      <input
+        id="recipientName"
+        placeholder="Recipient Name"
+      >
 
-<input
-id="bankName"
-placeholder="Bank Name"
->
+      <input
+        id="bankName"
+        placeholder="Bank Name"
+      >
 
-<input
-id="accountNumber"
-placeholder="Account Number"
->
+      <input
+        id="accountNumber"
+        placeholder="Account Number"
+      >
 
-<input
-id="routingNumber"
-placeholder="Routing Number"
->
+      <input
+        id="routingNumber"
+        placeholder="Routing Number"
+      >
 
-<input
-id="bankAddressInput"
-placeholder="Bank Address"
->
+      <input
+        id="bankAddressInput"
+        placeholder="Bank Address"
+      >
 
-</div>
+    </div>
 
-<!-- COMMON -->
-<input
-id="description"
-placeholder="Reference / Description"
->
+    <!-- COMMON -->
+    <input
+      id="description"
+      placeholder="Reference / Description"
+    >
 
-<select id="category">
+    <select id="category">
 
-<option>Personal</option>
+      <option>Personal</option>
 
-<option>Bills</option>
+      <option>Bills</option>
 
-<option>Business</option>
+      <option>Business</option>
 
-<option>Family Support</option>
+      <option>Family Support</option>
 
-</select>
+    </select>
 
-<input
-id="amount"
-placeholder="€ Amount"
->
+    <input
+      id="amount"
+      placeholder="€ Amount"
+    >
 
-<!-- FEES -->
-<div
-id="transferFee"
-style="
-margin-top:10px;
-opacity:0.7;
-font-size:13px;
-"
->
-Fee: €0
-</div>
+    <!-- FEES -->
+    <div
+      id="transferFee"
+      style="
+      margin-top:10px;
+      opacity:0.7;
+      font-size:13px;
+      "
+    >
+      Fee: €0
+    </div>
 
-<button onclick="openPinModal()">
-Send Transfer
-</button>
+    <button onclick="openPinModal()">
+      Send Transfer
+    </button>
 
-</div>
+  </div>
 
-<!-- ADD MONEY QUICK BUTTON -->
-<div class="card">
+  <!-- ADD MONEY -->
+  <div class="card">
 
-<button onclick="openPage('addMoneyPage')">
-➕ Add Money
-</button>
+    <button onclick="openPage('addMoneyPage')">
+      ➕ Add Money
+    </button>
 
-</div>
+  </div>
 
 </div>
 
 <!-- BILLS -->
 <div id="billsPage" class="hidden">
-<div class="card">
-<b>Pay Bills</b>
-<button onclick="payBill('Electricity',120)">Electricity €120</button>
-<button onclick="payBill('Netflix',15)">Netflix €15</button>
-</div>
+
+  <div class="card">
+
+    <b>Pay Bills</b>
+
+    <button onclick="payBill('Electricity',120)">
+      Electricity €120
+    </button>
+
+    <button onclick="payBill('Netflix',15)">
+      Netflix €15
+    </button>
+
+  </div>
+
 </div>
 
 <!-- GIFT -->
 <div id="giftPage" class="hidden">
-<div class="card">
-<b>Gift Cards</b>
-<button onclick="buyGiftCard('Amazon',100)">Amazon €100</button>
-<button onclick="buyGiftCard('Steam',25)">Steam €25</button>
+
+  <div class="card">
+
+    <b>Gift Cards</b>
+
+    <button onclick="buyGiftCard('Amazon',100)">
+      Amazon €100
+    </button>
+
+    <button onclick="buyGiftCard('Steam',25)">
+      Steam €25
+    </button>
+
+  </div>
+
 </div>
-</div>
-<!-- ADD MONEY -->
+
+<!-- ADD MONEY PAGE -->
 <div id="addMoneyPage" class="hidden">
 
-<div class="card">
-<b>💳 Add Money</b>
+  <div class="card">
 
-<select id="fundMethod">
-<option>Debit Card</option>
-<option>Bank Transfer</option>
-<option>Crypto Deposit</option>
-</select>
+    <b>💳 Add Money</b>
 
-<input id="addMoneyAmount" placeholder="€ Amount">
+    <select id="fundMethod">
 
-<button onclick="addMoney()">
-Add Funds
-</button>
+      <option>Debit Card</option>
 
-</div>
+      <option>Bank Transfer</option>
+
+      <option>Crypto Deposit</option>
+
+    </select>
+
+    <input
+      id="addMoneyAmount"
+      placeholder="€ Amount"
+    >
+
+    <button onclick="addMoney()">
+      Add Funds
+    </button>
+
+  </div>
+
 </div>
 
 <!-- PROFILE -->
 <div id="profilePage" class="hidden">
 
-<div class="card center">
-<div class="profile-avatar">👤</div>
-<h3 id="nameProfile"></h3>
+  <div class="card center">
 
-<div style="margin-top:8px; opacity:0.8;">
-📧 <span id="emailProfile"></span>
-</div>
+    <div class="profile-avatar">
+      👤
+    </div>
 
-<div style="margin-top:10px;opacity:0.85;line-height:1.7;">
+    <h3 id="nameProfile"></h3>
 
-  <div>
-    📍 <span id="addressProfile"></span>
+    <div style="margin-top:8px; opacity:0.8;">
+
+      📧
+      <span id="emailProfile"></span>
+
+    </div>
+
+    <div
+      style="
+      margin-top:10px;
+      opacity:0.85;
+      line-height:1.7;
+      "
+    >
+
+      <div>
+        📍
+        <span id="addressProfile"></span>
+      </div>
+
+      <div>
+        🏦
+        <span id="bankAddress"></span>
+      </div>
+
+      <div>
+        💳
+        <span id="accountTier"></span>
+      </div>
+
+      <div>
+        💰
+        <span id="accountLimit"></span>
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <button
+        onclick="logoutUser()"
+        class="logoutBtn"
+      >
+        🚪 Logout
+      </button>
+
+    </div>
+
   </div>
-
-  <div>
-    🏦 <span id="bankAddress"></span>
-  </div>
-
-  <div>
-    💳 <span id="accountTier"></span>
-  </div>
-
-  <div>
-    💰 <span id="accountLimit"></span>
-  </div>
-
-</div>
-
-<div class="card">
-<button onclick="logoutUser()" class="logoutBtn">
-🚪 Logout
-</button>
-</div>
-
-</div>
 
 </div>
 
 <!-- NAV -->
 <div class="bottomNav">
-<button onclick="openPage('homePage')">Home</button>
-<button onclick="openPage('paymentsPage')">Payments</button>
-<button onclick="openPage('billsPage')">Bills</button>
-<button onclick="openPage('giftPage')">Gift</button>
-<button onclick="openPage('profilePage')">Profile</button>
+
+  <button onclick="openPage('homePage')">
+    Home
+  </button>
+
+  <button onclick="openPage('paymentsPage')">
+    Payments
+  </button>
+
+  <button onclick="openPage('billsPage')">
+    Bills
+  </button>
+
+  <button onclick="openPage('giftPage')">
+    Gift
+  </button>
+
+  <button onclick="openPage('profilePage')">
+    Profile
+  </button>
+
 </div>
 
 <!-- WHATSAPP -->
-<a href="https://wa.me/40786996671" class="whatsapp-btn">💬</a>
+<a
+  href="https://wa.me/40786996671"
+  class="whatsapp-btn"
+>
+  💬
+</a>
 
 <!-- RECEIPT -->
-<div id="receiptModal" class="hidden receipt-modal">
+<div
+  id="receiptModal"
+  class="hidden receipt-modal"
+>
+
   <div class="receipt-card">
 
     <h3>Transaction Receipt</h3>
 
     <div class="receipt-row">
+
       <span>Status</span>
+
       <span>Completed</span>
+
     </div>
 
     <div class="receipt-row">
+
       <span>Amount</span>
+
       <span id="rAmount"></span>
+
     </div>
 
     <div class="receipt-row">
+
       <span>Type</span>
+
       <span id="rType"></span>
+
     </div>
 
     <div class="receipt-row">
+
       <span>Description</span>
+
       <span id="rNote"></span>
+
     </div>
 
     <div class="receipt-row">
+
       <span>Date</span>
+
       <span id="rDate"></span>
+
     </div>
 
     <div class="receipt-row">
+
       <span>Reference</span>
+
       <span id="rRef"></span>
+
     </div>
 
-    <button onclick="closeReceipt()">Close</button>
+    <button onclick="closeReceipt()">
+      Close
+    </button>
 
   </div>
+
 </div>
 
-<<!-- BASIC JS -->
+<!-- BASIC JS -->
 <script>
 
 function openPage(p){
@@ -429,7 +636,7 @@ function openPage(p){
 }
 
 
-// ✅ TRANSFER TYPE SWITCH
+// TRANSFER SWITCH
 window.switchTransferType = function(){
 
   const type =
@@ -463,7 +670,7 @@ window.switchTransferType = function(){
 };
 
 
-// ✅ CARD FLIP
+// CARD FLIP
 function flipCard(){
 
   const card =
@@ -477,13 +684,14 @@ function flipCard(){
   card.classList.toggle("flipped");
 
   cvv.innerText =
-  card.classList.contains("flipped")
-  ? window._realCVV
-  : "***";
+
+    card.classList.contains("flipped")
+    ? window._realCVV
+    : "***";
 }
 
 
-// ✅ LIVE TIME
+// TIME
 function updateTime(){
 
   const now = new Date();
@@ -527,7 +735,7 @@ updateTime();
 
 </script>
 
-<script type="module" src="dashboard.js"></script>>
+<script type="module" src="dashboard.js"></script>
 
 </body>
-</html>1
+</html>

@@ -395,7 +395,7 @@ Add Funds
   </div>
 </div>
 
-<!-- BASIC JS -->
+<<!-- BASIC JS -->
 <script>
 
 function openPage(p){
@@ -409,7 +409,7 @@ function openPage(p){
     "addMoneyPage"
   ]
 
-  .forEach(x=>{
+  .forEach(x => {
 
     const el =
     document.getElementById(x);
@@ -420,12 +420,16 @@ function openPage(p){
 
   });
 
-  document.getElementById(p)
-  .classList.remove("hidden");
+  const target =
+  document.getElementById(p);
+
+  if(target){
+    target.classList.remove("hidden");
+  }
 }
 
 
-// ✅ TRANSFER SWITCH
+// ✅ TRANSFER TYPE SWITCH
 window.switchTransferType = function(){
 
   const type =
@@ -468,6 +472,8 @@ function flipCard(){
   const cvv =
   document.getElementById("cardCVV");
 
+  if(!card || !cvv) return;
+
   card.classList.toggle("flipped");
 
   cvv.innerText =
@@ -482,22 +488,37 @@ function updateTime(){
 
   const now = new Date();
 
-  document.getElementById("time")
-  .innerText = now.toLocaleTimeString();
+  const time =
+  document.getElementById("time");
 
-  document.getElementById("date")
-  .innerText = now.toDateString();
+  const date =
+  document.getElementById("date");
 
-  document.getElementById("greeting")
-  .innerText =
+  const greeting =
+  document.getElementById("greeting");
 
-    now.getHours() < 12
-    ? "Good Morning"
+  if(time){
+    time.innerText =
+    now.toLocaleTimeString();
+  }
 
-    : now.getHours() < 18
-    ? "Good Afternoon"
+  if(date){
+    date.innerText =
+    now.toDateString();
+  }
 
-    : "Good Evening";
+  if(greeting){
+
+    greeting.innerText =
+
+      now.getHours() < 12
+      ? "Good Morning"
+
+      : now.getHours() < 18
+      ? "Good Afternoon"
+
+      : "Good Evening";
+  }
 }
 
 setInterval(updateTime,1000);
@@ -505,27 +526,8 @@ setInterval(updateTime,1000);
 updateTime();
 
 </script>
-function flipCard(){
-  const card = document.getElementById("cardInner");
-  const cvv = document.getElementById("cardCVV");
 
-  card.classList.toggle("flipped");
-  cvv.innerText = card.classList.contains("flipped") ? window._realCVV : "***";
-}
-
-function updateTime(){
-  const now = new Date();
-  document.getElementById("time").innerText = now.toLocaleTimeString();
-  document.getElementById("date").innerText = now.toDateString();
-  document.getElementById("greeting").innerText =
-    now.getHours()<12?"Good Morning":
-    now.getHours()<18?"Good Afternoon":"Good Evening";
-}
-setInterval(updateTime,1000);
-updateTime();
-</script>
-
-<script type="module" src="dashboard.js"></script>
+<script type="module" src="dashboard.js"></script>>
 
 </body>
 </html>1

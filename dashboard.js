@@ -180,24 +180,101 @@ return Array.isArray(data.transactions)
 ? data.transactions
 : Object.values(data.transactions);
 }
+function renderTransactions() {
 
-function renderTransactions(){
+  const container = el("transactions");
+  if (!container) return;
 
-const container = el("transactions");
-if(!container) return;
+  container.innerHTML = "";
 
-container.innerHTML = "";
+  // SORT NEWEST FIRST
+  const sortedTx = [...tx].sort((a, b) => {
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  });
 
-// SORT BY NEWEST DATE
-const sortedTx = [...tx].sort((a,b)=>{
-return new Date(b.date) - new Date(a.date);
-});
+  let currentGroup = "";
 
-let lastDate = "";
+  sortedTx.forEach(t => {
 
-sortedTx.forEach(t => {
+    const txDate = new Date(t.date);
 
-const txDate = new Date(t.date);  
+    // ===== DATE LABEL =====
+    const today = new Date();
+
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    let dateLabel = txDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+
+    if (txDate.toDateString() === today.toDateString()) {
+      dateLabel = "Today";
+    }
+    else if (txDate.toDateString() === yesterday.toDateString()) {
+      dateLabel = "Yesterday";
+    }
+
+    // ===== DATE HEADER =====
+    if (currentGroup !== dateLabel) {
+
+      currentGroup = dateLabel;
+
+      const header = document.createElement("div");
+
+      header.className = "tx-date-header";
+
+      header.innerText = dateLabel;
+
+      container.appendChild(header);
+    }
+
+    // ===== TIME =====
+    const formattedTime = txDate.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+
+    // ===== TRANSACTION =====
+    const div = document.createElement("div");
+
+    div.className = "tx";
+
+    div.onclick = () => showReceipt(t);
+
+    div.innerHTML = `
+      <div class="tx-left">
+
+        <div class="tx-title">
+          ${t.note || "Transaction"}
+        </div>
+
+        <small class="tx-time">
+          ${formattedTime}
+        </small>
+
+        <small class="tx-ref">
+          Ref: ${t.reference || genRef()}
+        </small>
+
+      </div>
+
+      <div class="
+        tx-amount
+        ${t.amount < 0 ? "tx-negative" : "tx-positive"}
+      ">
+        ${t.amount < 0 ? "-€" : "+€"}
+        ${formatMoney(Math.abs(t.amount))}
+      </div>
+    `;
+
+    container.appendChild(div);
+
+  });
+} 
 
 // FORMAT DATE HEADER  
 const today = new Date();  

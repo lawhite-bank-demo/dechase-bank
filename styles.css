@@ -246,19 +246,36 @@ input, select{
 .center{text-align:center;}
 
 /* ===== TRANSACTIONS ===== */
+.tx-date-header{
+  margin:20px 0 10px;
+  font-size:13px;
+  font-weight:700;
+  opacity:0.65;
+  letter-spacing:0.5px;
+}
+
 .tx{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:14px 0;
-  border-bottom:1px solid #1f2937;
+
+  padding:16px;
+  margin-bottom:10px;
+
+  background:#0f172a;
+
+  border-radius:16px;
+
   cursor:pointer;
+
+  transition:0.25s ease;
+
+  border:1px solid rgba(255,255,255,0.03);
 }
 
 .tx:hover{
-  background:#0f172a;
-  border-radius:10px;
-  padding:14px 10px;
+  transform:translateY(-2px);
+  background:#111c2e;
 }
 
 .tx-left{
@@ -266,13 +283,167 @@ input, select{
   flex-direction:column;
 }
 
-.tx-amount{
-  font-weight:bold;
+.tx-title{
+  font-weight:600;
   font-size:15px;
 }
 
-.tx-negative{ color:#ef4444; }
-.tx-positive{ color:#22c55e; }
+.tx-time{
+  display:block;
+  margin-top:4px;
+  opacity:0.7;
+  font-size:12px;
+}
+
+.tx-ref{
+  display:block;
+  margin-top:3px;
+  opacity:0.45;
+  font-size:11px;
+}
+
+.tx-amount{
+  font-weight:bold;
+  font-size:16px;
+}
+
+.tx-negative{
+  color:#ef4444;
+}
+
+.tx-positive{
+  color:#22c55e;
+}
+
+/* ===== GIFT CARDS ===== */
+.gift-container{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  margin-top:20px;
+}
+
+.gift-card{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:18px;
+
+  border-radius:22px;
+
+  background:linear-gradient(
+    135deg,
+    #2563eb,
+    #0ea5e9
+  );
+
+  box-shadow:
+    0 8px 25px rgba(0,0,0,0.25);
+
+  transition:0.3s ease;
+
+  cursor:pointer;
+
+  position:relative;
+
+  overflow:hidden;
+}
+
+.gift-card::before{
+  content:"";
+  position:absolute;
+  width:200%;
+  height:100%;
+  background:linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.15),
+    transparent
+  );
+  top:0;
+  left:-100%;
+  animation:giftShine 5s infinite;
+}
+
+@keyframes giftShine{
+  0%{
+    left:-100%;
+  }
+  100%{
+    left:100%;
+  }
+}
+
+.gift-card:hover{
+  transform:translateY(-3px);
+}
+
+.gift-left{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  z-index:2;
+}
+
+.gift-logo{
+  width:48px;
+  height:48px;
+  border-radius:14px;
+  background:white;
+  padding:6px;
+  object-fit:contain;
+}
+
+.gift-left h3{
+  margin:0;
+  font-size:18px;
+  font-weight:700;
+}
+
+.gift-left p{
+  margin-top:4px;
+  opacity:0.8;
+  font-size:13px;
+}
+
+.gift-right{
+  font-size:22px;
+  font-weight:800;
+  z-index:2;
+}
+
+.amazon{
+  background:linear-gradient(
+    135deg,
+    #2563eb,
+    #0ea5e9
+  );
+}
+
+.steam{
+  background:linear-gradient(
+    135deg,
+    #1e293b,
+    #0f172a
+  );
+}
+
+.netflix{
+  background:linear-gradient(
+    135deg,
+    #b91c1c,
+    #ef4444
+  );
+}
+
+.spotify{
+  background:linear-gradient(
+    135deg,
+    #15803d,
+    #22c55e
+  );
+}
 
 /* ===== WHATSAPP ===== */
 .whatsapp-btn{

@@ -381,4 +381,88 @@ border-bottom:1px solid #1f2937;
 .receipt-row:last-child{
 border-bottom:none;
 }
+/* ===== GIFT PAGE ===== */
 
+.gift-card{
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:18px;
+
+  border-radius:22px;
+
+  margin-top:18px;
+
+  background:linear-gradient(
+    135deg,
+    #2563eb,
+    #0ea5e9
+  );
+
+  box-shadow:
+  0 10px 25px rgba(0,0,0,0.25);
+
+  transition:0.25s;
+
+  overflow:hidden;
+}
+
+.gift-card:hover{
+
+  transform:translateY(-4px);
+}
+
+.gift-card.steam{
+
+  background:linear-gradient(
+    135deg,
+    #0f172a,
+    #374151
+  );
+}
+
+.gift-left{
+
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.gift-logo{
+
+  width:70px;
+  height:70px;
+
+  border-radius:18px;
+
+  object-fit:cover;
+
+  background:white;
+
+  padding:10px;
+}
+
+.gift-left h3{
+
+  margin:0;
+
+  font-size:20px;
+}
+
+.gift-left p{
+
+  margin-top:6px;
+
+  opacity:0.8;
+
+  font-size:14px;
+}
+
+.gift-right{
+
+  font-size:34px;
+
+  font-weight:bold;
+}

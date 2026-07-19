@@ -852,27 +852,105 @@ async function init(){
 
   });
 }
-window.openPinModal = async function () {
+// =======================
+// OPEN PIN MODAL
+// =======================
+
+window.openPinModal = function () {
 
     if (frozen) {
-        return notify("Card is frozen");
+        notify("Card is frozen");
+        return;
+    }
+
+    const type = el("transferType").value;
+
+    if (type !== "wire") {
+        notify("Please select US Wire Transfer");
+        return;
     }
 
     const accountNumber = el("accountNumber").value.trim();
     const amount = Number(el("amount").value);
-    const description = el("description").value.trim() || "Bank Transfer";
 
     if (!accountNumber) {
-        return notify("Enter recipient account number");
+        notify("Enter recipient account number");
+        return;
     }
 
     if (!amount || amount <= 0) {
-        return notify("Enter a valid amount");
+        notify("Enter a valid amount");
+        return;
     }
 
     if (amount > balance) {
-        return notify("Insufficient balance");
+        notify("Insufficient balance");
+        return;
     }
+
+    el("transferPin").value = "";
+
+    el("pinModal").classList.remove("hidden");
+};
+
+
+// =======================
+// CLOSE PIN MODAL
+// =======================
+
+window.closePinModal = function () {
+
+    el("pinModal").classList.add("hidden");
+
+};
+
+
+// =======================
+// VERIFY PIN
+// =======================
+
+window.verifyTransferPin = async function () {
+
+    const entered = el("transferPin").value.trim();
+
+    if (!entered) {
+        notify("Enter your PIN");
+        return;
+    }
+
+    const snap = await getDoc(userRef);
+
+    if (!snap.exists()) {
+        notify("User not found");
+        return;
+    }
+
+    const user = snap.data();
+
+    if (String(user.pin) !== String(entered)) {
+        notify("Incorrect PIN");
+        return;
+    }
+
+    closePinModal();
+
+    processTransfer();
+
+};
+
+
+// =======================
+// PROCESS TRANSFER
+// =======================
+
+async function processTransfer() {
+
+    const accountNumber = el("accountNumber").value.trim();
+
+    const amount = Number(el("amount").value);
+
+    const description =
+        el("description").value.trim() || "Bank Transfer";
 
     const q = query(
         collection(db, "users"),
@@ -882,50 +960,69 @@ window.openPinModal = async function () {
     const result = await getDocs(q);
 
     if (result.empty) {
-        return notify("Recipient not found");
+        notify("Recipient not found");
+        return;
     }
 
     const receiverDoc = result.docs[0];
 
     if (receiverDoc.id === localStorage.getItem("user")) {
-        return notify("Cannot transfer to yourself");
+        notify("Cannot transfer to yourself");
+        return;
     }
 
     const receiver = receiverDoc.data();
 
-    if (!confirm(`Transfer €${formatMoney(amount)} to ${receiver.fullName}?`)) {
-        return;
-    }
-
     const reference = genRef();
 
     const senderTx = {
+
         amount: -amount,
+
         note: description,
+
         date: new Date().toISOString(),
+
         type: "transfer",
+
         reference
+
     };
 
     const receiverTx = {
+
         amount: amount,
+
         note: "Transfer from " + localStorage.getItem("user"),
+
         date: new Date().toISOString(),
+
         type: "transfer",
+
         reference
+
     };
 
     await updateDoc(userRef, {
+
         balance: balance - amount,
+
         transactions: [...tx, senderTx]
+
     });
 
     await updateDoc(receiverDoc.ref, {
+
         balance: Number(receiver.balance || 0) + amount,
+
         transactions: [
+
             ...(receiver.transactions || []),
+
             receiverTx
+
         ]
+
     });
 
     notify("Transfer Successful");
@@ -933,9 +1030,11 @@ window.openPinModal = async function () {
     showReceipt(senderTx);
 
     el("amount").value = "";
-    el("description").value = "";
-    el("accountNumber").value = "";
-}
 
+    el("description").value = "";
+
+    el("accountNumber").value = "";
+
+}
 // START
 init();

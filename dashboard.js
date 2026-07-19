@@ -6,10 +6,12 @@ import {
   doc,
   getDoc,
   updateDoc,
-  onSnapshot
-}
-
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  onSnapshot,
+  collection,
+  query,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
 

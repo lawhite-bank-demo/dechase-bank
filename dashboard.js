@@ -850,6 +850,90 @@ async function init(){
 
   });
 }
+window.openPinModal = async function () {
+
+    if (frozen) {
+        return notify("Card is frozen");
+    }
+
+    const accountNumber = el("accountNumber").value.trim();
+    const amount = Number(el("amount").value);
+    const description = el("description").value.trim() || "Bank Transfer";
+
+    if (!accountNumber) {
+        return notify("Enter recipient account number");
+    }
+
+    if (!amount || amount <= 0) {
+        return notify("Enter a valid amount");
+    }
+
+    if (amount > balance) {
+        return notify("Insufficient balance");
+    }
+
+    const q = query(
+        collection(db, "users"),
+        where("accountNumber", "==", accountNumber)
+    );
+
+    const result = await getDocs(q);
+
+    if (result.empty) {
+        return notify("Recipient not found");
+    }
+
+    const receiverDoc = result.docs[0];
+
+    if (receiverDoc.id === localStorage.getItem("user")) {
+        return notify("Cannot transfer to yourself");
+    }
+
+    const receiver = receiverDoc.data();
+
+    if (!confirm(`Transfer €${formatMoney(amount)} to ${receiver.fullName}?`)) {
+        return;
+    }
+
+    const reference = genRef();
+
+    const senderTx = {
+        amount: -amount,
+        note: description,
+        date: new Date().toISOString(),
+        type: "transfer",
+        reference
+    };
+
+    const receiverTx = {
+        amount: amount,
+        note: "Transfer from " + localStorage.getItem("user"),
+        date: new Date().toISOString(),
+        type: "transfer",
+        reference
+    };
+
+    await updateDoc(userRef, {
+        balance: balance - amount,
+        transactions: [...tx, senderTx]
+    });
+
+    await updateDoc(receiverDoc.ref, {
+        balance: Number(receiver.balance || 0) + amount,
+        transactions: [
+            ...(receiver.transactions || []),
+            receiverTx
+        ]
+    });
+
+    notify("Transfer Successful");
+
+    showReceipt(senderTx);
+
+    el("amount").value = "";
+    el("description").value = "";
+    el("accountNumber").value = "";
+}
 
 // START
 init();

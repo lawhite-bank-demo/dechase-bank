@@ -1063,7 +1063,5 @@ async function processTransfer() {
 
     openPage("homePage");
 }
-
-}
 // START
 init();

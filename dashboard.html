@@ -580,7 +580,41 @@
 >
   💬
 </a>
+<!-- PIN MODAL -->
+<div id="pinModal" class="hidden receipt-modal">
 
+  <div class="receipt-card">
+
+    <h2 style="text-align:center;">🔒 Confirm Transfer</h2>
+
+    <p style="text-align:center;">
+      Enter your 4-digit transaction PIN
+    </p>
+
+    <input
+      id="transferPin"
+      type="password"
+      maxlength="4"
+      placeholder="****"
+      style="
+      text-align:center;
+      font-size:22px;
+      letter-spacing:8px;
+      ">
+
+    <button onclick="verifyTransferPin()">
+      Confirm Transfer
+    </button>
+
+    <button
+      onclick="closePinModal()"
+      style="background:#6b7280;">
+      Cancel
+    </button>
+
+  </div>
+
+</div>
 <!-- RECEIPT -->
 <div
   id="receiptModal"

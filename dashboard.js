@@ -865,10 +865,6 @@ window.openPinModal = function () {
 
     const type = el("transferType").value;
 
-    if (type !== "wire") {
-        notify("Please select US Wire Transfer");
-        return;
-    }
 
     const accountNumber = el("accountNumber").value.trim();
     const amount = Number(el("amount").value);

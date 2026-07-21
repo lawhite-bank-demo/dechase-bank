@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+u<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -283,6 +283,35 @@ s.innerText = msg;
 s.style.display = "block";
 setTimeout(()=>s.style.display="none",2000);
 }
+<input id="adminUsername" placeholder="Username">
+<input id="adminPassword" type="password" placeholder="Password">
+
+<button onclick="adminLogin()">
+Login
+</button>
+
+<div id="loginPage">
+
+</div>
+
+<div id="dashboardPage" class="hidden">
+
+    <h2>Total Users:
+        <span id="totalUsers">0</span>
+    </h2>
+
+    <input
+        id="searchUser"
+        placeholder="Search user..."
+        onkeyup="searchUsers()">
+
+    <div id="usersList"></div>
+
+    <button onclick="logoutAdmin()">
+Logout
+</button>
+
+</div>
 
 </script>
 

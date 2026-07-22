@@ -293,32 +293,37 @@
     <!-- WIRE -->
     <div id="wireFields" class="hidden">
 
-      <input
-        id="recipientName"
-        placeholder="Recipient Name"
-      >
+<input
+id="accountNumber"
+placeholder="Account Number"
+onkeyup="findRecipient()"
+>
 
-      <input
-        id="bankName"
-        placeholder="Bank Name"
-      >
+<input
+id="routingNumber"
+placeholder="Routing Number"
+readonly
+>
 
-      <input
-        id="accountNumber"
-        placeholder="Account Number"
-      >
+<input
+id="recipientName"
+placeholder="Recipient Name"
+readonly
+>
 
-      <input
-        id="routingNumber"
-        placeholder="Routing Number"
-      >
+<input
+id="bankName"
+placeholder="Bank Name"
+readonly
+>
 
-      <input
-        id="bankAddressInput"
-        placeholder="Bank Address"
-      >
+<input
+id="bankAddressInput"
+placeholder="Bank Address"
+readonly
+>
 
-    </div>
+</div>
 
     <!-- COMMON -->
     <input

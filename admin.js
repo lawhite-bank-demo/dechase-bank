@@ -23,7 +23,7 @@ from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
 
-    apiKey: "YOUR_API_KEY",
+    apiKey: "AIzaSy
 
     authDomain: "dechase-bank.firebaseapp.com",
 
@@ -533,3 +533,130 @@ window.manualTransaction = async function(){
     ? selectedUser.transactions
 
     : [];
+transactions.unshift(tx);
+
+await updateDoc(selectedUserRef,{
+
+    transactions:transactions
+
+});
+
+selectedUser.transactions = transactions;
+
+el("manualNote").value = "";
+
+alert("Manual transaction added.");
+
+manageUser(selectedUserRef.id);
+
+loadDashboard();
+
+loadUsers();
+
+};
+
+// ======================================
+// REFRESH CUSTOMER
+// ======================================
+
+window.refreshCustomer = function(){
+
+    if(selectedUserRef){
+
+        manageUser(selectedUserRef.id);
+
+    }
+
+};
+
+// ======================================
+// REFRESH DASHBOARD
+// ======================================
+
+window.refreshDashboard = async function(){
+
+    await loadDashboard();
+
+    await loadUsers();
+
+    refreshCustomer();
+
+};
+
+// ======================================
+// LOAD PENDING TRANSFERS
+// ======================================
+
+window.loadPending = async function(){
+
+    const table = el("pendingTable");
+
+    if(!table) return;
+
+    table.innerHTML = "";
+
+    const snap = await getDocs(collection(db,"pendingTransfers"));
+
+    if(snap.empty){
+
+        table.innerHTML = "<h3>No Pending Transfers</h3>";
+
+        return;
+
+    }
+
+    snap.forEach(docSnap=>{
+
+        const data = docSnap.data();
+
+        table.innerHTML += `
+
+<div class="userCard">
+
+<h3>${data.fullName || "Unknown User"}</h3>
+
+<p>€${Number(data.amount||0).toLocaleString()}</p>
+
+<p>${data.bankName || ""}</p>
+
+<p>${data.reference || ""}</p>
+
+</div>
+
+`;
+
+    });
+
+};
+
+// ======================================
+// LOGOUT
+// ======================================
+
+window.logoutAdmin = function(){
+
+    if(confirm("Logout Admin?")){
+
+        localStorage.removeItem("admin");
+
+        location.reload();
+
+    }
+
+};
+
+// ======================================
+// AUTO START
+// ======================================
+
+window.onload = async function(){
+
+    showSection("dashboard");
+
+    await loadDashboard();
+
+    await loadUsers();
+
+    console.log("Admin Panel Loaded");
+
+};

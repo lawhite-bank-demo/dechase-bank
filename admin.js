@@ -353,5 +353,6 @@ window.showSection = function(section){
     }
 
 };
+showSection("dashboard");
 loadDashboard();
 loadUsers();

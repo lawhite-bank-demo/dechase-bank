@@ -342,6 +342,8 @@ window.loadDashboard = async function () {
 };
 window.showSection = function(section){
 
+    alert("Opening: " + section);
+
     document.querySelectorAll("section").forEach(sec => {
         sec.style.display = "none";
     });

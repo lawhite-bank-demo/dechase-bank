@@ -175,7 +175,11 @@ Manage
 `;
 
 });
+window.manageUser = function(id) {
 
+    alert("Selected user: " + id);
+
+};
 }
 // ======================
 // LOGOUT

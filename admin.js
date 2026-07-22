@@ -340,5 +340,18 @@ window.loadDashboard = async function () {
     }
 
 };
+window.showSection = function(section){
+
+    document.querySelectorAll("section").forEach(sec => {
+        sec.style.display = "none";
+    });
+
+    const page = document.getElementById(section);
+
+    if(page){
+        page.style.display = "block";
+    }
+
+};
 loadDashboard();
 loadUsers();

@@ -60,7 +60,8 @@ return document.getElementById(id);
 }
 
 let users=[];
-
+let selectedUser = null;
+let selectedUserRef = null;
 
 // ======================
 // ADMIN LOGIN

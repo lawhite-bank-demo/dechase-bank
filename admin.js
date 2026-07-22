@@ -234,56 +234,67 @@ if(localStorage.getItem("admin")){
 // LOAD DASHBOARD
 // ===============================
 
-window.loadDashboard = async function() {
+window.loadDashboard = async function () {
 
-    const usersSnap = await getDocs(collection(db,"users"));
+    try {
 
-    let totalUsers = 0;
-    let totalBalance = 0;
-    let totalTransactions = 0;
+        const usersSnap = await getDocs(collection(db, "users"));
 
-    usersSnap.forEach(doc=>{
+        let totalUsers = 0;
+        let totalBalance = 0;
+        let todayTransactions = 0;
 
-        totalUsers++;
+        const today = new Date().toDateString();
 
-        const user = doc.data();
+        usersSnap.forEach(docSnap => {
 
-        totalBalance += Number(user.balance || 0);
+            totalUsers++;
 
-        if(Array.isArray(user.transactions)){
+            const user = docSnap.data();
 
-            totalTransactions += user.transactions.length;
+            totalBalance += Number(user.balance || 0);
 
-        }
+            const transactions = Array.isArray(user.transactions)
+                ? user.transactions
+                : [];
 
-    });
+            transactions.forEach(tx => {
 
-    document.getElementById("totalUsers").innerText =
-    totalUsers;
+                if (tx.date) {
 
-    document.getElementById("bankBalance").innerText =
-    "€" + totalBalance.toLocaleString();
+                    const txDate = new Date(tx.date).toDateString();
 
-    document.getElementById("todayTransactions").innerText =
-    totalTransactions;
+                    if (txDate === today) {
+                        todayTransactions++;
+                    }
 
-}
-async function loadPendingCounter(){
+                }
 
-    const pending =
-    await getDocs(collection(db,"pendingTransfers"));
+            });
 
-    document.getElementById("pendingTransfers").innerText =
-    pending.size;
+        });
 
-}
-alert("Admin JS Loaded");
-window.showSection = function(section){
+        document.getElementById("totalUsers").innerText = totalUsers;
 
-document.querySelectorAll("section").forEach(s=>{
-s.style.display="none";
-});
+        document.getElementById("bankBalance").innerText =
+            "€" + totalBalance.toLocaleString(undefined, {
+                minimumFractionDigits: 2
+            });
 
-document.getElementById(section).style.display="block";
+        document.getElementById("todayTransactions").innerText =
+            todayTransactions;
 
-}
+        const pendingSnap = await getDocs(collection(db, "pendingTransfers"));
+
+        document.getElementById("pendingTransfers").innerText =
+            pendingSnap.size;
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert(err.message);
+
+    }
+
+};

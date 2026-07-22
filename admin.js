@@ -123,13 +123,13 @@ loadUsers();
 // LOAD USERS
 // ======================
 
-window.loadUsers = async function() {
+window.loadUsers = async function () {
 
-    const snap = await getDocs(collection(db,"users"));
+    const snap = await getDocs(collection(db, "users"));
 
     users = [];
 
-    snap.forEach(docSnap=>{
+    snap.forEach(docSnap => {
 
         users.push({
             id: docSnap.id,
@@ -140,11 +140,7 @@ window.loadUsers = async function() {
 
     renderUsers(users);
 
-    loadDashboard();
-
-}
-
-}
+};
 
 // ======================
 // RENDER USERS

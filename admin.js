@@ -6,19 +6,18 @@ import { initializeApp }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 import {
-
 getFirestore,
-
 collection,
-
 doc,
-
 getDoc,
-
-getDocs
-
+getDocs,
+updateDoc,
+setDoc,
+deleteDoc,
+query,
+where,
+orderBy
 }
-
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
@@ -112,27 +111,76 @@ loadUsers();
 
 async function loadUsers(){
 
-const snapshot=
-await getDocs(collection(db,"users"));
+    const snap = await getDocs(collection(db,"users"));
 
-users=[];
+    users = [];
 
-snapshot.forEach(doc=>{
+    let totalBalance = 0;
 
-users.push({
+    snap.forEach((d)=>{
 
-id:doc.id,
+        const user = {
+            id:d.id,
+            ...d.data()
+        };
 
-...doc.data()
+        users.push(user);
 
-});
+        totalBalance += Number(user.balance || 0);
 
-});
+    });
 
-el("totalUsers").innerText=
-users.length;
+    document.getElementById("totalUsers").innerText =
+    users.length;
 
-renderUsers(users);
+    document.getElementById("bankBalance").innerText =
+    "€" + totalBalance.toLocaleString();
+
+    renderUsers(users);
+function renderUsers(list){
+
+    let html="";
+
+    list.forEach(user=>{
+
+        html += `
+        <div class="card">
+
+            <h3>${user.fullName}</h3>
+
+            <p>
+            Username:
+            ${user.id}
+            </p>
+
+            <p>
+            Balance:
+            €${Number(user.balance||0).toLocaleString()}
+            </p>
+
+            <button onclick="openUser('${user.id}')">
+
+            Manage
+
+            </button>
+
+        </div>
+        `;
+
+    });
+
+    document.getElementById("usersTable").innerHTML = html;
+
+}
+}
+window.openUser = function(id){
+
+    currentUser = users.find(u=>u.id===id);
+
+    alert(
+        "Selected: " +
+        currentUser.fullName
+    );
 
 }
 // ======================

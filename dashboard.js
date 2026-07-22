@@ -686,90 +686,70 @@ async function init(){
     "index.html";
   }
 
-  const data = snap.data();
+ const data = snap.data();
 
-  balance =
-  Number(data.balance || 0);
+balance = Number(data.balance || 0);
 
-  tx = getTx(data);
+tx = getTx(data);
 
-  frozen =
-  data.cardFrozen || false;
+frozen = data.cardFrozen || false;
 
-  setText(
-    "welcome",
-    "Hi, " + data.fullName
-  );
+setText("welcome", "Hi, " + (data.fullName || ""));
 
-  setText(
-    "nameProfile",
-    data.fullName
-  );
+setText("nameProfile", data.fullName || "");
 
-  setText(
+setText(
     "emailProfile",
+    data.email || "dechasebank@gmail.com"
+);
 
-    data.email ||
-    "dechasebank@gmail.com"
-  );
+window._userEmail = data.email || "";
 
-  window._userEmail =
-  data.email;
+setAccountField("iban", data.iban);
 
-  setAccountField(
-    "iban",
-    data.iban
-  );
+setAccountField("swift", data.swift);
 
-  setAccountField(
-    "swift",
-    data.swift
-  );
-
-  setAccountField(
+setAccountField(
     "accountNumberDisplay",
     data.accountNumber
-  );
+);
 
-  setAccountField(
+setAccountField(
     "routingDisplay",
     data.routingNumber
-  );
-fullCardNumber = d.accountNumber || "";
+);
+
+// CARD DETAILS
+fullCardNumber =
+    data.cardNumber ||
+    data.accountNumber ||
+    "";
 
 setText(
     "cardNumber",
-    "**** **** **** " +
-    (fullCardNumber.slice(-4) || "0000")
+    fullCardNumber
+        ? "**** **** **** " + fullCardNumber.slice(-4)
+        : "**** **** **** 0000"
 );
-
-setText("cardName", d.fullName);
-
-setText("cardExpiry", d.cardExpiry);
-
-realCVV = d.cardCVV || "***";
-
-window._realCVV = realCVV;
-  fullCardNumber = data.accountNumber || "";
 
 setText(
-    "cardNumber",
-    "**** **** **** " +
-    (fullCardNumber.slice(-4) || "0000")
+    "cardName",
+    data.fullName || ""
 );
 
-setText("cardName", data.fullName);
+setText(
+    "cardExpiry",
+    data.cardExpiry ||
+    data.card?.expiry ||
+    ""
+);
 
-setText("cardExpiry", data.cardExpiry);
-
-realCVV = data.cardCVV || "***";
+realCVV =
+    data.cardCVV ||
+    data.card?.cvv ||
+    "***";
 
 window._realCVV = realCVV;
-
-window._realCVV = realCVV; 
-
-  window._realCVV =
-  realCVV;
 
   updateFreezeUI();
 

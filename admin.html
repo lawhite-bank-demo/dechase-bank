@@ -1,319 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel</title>
 
-<style>
-body{margin:0;font-family:Arial;background:#031427;color:white;}
-.container{max-width:420px;margin:auto;padding:20px;}
-.card{background:#0a1f44;padding:15px;border-radius:12px;margin-bottom:15px;}
-input,button{width:100%;padding:12px;margin-top:10px;border:none;border-radius:8px;}
-input{background:#021022;color:white;}
-button{background:#2563eb;color:white;font-weight:bold;}
-.tx{background:#021022;padding:10px;border-radius:8px;margin-top:10px;}
-.delete{background:#ef4444;margin-top:8px;}
-.success{background:#16a34a;padding:10px;border-radius:8px;display:none;margin-bottom:10px;}
-.approve{background:#22c55e;margin-top:8px;}
-</style>
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>DeChase Bank Admin</title>
+
+<link rel="stylesheet" href="admin.css">
+
 </head>
 
 <body>
 
-<div class="container">
+<div class="sidebar">
 
-<h2>Admin Control Panel</h2>
+<div class="logo">
+<h2>DeChase Bank</h2>
+<p>ADMIN PANEL</p>
+</div>
 
-<div id="success" class="success">Success ✅</div>
+<ul>
+
+<li onclick="showSection('dashboard')">
+🏠 Dashboard
+</li>
+
+<li onclick="showSection('users')">
+👥 Users
+</li>
+
+<li onclick="showSection('accounts')">
+💳 Accounts
+</li>
+
+<li onclick="showSection('transactions')">
+📜 Transactions
+</li>
+
+<li onclick="showSection('transfers')">
+💸 Transfers
+</li>
+
+<li onclick="showSection('settings')">
+⚙ Settings
+</li>
+
+<li onclick="logoutAdmin()">
+🚪 Logout
+</li>
+
+</ul>
+
+</div>
+
+<div class="content">
+
+<!-- DASHBOARD -->
+
+<section id="dashboard">
+
+<h1>Dashboard</h1>
+
+<div class="cards">
 
 <div class="card">
+<h3>Total Users</h3>
+<h2 id="totalUsers">0</h2>
+</div>
+
+<div class="card">
+<h3>Total Bank Balance</h3>
+<h2 id="bankBalance">€0.00</h2>
+</div>
+
+<div class="card">
+<h3>Pending Transfers</h3>
+<h2 id="pendingTransfers">0</h2>
+</div>
+
+<div class="card">
+<h3>Today's Transactions</h3>
+<h2 id="todayTransactions">0</h2>
+</div>
+
+</div>
+
+</section>
+
+<!-- USERS -->
+
+<section id="users" style="display:none;">
+
+<h1>Users</h1>
+
+<input
+id="searchUser"
+placeholder="Search User">
+
+<button onclick="loadUsers()">
+
+Load Users
+
+</button>
+
+<div id="usersTable"></div>
+
+</section>
+
+<!-- ACCOUNTS -->
+
+<section id="accounts" style="display:none;">
+
+<h1>Accounts</h1>
+
+<div id="accountsTable"></div>
+
+</section>
+
+<!-- TRANSACTIONS -->
+
+<section id="transactions" style="display:none;">
+
+<h1>Transactions</h1>
+
 <input id="username" placeholder="Username">
-<input id="amount" placeholder="Amount (- for debit)">
-<input id="note" placeholder="Note">
+
+<input id="amount" placeholder="Amount">
+
+<input id="note" placeholder="Transaction Note">
+
 <input id="reference" placeholder="Reference">
 
-<button onclick="addTransaction()">Add Transaction</button>
-<button onclick="loadUser()">Load User Transactions</button>
-<button onclick="loadPending()">Load Pending Transfers</button>
-</div>
+<button onclick="addTransaction()">
 
-<div id="transactions"></div>
+Add Transaction
 
-</div>
-
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-getFirestore, doc, getDoc, updateDoc,
-collection, getDocs
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-apiKey: "AIzaSyBDp6wmJMY8WPyKPNE-bvVSiz4AIUbn71U",
-authDomain: "dechase-bank.firebaseapp.com",
-projectId: "dechase-bank"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// ===== HELPERS =====
-function getTx(data){
-return data.transactions
-? (Array.isArray(data.transactions)?[...data.transactions]:Object.values(data.transactions))
-: [];
-}
-
-let currentUser = null;
-let tx = [];
-let usdBalance = 0;
-
-// ===== LOAD USER =====
-window.loadUser = async ()=>{
-const username = document.getElementById("username").value.trim();
-if(!username) return alert("Enter username");
-
-const userRef = doc(db,"users",username);
-const snap = await getDoc(userRef);
-
-if(!snap.exists()) return alert("User not found");
-
-currentUser = userRef;
-const data = snap.data();
-
-tx = getTx(data);
-usdBalance = Number(data.usdBalance || 0);
-
-renderTx();
-};
-
-// ===== RENDER =====
-function renderTx(){
-const box = document.getElementById("transactions");
-box.innerHTML = "";
-
-if(tx.length===0){
-box.innerHTML = "<div class='tx'>No transactions</div>";
-return;
-}
-
-tx.forEach((t,i)=>{
-box.innerHTML += `
-<div class="tx">
-<strong>${t.note}</strong><br>
-$${t.amount}<br>
-<small>${new Date(t.date).toLocaleString()}</small>
-<button class="delete" onclick="deleteTx(${i})">Delete</button>
-</div>
-`;
-});
-}
-
-// ===== ADD TX =====
-window.addTransaction = async ()=>{
-if(!currentUser) return alert("Load user first");
-
-const amount = parseFloat(document.getElementById("amount").value);
-const note = document.getElementById("note").value.trim();
-const reference = document.getElementById("reference").value.trim();
-
-if(isNaN(amount) || !note) return alert("Invalid input");
-
-usdBalance += amount;
-
-const newTx = {
-amount,
-note,
-date: new Date().toISOString(),
-reference: reference || "ACH-"+Math.floor(Math.random()*1000000)
-};
-
-tx.unshift(newTx);
-
-await updateDoc(currentUser,{
-transactions: tx,
-usdBalance
-});
-
-showSuccess("Transaction Added");
-renderTx();
-};
-
-// ===== DELETE =====
-window.deleteTx = async (index)=>{
-if(!confirm("Delete this transaction?")) return;
-
-const removed = tx[index];
-
-usdBalance -= removed.amount;
-tx.splice(index,1);
-
-await updateDoc(currentUser,{
-transactions: tx,
-usdBalance
-});
-
-showSuccess("Transaction Deleted");
-renderTx();
-};
-
-// ===== LOAD PENDING =====
-window.loadPending = async ()=>{
-
-const box = document.getElementById("transactions");
-box.innerHTML = "<div class='tx'>Loading...</div>";
-
-const snap = await getDocs(collection(db,"pendingTransfers"));
-
-box.innerHTML = "";
-
-if(snap.empty){
-box.innerHTML = "<div class='tx'>No pending transfers</div>";
-return;
-}
-
-snap.forEach(docSnap=>{
-const p = docSnap.data();
-const id = docSnap.id;
-
-box.innerHTML += `
-<div class="tx">
-<b>${p.sender}</b><br>
-$${p.amount} → ${p.accountNumber || "----"}<br>
-Status: ${p.status || "pending"}<br>
-
-<button class="approve" onclick="approveTx('${id}')">Approve</button>
-<button class="delete" onclick="rejectTx('${id}')">Reject</button>
-</div>
-`;
-});
-};
-
-// ===== 🔥 APPROVE (FULL FIX) =====
-window.approveTx = async (id)=>{
-
-const ref = doc(db,"pendingTransfers",id);
-const snap = await getDoc(ref);
-const data = snap.data();
-
-// sender
-const senderRef = doc(db,"users",data.sender);
-const senderSnap = await getDoc(senderRef);
-const senderData = senderSnap.data();
-
-if(senderData.usdBalance < data.amount){
-alert("Insufficient funds");
-return;
-}
-
-// find receiver
-const usersSnap = await getDocs(collection(db,"users"));
-
-let receiverRef = null;
-
-usersSnap.forEach(d=>{
-if(d.data().accountNumber === data.accountNumber){
-receiverRef = doc(db,"users",d.id);
-}
-});
-
-if(!receiverRef){
-alert("Receiver not found");
-return;
-}
-
-const receiverSnap = await getDoc(receiverRef);
-const receiverData = receiverSnap.data();
-
-// ===== BALANCE UPDATE =====
-await updateDoc(senderRef,{
-usdBalance: senderData.usdBalance - data.amount
-});
-
-await updateDoc(receiverRef,{
-usdBalance: Number(receiverData.usdBalance || 0) + data.amount
-});
-
-// ===== TRANSACTIONS =====
-await updateDoc(senderRef,{
-transactions:[
-...(senderData.transactions || []),
-{
-amount:-data.amount,
-note:"Transfer to " + data.accountNumber,
-date:new Date().toISOString()
-}
-]
-});
-
-await updateDoc(receiverRef,{
-transactions:[
-...(receiverData.transactions || []),
-{
-amount:data.amount,
-note:"Received from " + data.sender,
-date:new Date().toISOString()
-}
-]
-});
-
-// ===== STATUS =====
-await updateDoc(ref,{status:"completed"});
-
-showSuccess("Approved & Completed ✅");
-loadPending();
-};
-
-// ===== REJECT =====
-window.rejectTx = async (id)=>{
-await updateDoc(doc(db,"pendingTransfers",id),{
-status:"failed"
-});
-
-showSuccess("Rejected ❌");
-loadPending();
-};
-
-// ===== SUCCESS =====
-function showSuccess(msg){
-const s = document.getElementById("success");
-s.innerText = msg;
-s.style.display = "block";
-setTimeout(()=>s.style.display="none",2000);
-}
-<input id="adminUsername" placeholder="Username">
-<input id="adminPassword" type="password" placeholder="Password">
-
-<button onclick="adminLogin()">
-Login
 </button>
 
-<div id="loginPage">
+<div id="transactionsTable"></div>
 
-</div>
+</section>
 
-<div id="dashboardPage" class="hidden">
+<!-- TRANSFERS -->
 
-    <h2>Total Users:
-        <span id="totalUsers">0</span>
-    </h2>
+<section id="transfers" style="display:none;">
 
-    <input
-        id="searchUser"
-        placeholder="Search user..."
-        onkeyup="searchUsers()">
+<h1>Pending Transfers</h1>
 
-    <div id="usersList"></div>
+<button onclick="loadPending()">
 
-    <button onclick="logoutAdmin()">
-Logout
+Load Pending Transfers
+
 </button>
 
+<div id="pendingTable"></div>
+
+</section>
+
+<!-- SETTINGS -->
+
+<section id="settings" style="display:none;">
+
+<h1>Settings</h1>
+
+<p>Coming Soon...</p>
+
+</section>
+
 </div>
 
-</script>
+<script type="module" src="admin.js"></script>
 
 </body>
+
 </html>

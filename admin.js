@@ -183,12 +183,7 @@ Manage
 
 </div>
 
-`;
-
 });
-window.manageUser = function(id) {
-
-    alert("Selected user: " + id);
 
 };
 }
@@ -236,6 +231,45 @@ window.manageUser = async function(id){
     ? "Frozen"
     : "Active";
 
+};
+window.manageUser = async function(id){
+
+    selectedUserRef = doc(db,"users",id);
+
+    const snap = await getDoc(selectedUserRef);
+
+    if(!snap.exists()){
+        alert("Customer not found");
+        return;
+    }
+
+    selectedUser = snap.data();
+
+    document.getElementById("customerPanel").style.display = "block";
+
+    document.getElementById("selectedName").innerText =
+        selectedUser.fullName || "";
+
+    document.getElementById("selectedEmail").innerText =
+        selectedUser.email || "No Email";
+
+    document.getElementById("selectedBalance").innerText =
+        Number(selectedUser.balance || 0).toLocaleString();
+
+    document.getElementById("selectedIBAN").innerText =
+        selectedUser.iban || "";
+
+    document.getElementById("selectedSwift").innerText =
+        selectedUser.swift || "";
+
+    document.getElementById("selectedAccount").innerText =
+        selectedUser.accountNumber || "";
+
+    document.getElementById("selectedRouting").innerText =
+        selectedUser.routingNumber || "";
+
+    document.getElementById("selectedStatus").innerText =
+        selectedUser.cardFrozen ? "Frozen" : "Active";
 };
 // ======================
 // LOGOUT

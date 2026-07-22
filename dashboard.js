@@ -951,7 +951,6 @@ window.verifyTransferPin = async function () {
 // =======================
 // PROCESS TRANSFER
 // =======================
-
 async function processTransfer() {
 
     const type = el("transferType").value;
@@ -961,19 +960,19 @@ async function processTransfer() {
     let receiverDoc;
     let receiver;
 
-    if (type === "wire") {
+    if(type === "wire"){
 
         const accountNumber = el("accountNumber").value.trim();
         const routingNumber = el("routingNumber").value.trim();
 
         const q = query(
-            collection(db, "users"),
-            where("accountNumber", "==", accountNumber)
+            collection(db,"users"),
+            where("accountNumber","==",accountNumber)
         );
 
         const result = await getDocs(q);
 
-        if (result.empty) {
+        if(result.empty){
             notify("Recipient not found");
             return;
         }
@@ -981,24 +980,24 @@ async function processTransfer() {
         receiverDoc = result.docs[0];
         receiver = receiverDoc.data();
 
-        if (receiver.routingNumber !== routingNumber) {
+        if(receiver.routingNumber !== routingNumber){
             notify("Invalid Routing Number");
             return;
         }
 
-    } else {
+    }else{
 
         const iban = el("ibanInput").value.trim();
         const swift = el("swiftInput").value.trim();
 
         const q = query(
-            collection(db, "users"),
-            where("iban", "==", iban)
+            collection(db,"users"),
+            where("iban","==",iban)
         );
 
         const result = await getDocs(q);
 
-        if (result.empty) {
+        if(result.empty){
             notify("Recipient not found");
             return;
         }
@@ -1006,59 +1005,43 @@ async function processTransfer() {
         receiverDoc = result.docs[0];
         receiver = receiverDoc.data();
 
-        if (receiver.swift !== swift) {
+        if(receiver.swift !== swift){
             notify("Invalid SWIFT/BIC");
             return;
         }
 
     }
 
-    if (receiverDoc.id === localStorage.getItem("user")) {
+    if(receiverDoc.id === localStorage.getItem("user")){
         notify("Cannot transfer to yourself");
         return;
     }
 
     const reference = genRef();
 
-    const senderTx = {
-        amount: -amount,
-        note: description,
-        date: new Date().toISOString(),
-        type: "transfer",
-        reference
-    };
+    await addDoc(collection(db,"pendingTransfers"),{
 
-    const receiverTx = {
+        senderId: localStorage.getItem("user"),
+        senderName: el("nameProfile").innerText,
+
+        receiverId: receiverDoc.id,
+        receiverName: receiver.fullName,
+
+        receiverAccount: receiver.accountNumber || "",
+        receiverIBAN: receiver.iban || "",
+
         amount: amount,
-        note: "Transfer from " + localStorage.getItem("user"),
-        date: new Date().toISOString(),
-        type: "transfer",
-        reference
-    };
+        note: description,
+        type: type,
+        reference: reference,
 
-    await updateDoc(userRef,{
-        balance: balance - amount,
-        transactions:[...tx, senderTx]
+        status: "Pending",
+
+        createdAt: new Date().toISOString()
+
     });
 
-    await updateDoc(receiverDoc.ref,{
-        balance: Number(receiver.balance || 0) + amount,
-        transactions:[
-            ...(receiver.transactions || []),
-            receiverTx
-        ]
-    });
-
-    balance -= amount;
-    tx.push(senderTx);
-
-    renderBalance();
-    renderTransactions();
-    updateWallet();
-
-    notify("Transfer Successful");
-
-    showReceipt(senderTx);
+    notify("Transfer submitted for approval.");
 
     el("amount").value="";
     el("description").value="";

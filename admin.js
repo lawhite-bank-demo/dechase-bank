@@ -111,78 +111,20 @@ loadUsers();
 
 async function loadUsers(){
 
+    console.log("Loading users...");
+
     const snap = await getDocs(collection(db,"users"));
 
-    users = [];
+    console.log("Documents found:", snap.size);
 
-    let totalBalance = 0;
-
-    snap.forEach((d)=>{
-
-        const user = {
-            id:d.id,
-            ...d.data()
-        };
-
-        users.push(user);
-
-        totalBalance += Number(user.balance || 0);
-
+    snap.forEach(doc=>{
+        console.log(doc.id, doc.data());
     });
 
-    document.getElementById("totalUsers").innerText =
-    users.length;
-
-    document.getElementById("bankBalance").innerText =
-    "€" + totalBalance.toLocaleString();
-
-    renderUsers(users);
-function renderUsers(list){
-
-    let html="";
-
-    list.forEach(user=>{
-
-        html += `
-        <div class="card">
-
-            <h3>${user.fullName}</h3>
-
-            <p>
-            Username:
-            ${user.id}
-            </p>
-
-            <p>
-            Balance:
-            €${Number(user.balance||0).toLocaleString()}
-            </p>
-
-            <button onclick="openUser('${user.id}')">
-
-            Manage
-
-            </button>
-
-        </div>
-        `;
-
-    });
-
-    document.getElementById("usersTable").innerHTML = html;
+    alert("Users found: " + snap.size);
 
 }
-}
-window.openUser = function(id){
 
-    currentUser = users.find(u=>u.id===id);
-
-    alert(
-        "Selected: " +
-        currentUser.fullName
-    );
-
-}
 // ======================
 // RENDER USERS
 // ======================

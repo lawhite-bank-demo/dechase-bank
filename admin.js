@@ -198,14 +198,66 @@ location.reload();
 
 if(localStorage.getItem("admin")){
 
-el("loginPage")
-.classList
-.add("hidden");
+    el("loginPage")
+    .classList
+    .add("hidden");
 
-el("dashboardPage")
-.classList
-.remove("hidden");
+    el("dashboardPage")
+    .classList
+    .remove("hidden");
 
-loadUsers();
+    loadUsers();
+
+    loadDashboard();
+
+    loadPendingCounter();
+
+}
+
+// ===============================
+// LOAD DASHBOARD
+// ===============================
+
+async function loadDashboard(){
+
+    const usersSnap = await getDocs(collection(db,"users"));
+
+    let totalUsers = 0;
+    let totalBalance = 0;
+    let totalTransactions = 0;
+
+    usersSnap.forEach(doc=>{
+
+        totalUsers++;
+
+        const user = doc.data();
+
+        totalBalance += Number(user.balance || 0);
+
+        if(Array.isArray(user.transactions)){
+
+            totalTransactions += user.transactions.length;
+
+        }
+
+    });
+
+    document.getElementById("totalUsers").innerText =
+    totalUsers;
+
+    document.getElementById("bankBalance").innerText =
+    "€" + totalBalance.toLocaleString();
+
+    document.getElementById("todayTransactions").innerText =
+    totalTransactions;
+
+}
+async function loadPendingCounter(){
+
+    const pending =
+    await getDocs(collection(db,"pendingTransfers"));
+
+    document.getElementById("pendingTransfers").innerText =
+    pending.size;
 
 }

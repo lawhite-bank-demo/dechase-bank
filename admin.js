@@ -261,3 +261,4 @@ async function loadPendingCounter(){
     pending.size;
 
 }
+alert("Admin JS Loaded");

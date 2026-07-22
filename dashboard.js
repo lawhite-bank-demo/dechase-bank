@@ -716,9 +716,19 @@ async function init(){
 
   fullCardNumber = data.accountNumber || "";
 
+setText(
+    "cardNumber",
+    "**** **** **** " +
+    (fullCardNumber.slice(-4) || "0000")
+);
+
+setText("cardName", data.fullName);
+
 setText("cardExpiry", data.cardExpiry);
 
 realCVV = data.cardCVV || "***";
+
+window._realCVV = realCVV;
 
 window._realCVV = realCVV; 
 

@@ -714,38 +714,13 @@ async function init(){
     data.routingNumber
   );
 
-  fullCardNumber =
-  data.card?.cardNumber || "";
+  fullCardNumber = data.accountNumber || "";
 
-  setText(
+setText("cardExpiry", data.cardExpiry);
 
-    "cardNumber",
+realCVV = data.cardCVV || "***";
 
-    "**** **** **** " +
-
-    (
-      fullCardNumber.slice(-4)
-      || "••••"
-    )
-  );
-
-  setText(
-    "cardName",
-    data.fullName
-  );
-
-  setText(
-    "cardExpiry",
-    data.card?.expiry
-  );
-
-  realCVV =
-
-    data.card?.cvv ||
-
-    data.cvv ||
-
-    "***";
+window._realCVV = realCVV; 
 
   window._realCVV =
   realCVV;

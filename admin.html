@@ -97,16 +97,58 @@
 <h1>Users</h1>
 
 <input
-id="searchUser"
-placeholder="Search User">
+    id="searchUser"
+    type="text"
+    placeholder="Search by Name, Email, Account Number or IBAN"
+    oninput="filterUsers()">
 
 <button onclick="loadUsers()">
-
-Load Users
-
+🔄 Refresh Users
 </button>
 
 <div id="usersTable"></div>
+
+<hr style="margin:25px 0;">
+
+<h2>Selected Customer</h2>
+
+<div class="card">
+
+    <p><b>Name:</b> <span id="selectedName">None</span></p>
+
+    <p><b>Email:</b> <span id="selectedEmail"></span></p>
+
+    <p><b>Balance:</b> €<span id="selectedBalance">0.00</span></p>
+
+    <p><b>IBAN:</b> <span id="selectedIBAN"></span></p>
+
+    <p><b>Account Number:</b> <span id="selectedAccount"></span></p>
+
+    <p><b>Status:</b> <span id="selectedStatus">Active</span></p>
+
+</div>
+
+<input id="creditAmount" placeholder="Credit Amount">
+
+<button onclick="creditUser()">
+💰 Credit Account
+</button>
+
+<input id="debitAmount" placeholder="Debit Amount">
+
+<button onclick="debitUser()">
+💸 Debit Account
+</button>
+
+<input id="manualNote" placeholder="Transaction Note">
+
+<button onclick="manualTransaction()">
+➕ Add Manual Transaction
+</button>
+
+<button onclick="toggleFreeze()">
+❄ Freeze / Unfreeze
+</button>
 
 </section>
 

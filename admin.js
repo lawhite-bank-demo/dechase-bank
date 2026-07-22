@@ -298,3 +298,5 @@ window.loadDashboard = async function () {
     }
 
 };
+loadDashboard();
+loadUsers();

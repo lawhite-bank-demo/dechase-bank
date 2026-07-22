@@ -31,7 +31,21 @@ projectId:"dechase-bank"
 });
 
 const db=getFirestore(app);
+window.db = db;
 
+(async () => {
+    try {
+        const snap = await getDocs(collection(db, "users"));
+        console.log("Users found:", snap.size);
+
+        snap.forEach(doc => {
+            console.log(doc.id, doc.data());
+        });
+
+    } catch (e) {
+        console.error("Firestore error:", e);
+    }
+})();
 console.log("Firebase connected");
 alert("Firebase connected");
 

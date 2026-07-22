@@ -33,6 +33,8 @@ projectId:"dechase-bank"
 
 const db=getFirestore(app);
 
+console.log("Firebase connected");
+alert("Firebase connected");
 
 // ======================
 // HELPERS

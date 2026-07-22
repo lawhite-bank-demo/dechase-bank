@@ -735,7 +735,21 @@ async function init(){
     "routingDisplay",
     data.routingNumber
   );
+fullCardNumber = d.accountNumber || "";
 
+setText(
+    "cardNumber",
+    "**** **** **** " +
+    (fullCardNumber.slice(-4) || "0000")
+);
+
+setText("cardName", d.fullName);
+
+setText("cardExpiry", d.cardExpiry);
+
+realCVV = d.cardCVV || "***";
+
+window._realCVV = realCVV;
   fullCardNumber = data.accountNumber || "";
 
 setText(

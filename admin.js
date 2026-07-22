@@ -149,87 +149,33 @@ window.loadUsers = async function () {
 
 function renderUsers(list){
 
-const container = el("usersTable");
+    const container = el("usersTable");
 
-container.innerHTML="";
+    container.innerHTML = "";
 
-list.forEach(user=>{
+    list.forEach(user => {
 
-container.innerHTML+=`
+        container.innerHTML += `
+        <div class="userCard">
 
-<div class="userCard">
+            <h3>${user.fullName || ""}</h3>
 
-<h3>${user.fullName}</h3>
+            <p>${user.email || "No Email"}</p>
 
-<p>${user.email}</p>
+            <p>€${Number(user.balance || 0).toLocaleString()}</p>
 
-<p>
+            <p>${user.accountNumber || ""}</p>
 
-€${Number(user.balance||0).toLocaleString()}
+            <button onclick="manageUser('${user.id}')">
+                Manage
+            </button>
 
-</p>
+        </div>
+        `;
 
-<p>
+    });
 
-${user.accountNumber||""}
-
-</p>
-
-<button onclick="manageUser('${user.id}')">
-
-Manage
-
-</button>
-
-</div>
-
-});
-
-};
 }
-window.manageUser = async function(id){
-
-    selectedUserRef = doc(db,"users",id);
-
-    const snap = await getDoc(selectedUserRef);
-
-    if(!snap.exists()){
-
-        alert("Customer not found");
-
-        return;
-
-    }
-
-    selectedUser = snap.data();
-
-    document.getElementById("customerPanel").style.display="block";
-
-    document.getElementById("selectedName").innerText =
-    selectedUser.fullName || "";
-
-    document.getElementById("selectedEmail").innerText =
-    selectedUser.email || "";
-
-    document.getElementById("selectedBalance").innerText =
-    Number(selectedUser.balance || 0).toLocaleString();
-
-    document.getElementById("selectedIBAN").innerText =
-    selectedUser.iban || "";
-
-    document.getElementById("selectedSwift").innerText =
-    selectedUser.swift || "";
-
-    document.getElementById("selectedAccount").innerText =
-    selectedUser.accountNumber || "";
-
-    document.getElementById("selectedRouting").innerText =
-    selectedUser.routingNumber || "";
-
-    document.getElementById("selectedStatus").innerText =
-    selectedUser.cardFrozen
-    ? "Frozen"
-    : "Active";
 
 };
 window.manageUser = async function(id){

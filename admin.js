@@ -111,17 +111,24 @@ loadUsers();
 
 async function loadUsers(){
 
-    console.log("Loading users...");
-
     const snap = await getDocs(collection(db,"users"));
 
-    console.log("Documents found:", snap.size);
+    users = [];
 
-    snap.forEach(doc=>{
-        console.log(doc.id, doc.data());
+    snap.forEach(docSnap=>{
+
+        users.push({
+            id: docSnap.id,
+            ...docSnap.data()
+        });
+
     });
 
-    alert("Users found: " + snap.size);
+    renderUsers(users);
+
+    loadDashboard();
+
+}
 
 }
 

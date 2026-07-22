@@ -292,7 +292,29 @@ window.toggleCardNumber = function(){
     : "**** **** **** " +
       fullCardNumber.slice(-4);
 };
+window.flipCard = function(){
 
+    const card = document.getElementById("cardInner");
+
+    if(!card) return;
+
+    card.classList.toggle("flipped");
+
+    const cvv = document.getElementById("cardCVV");
+
+    if(cvv){
+
+        cvv.innerText =
+
+            card.classList.contains("flipped")
+
+            ? realCVV
+
+            : "***";
+
+    }
+
+};
 
 // ===== FREEZE =====
 window.toggleCard = async function(){

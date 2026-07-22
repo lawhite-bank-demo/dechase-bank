@@ -254,3 +254,12 @@ async function loadPendingCounter(){
 
 }
 alert("Admin JS Loaded");
+window.showSection = function(section){
+
+document.querySelectorAll("section").forEach(s=>{
+s.style.display="none";
+});
+
+document.getElementById(section).style.display="block";
+
+}

@@ -165,7 +165,7 @@ ${user.accountNumber||""}
 
 </p>
 
-<button>
+<button onclick="manageUser('${user.id}')">
 
 Manage
 

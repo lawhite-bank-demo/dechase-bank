@@ -831,39 +831,50 @@ window._realCVV = realCVV;
 // OPEN PIN MODAL
 // =======================
 
-const type = el("transferType").value;
-const amount = Number(el("amount").value);
+window.openPinModal = function () {
 
-if(type === "wire"){
-
-    if(!el("accountNumber").value.trim()){
-        notify("Enter recipient account number");
+    if (frozen) {
+        notify("Card is frozen");
         return;
     }
 
-}else{
+    const type = el("transferType").value;
+    const amount = Number(el("amount").value);
 
-    if(!el("ibanInput").value.trim()){
-        notify("Enter recipient IBAN");
+    if (type === "wire") {
+
+        if (!el("accountNumber").value.trim()) {
+            notify("Enter recipient account number");
+            return;
+        }
+
+    } else {
+
+        if (!el("ibanInput").value.trim()) {
+            notify("Enter recipient IBAN");
+            return;
+        }
+
+        if (!el("swiftInput").value.trim()) {
+            notify("Enter SWIFT/BIC");
+            return;
+        }
+
+    }
+
+    if (!amount || amount <= 0) {
+        notify("Enter a valid amount");
         return;
     }
 
-    if(!el("swiftInput").value.trim()){
-        notify("Enter SWIFT/BIC");
+    if (amount > balance) {
+        notify("Insufficient balance");
         return;
     }
 
-}
-
-if(!amount || amount <= 0){
-    notify("Enter a valid amount");
-    return;
-}
-
-if(amount > balance){
-    notify("Insufficient balance");
-    return;
-}
+    el("transferPin").value = "";
+    el("pinModal").classList.remove("hidden");
+};
 
 // =======================
 // CLOSE PIN MODAL

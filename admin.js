@@ -220,7 +220,7 @@ if(localStorage.getItem("admin")){
 // LOAD DASHBOARD
 // ===============================
 
-async function loadDashboard(){
+window.loadDashboard = async function() {
 
     const usersSnap = await getDocs(collection(db,"users"));
 

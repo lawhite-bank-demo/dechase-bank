@@ -109,7 +109,7 @@ loadUsers();
 // LOAD USERS
 // ======================
 
-async function loadUsers(){
+window.loadUsers = async function() {
 
     const snap = await getDocs(collection(db,"users"));
 

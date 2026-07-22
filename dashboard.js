@@ -831,39 +831,39 @@ window._realCVV = realCVV;
 // OPEN PIN MODAL
 // =======================
 
-window.openPinModal = function () {
+const type = el("transferType").value;
+const amount = Number(el("amount").value);
 
-    if (frozen) {
-        notify("Card is frozen");
-        return;
-    }
+if(type === "wire"){
 
-    const type = el("transferType").value;
-
-
-    const accountNumber = el("accountNumber").value.trim();
-    const amount = Number(el("amount").value);
-
-    if (!accountNumber) {
+    if(!el("accountNumber").value.trim()){
         notify("Enter recipient account number");
         return;
     }
 
-    if (!amount || amount <= 0) {
-        notify("Enter a valid amount");
+}else{
+
+    if(!el("ibanInput").value.trim()){
+        notify("Enter recipient IBAN");
         return;
     }
 
-    if (amount > balance) {
-        notify("Insufficient balance");
+    if(!el("swiftInput").value.trim()){
+        notify("Enter SWIFT/BIC");
         return;
     }
 
-    el("transferPin").value = "";
+}
 
-    el("pinModal").classList.remove("hidden");
-};
+if(!amount || amount <= 0){
+    notify("Enter a valid amount");
+    return;
+}
 
+if(amount > balance){
+    notify("Insufficient balance");
+    return;
+}
 
 // =======================
 // CLOSE PIN MODAL

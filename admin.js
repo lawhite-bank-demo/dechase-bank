@@ -138,8 +138,7 @@ async function loadUsers(){
 
 function renderUsers(list){
 
-const container=
-el("usersList");
+const container = el("usersTable");
 
 container.innerHTML="";
 

@@ -1,140 +1,163 @@
-// ======================
-// FIREBASE
-// ======================
+// ======================================
+// DECHASE BANK ADMIN PANEL
+// PART 1
+// Firebase + Dashboard + Users + Search
+// ======================================
+
+// ---------- FIREBASE ----------
 
 import { initializeApp }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 import {
-getFirestore,
-collection,
-doc,
-getDoc,
-getDocs,
-updateDoc,
-setDoc,
-deleteDoc,
-query,
-where,
-orderBy
+    getFirestore,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    updateDoc
 }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const app = initializeApp({
+// ---------- CONFIG ----------
 
-apiKey:"AIzaSy...",
+const firebaseConfig = {
 
-authDomain:"dechase-bank.firebaseapp.com",
+    apiKey: "YOUR_API_KEY",
 
-projectId:"dechase-bank"
+    authDomain: "dechase-bank.firebaseapp.com",
 
-});
+    projectId: "dechase-bank"
 
-const db=getFirestore(app);
-window.db = db;
+};
 
-(async () => {
-    try {
-        const snap = await getDocs(collection(db, "users"));
-        console.log("Users found:", snap.size);
+const app = initializeApp(firebaseConfig);
 
-        snap.forEach(doc => {
-            console.log(doc.id, doc.data());
-        });
+const db = getFirestore(app);
 
-    } catch (e) {
-        console.error("Firestore error:", e);
-    }
-})();
-console.log("Firebase connected");
-alert("Firebase connected");
+// ---------- GLOBALS ----------
 
-// ======================
-// HELPERS
-// ======================
+let users = [];
+
+let selectedUser = null;
+
+let selectedUserRef = null;
+
+// ---------- HELPER ----------
 
 function el(id){
 
-return document.getElementById(id);
+    return document.getElementById(id);
 
 }
 
-let users=[];
-let selectedUser = null;
-let selectedUserRef = null;
+// ---------- NAVIGATION ----------
 
-// ======================
-// ADMIN LOGIN
-// ======================
+window.showSection = function(section){
 
-window.adminLogin=async function(){
+    document.querySelectorAll("section").forEach(sec=>{
 
-const username=
-el("adminUsername").value.trim();
+        sec.style.display="none";
 
-const password=
-el("adminPassword").value.trim();
+    });
 
-if(!username||!password){
+    const page = el(section);
 
-alert("Enter username and password");
+    if(page){
 
-return;
+        page.style.display="block";
 
-}
-
-const adminRef=
-doc(db,"admins",username);
-
-const snap=
-await getDoc(adminRef);
-
-if(!snap.exists()){
-
-alert("Admin not found");
-
-return;
-
-}
-
-const admin=
-snap.data();
-
-if(admin.password!==password){
-
-alert("Wrong password");
-
-return;
-
-}
-
-localStorage.setItem(
-"admin",
-username
-);
-
-el("loginPage").classList.add("hidden");
-
-el("dashboardPage").classList.remove("hidden");
-
-loadUsers();
+    }
 
 };
-// ======================
-// LOAD USERS
-// ======================
 
-window.loadUsers = async function () {
+// ---------- LOAD DASHBOARD ----------
 
-    const snap = await getDocs(collection(db, "users"));
+window.loadDashboard = async function(){
+
+    const snap = await getDocs(collection(db,"users"));
+
+    let totalUsers = 0;
+
+    let totalBalance = 0;
+
+    let todayTransactions = 0;
+
+    const today = new Date().toDateString();
+
+    snap.forEach(docSnap=>{
+
+        totalUsers++;
+
+        const user = docSnap.data();
+
+        totalBalance += Number(user.balance || 0);
+
+        if(Array.isArray(user.transactions)){
+
+            user.transactions.forEach(tx=>{
+
+                if(tx.date){
+
+                    const txDate = new Date(tx.date).toDateString();
+
+                    if(txDate===today){
+
+                        todayTransactions++;
+
+                    }
+
+                }
+
+            });
+
+        }
+
+    });
+
+    el("totalUsers").innerText = totalUsers;
+
+    el("bankBalance").innerText =
+    "€" +
+    totalBalance.toLocaleString(undefined,{
+        minimumFractionDigits:2
+    });
+
+    el("todayTransactions").innerText =
+    todayTransactions;
+
+    try{
+
+        const pending =
+        await getDocs(collection(db,"pendingTransfers"));
+
+        el("pendingTransfers").innerText =
+        pending.size;
+
+    }catch{
+
+        el("pendingTransfers").innerText="0";
+
+    }
+
+};
+
+// ---------- LOAD USERS ----------
+
+window.loadUsers = async function(){
+
+    const snap = await getDocs(collection(db,"users"));
 
     users = [];
 
-    snap.forEach(docSnap => {
+    snap.forEach(docSnap=>{
 
         users.push({
-            id: docSnap.id,
+
+            id:docSnap.id,
+
             ...docSnap.data()
+
         });
 
     });
@@ -143,9 +166,63 @@ window.loadUsers = async function () {
 
 };
 
-// ======================
-// RENDER USERS
-// ======================
+// ---------- SEARCH ----------
+
+window.filterUsers = function(){
+
+    const text =
+
+    el("searchUser")
+
+    .value
+
+    .toLowerCase()
+
+    .trim();
+
+    const filtered = users.filter(user=>{
+
+        return (
+
+            (user.fullName||"")
+
+            .toLowerCase()
+
+            .includes(text)
+
+            ||
+
+            (user.email||"")
+
+            .toLowerCase()
+
+            .includes(text)
+
+            ||
+
+            (user.accountNumber||"")
+
+            .toLowerCase()
+
+            .includes(text)
+
+            ||
+
+            (user.iban||"")
+
+            .toLowerCase()
+
+            .includes(text)
+
+        );
+
+    });
+
+    renderUsers(filtered);
+
+};
+
+// ---------- RENDER USERS ----------
 
 function renderUsers(list){
 
@@ -153,165 +230,122 @@ function renderUsers(list){
 
     container.innerHTML = "";
 
-    list.forEach(user => {
+    if(list.length===0){
+
+        container.innerHTML =
+        "<h3>No users found.</h3>";
+
+        return;
+
+    }
+
+    list.forEach(user=>{
 
         container.innerHTML += `
-        <div class="userCard">
 
-            <h3>${user.fullName || ""}</h3>
+<div class="userCard">
 
-            <p>${user.email || "No Email"}</p>
+<h3>${user.fullName || "No Name"}</h3>
 
-            <p>€${Number(user.balance || 0).toLocaleString()}</p>
+<p>${user.email || "No Email"}</p>
 
-            <p>${user.accountNumber || ""}</p>
+<p>€${Number(user.balance||0).toLocaleString()}</p>
 
-            <button onclick="manageUser('${user.id}')">
-                Manage
-            </button>
+<p>${user.accountNumber || ""}</p>
 
-        </div>
-        `;
+<button onclick="manageUser('${user.id}')">
+
+Manage Customer
+
+</button>
+
+</div>
+
+`;
 
     });
 
 }
 
-};
+// ---------- START ----------
+
+showSection("dashboard");
+
+loadDashboard();
+
+loadUsers();
+
+console.log("Admin Part 1 Loaded");
+
+// ======================================
+// PART 2
+// CUSTOMER MANAGEMENT
+// ======================================
+
+// ---------- OPEN CUSTOMER ----------
+
 window.manageUser = async function(id){
 
-    selectedUserRef = doc(db,"users",id);
+    try{
 
-    const snap = await getDoc(selectedUserRef);
+        selectedUserRef = doc(db,"users",id);
 
-    if(!snap.exists()){
-        alert("Customer not found");
-        return;
-    }
+        const snap = await getDoc(selectedUserRef);
 
-    selectedUser = snap.data();
+        if(!snap.exists()){
 
-    document.getElementById("customerPanel").style.display = "block";
+            alert("Customer not found.");
 
-    document.getElementById("selectedName").innerText =
+            return;
+
+        }
+
+        selectedUser = snap.data();
+
+        showSection("users");
+
+        const panel = el("customerPanel");
+
+        if(panel){
+
+            panel.style.display = "block";
+
+            panel.scrollIntoView({
+                behavior:"smooth"
+            });
+
+        }
+
+        el("selectedName").innerText =
         selectedUser.fullName || "";
 
-    document.getElementById("selectedEmail").innerText =
+        el("selectedEmail").innerText =
         selectedUser.email || "No Email";
 
-    document.getElementById("selectedBalance").innerText =
-        Number(selectedUser.balance || 0).toLocaleString();
+        el("selectedBalance").innerText =
+        Number(selectedUser.balance || 0)
+        .toLocaleString();
 
-    document.getElementById("selectedIBAN").innerText =
+        el("selectedIBAN").innerText =
         selectedUser.iban || "";
 
-    document.getElementById("selectedSwift").innerText =
+        el("selectedSwift").innerText =
         selectedUser.swift || "";
 
-    document.getElementById("selectedAccount").innerText =
+        el("selectedAccount").innerText =
         selectedUser.accountNumber || "";
 
-    document.getElementById("selectedRouting").innerText =
+        el("selectedRouting").innerText =
         selectedUser.routingNumber || "";
 
-    document.getElementById("selectedStatus").innerText =
-        selectedUser.cardFrozen ? "Frozen" : "Active";
-};
-// ======================
-// LOGOUT
-// ======================
+        el("selectedStatus").innerText =
+        selectedUser.cardFrozen
+        ? "Frozen"
+        : "Active";
 
-window.logoutAdmin=function(){
+    }
 
-localStorage.removeItem("admin");
-
-location.reload();
-
-};
-
-
-// ======================
-// AUTO LOGIN
-// ======================
-
-if(localStorage.getItem("admin")){
-
-    el("loginPage")
-    .classList
-    .add("hidden");
-
-    el("dashboardPage")
-    .classList
-    .remove("hidden");
-
-    loadUsers();
-
-    loadDashboard();
-
-    loadPendingCounter();
-
-}
-
-// ===============================
-// LOAD DASHBOARD
-// ===============================
-
-window.loadDashboard = async function () {
-
-    try {
-
-        const usersSnap = await getDocs(collection(db, "users"));
-
-        let totalUsers = 0;
-        let totalBalance = 0;
-        let todayTransactions = 0;
-
-        const today = new Date().toDateString();
-
-        usersSnap.forEach(docSnap => {
-
-            totalUsers++;
-
-            const user = docSnap.data();
-
-            totalBalance += Number(user.balance || 0);
-
-            const transactions = Array.isArray(user.transactions)
-                ? user.transactions
-                : [];
-
-            transactions.forEach(tx => {
-
-                if (tx.date) {
-
-                    const txDate = new Date(tx.date).toDateString();
-
-                    if (txDate === today) {
-                        todayTransactions++;
-                    }
-
-                }
-
-            });
-
-        });
-
-        document.getElementById("totalUsers").innerText = totalUsers;
-
-        document.getElementById("bankBalance").innerText =
-            "€" + totalBalance.toLocaleString(undefined, {
-                minimumFractionDigits: 2
-            });
-
-        document.getElementById("todayTransactions").innerText =
-            todayTransactions;
-
-        const pendingSnap = await getDocs(collection(db, "pendingTransfers"));
-
-        document.getElementById("pendingTransfers").innerText =
-            pendingSnap.size;
-
-    } catch (err) {
+    catch(err){
 
         console.error(err);
 
@@ -320,21 +354,182 @@ window.loadDashboard = async function () {
     }
 
 };
-window.showSection = function(section){
 
-    alert("Opening: " + section);
+// ---------- CREDIT CUSTOMER ----------
 
-    document.querySelectorAll("section").forEach(sec => {
-        sec.style.display = "none";
-    });
+window.creditUser = async function(){
 
-    const page = document.getElementById(section);
+    if(!selectedUserRef){
 
-    if(page){
-        page.style.display = "block";
+        alert("Select a customer first.");
+
+        return;
+
     }
 
+    const amount =
+    Number(el("creditAmount").value);
+
+    if(amount<=0){
+
+        alert("Enter a valid amount.");
+
+        return;
+
+    }
+
+    selectedUser.balance =
+    Number(selectedUser.balance || 0)
+    + amount;
+
+    await updateDoc(selectedUserRef,{
+
+        balance:selectedUser.balance
+
+    });
+
+    alert("Account credited successfully.");
+
+    el("creditAmount").value="";
+
+    manageUser(selectedUserRef.id);
+
+    loadDashboard();
+
+    loadUsers();
+
 };
-showSection("dashboard");
-loadDashboard();
-loadUsers();
+
+// ---------- DEBIT CUSTOMER ----------
+
+window.debitUser = async function(){
+
+    if(!selectedUserRef){
+
+        alert("Select a customer first.");
+
+        return;
+
+    }
+
+    const amount =
+    Number(el("debitAmount").value);
+
+    if(amount<=0){
+
+        alert("Enter a valid amount.");
+
+        return;
+
+    }
+
+    selectedUser.balance =
+    Number(selectedUser.balance || 0)
+    - amount;
+
+    await updateDoc(selectedUserRef,{
+
+        balance:selectedUser.balance
+
+    });
+
+    alert("Account debited successfully.");
+
+    el("debitAmount").value="";
+
+    manageUser(selectedUserRef.id);
+
+    loadDashboard();
+
+    loadUsers();
+
+};
+
+// ---------- FREEZE ACCOUNT ----------
+
+window.toggleFreeze = async function(){
+
+    if(!selectedUserRef){
+
+        alert("Select a customer first.");
+
+        return;
+
+    }
+
+    const frozen =
+    !selectedUser.cardFrozen;
+
+    await updateDoc(selectedUserRef,{
+
+        cardFrozen:frozen
+
+    });
+
+    selectedUser.cardFrozen =
+    frozen;
+
+    el("selectedStatus").innerText =
+    frozen
+    ? "Frozen"
+    : "Active";
+
+    alert(
+
+        frozen
+
+        ? "Account Frozen"
+
+        : "Account Unfrozen"
+
+    );
+
+};
+
+// ---------- MANUAL TRANSACTION ----------
+
+window.manualTransaction = async function(){
+
+    if(!selectedUserRef){
+
+        alert("Select a customer first.");
+
+        return;
+
+    }
+
+    const note =
+    el("manualNote").value.trim();
+
+    if(note===""){
+
+        alert("Enter a transaction note.");
+
+        return;
+
+    }
+
+    const tx = {
+
+        amount:0,
+
+        type:"manual",
+
+        note:note,
+
+        reference:
+        "ADM"+
+        Date.now(),
+
+        date:
+        new Date().toISOString()
+
+    };
+
+    const transactions =
+
+    Array.isArray(selectedUser.transactions)
+
+    ? selectedUser.transactions
+
+    : [];

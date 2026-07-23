@@ -146,8 +146,7 @@ window.loadDashboard = async function(){
 
 const snap = await getDocs(q);
 
-        el("pendingTransfers").innerText =
-        pending.size;
+el("pendingTransfers").innerText = snap.size;
 
     }catch{
 

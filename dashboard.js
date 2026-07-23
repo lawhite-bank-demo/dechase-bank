@@ -793,6 +793,43 @@ window._realCVV = realCVV;
   renderTransactions();
 
   fetchRates();
+// =======================
+// LIVE PENDING TRANSFERS
+// =======================
+
+const pendingQuery = query(
+    collection(db, "pendingTransfers"),
+    where("sender", "==", username)
+);
+
+onSnapshot(pendingQuery, (snapshot) => {
+
+    // Reset transactions to completed ones
+    tx = getTx(data);
+
+    // Add pending transfers
+    snapshot.forEach(doc => {
+
+        const p = doc.data();
+
+        if (p.status === "pending") {
+
+            tx.unshift({
+                amount: -Number(p.amount),
+                note: (p.description || "Bank Transfer") + " (Pending)",
+                reference: p.reference,
+                type: "transfer",
+                date: p.date,
+                status: "pending"
+            });
+
+        }
+
+    });
+
+    renderTransactions();
+
+});
 
   startAutoLogout();
 

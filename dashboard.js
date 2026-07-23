@@ -787,7 +787,7 @@ window._realCVV = realCVV;
   startAutoLogout();
 
 
-  onSnapshot(userRef,(snap)=>{
+  onSnapshot(userRef, async (snap)=>{
 
     const d = snap.data();
 
@@ -797,6 +797,30 @@ window._realCVV = realCVV;
     Number(d.balance || 0);
 
     tx = getTx(d);
+const username = localStorage.getItem("user");
+
+const pendingQuery = query(
+    collection(db, "pendingTransfers"),
+    where("sender", "==", username),
+    where("status", "==", "pending")
+);
+
+const pendingSnap = await getDocs(pendingQuery);
+
+pendingSnap.forEach(doc => {
+
+    const p = doc.data();
+
+    tx.unshift({
+        amount: -Number(p.amount),
+        note: p.description + " (Pending)",
+        reference: p.reference,
+        type: "transfer",
+        date: p.date,
+        status: "pending"
+    });
+
+});
 
     frozen =
     d.cardFrozen || false;

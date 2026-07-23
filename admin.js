@@ -131,8 +131,12 @@ window.loadDashboard = async function(){
 
     try{
 
-        const pending =
-        await getDocs(collection(db,"pendingTransfers"));
+        const q = query(
+    collection(db, "pendingTransfers"),
+    where("status", "==", "pending")
+);
+
+const snap = await getDocs(q);
 
         el("pendingTransfers").innerText =
         pending.size;
@@ -589,36 +593,36 @@ window.refreshDashboard = async function(){
 // ======================================
 // LOAD PENDING TRANSFERS
 // ======================================
-
-window.loadPending = async function(){
+window.loadPending = async function () {
 
     const table = el("pendingTable");
-
-    if(!table) return;
-
     table.innerHTML = "";
 
-    const snap = await getDocs(collection(db,"pendingTransfers"));
+    const snap = await getDocs(collection(db, "pendingTransfers"));
 
-    if(snap.empty){
-
+    if (snap.empty) {
         table.innerHTML = "<h3>No Pending Transfers</h3>";
-
         return;
-
     }
 
     snap.forEach(docSnap => {
 
-    const data = docSnap.data();
+        const data = docSnap.data();
 
-    table.innerHTML += `
+        table.innerHTML += `
+
 <div class="userCard">
+
 <h3>${data.sender || "Unknown User"}</h3>
-<p>Amount: €${Number(data.amount || 0).toLocaleString()}</p>
-<p>Account: ${data.accountNumber || ""}</p>
-<p>Description: ${data.description || ""}</p>
-<p>Status: ${data.status || "pending"}</p>
+
+<p><b>Amount:</b> €${Number(data.amount || 0).toLocaleString()}</p>
+
+<p><b>Account:</b> ${data.accountNumber || ""}</p>
+
+<p><b>Description:</b> ${data.description || ""}</p>
+
+<p><b>Status:</b> ${data.status || "pending"}</p>
+
 <button onclick="approveTransfer('${docSnap.id}')">
 ✅ Approve
 </button>
@@ -628,11 +632,74 @@ window.loadPending = async function(){
 </button>
 
 </div>
+
 `;
 
-});
+    });
 
 };
+// ======================================
+// APPROVE TRANSFER
+// ======================================
+
+window.approveTransfer = async function(id){
+
+    const transferRef = doc(db, "pendingTransfers", id);
+
+    const transferSnap = await getDoc(transferRef);
+
+    if(!transferSnap.exists()){
+        alert("Transfer not found.");
+        return;
+    }
+
+    const transfer = transferSnap.data();
+
+    const userRef = doc(db, "users", transfer.sender);
+
+    const userSnap = await getDoc(userRef);
+
+    if(!userSnap.exists()){
+        alert("Customer not found.");
+        return;
+    }
+
+    const user = userSnap.data();
+
+    const newBalance =
+        Number(user.balance || 0) -
+        Number(transfer.amount || 0);
+
+    const transactions =
+        Array.isArray(user.transactions)
+        ? user.transactions
+        : [];
+
+    transactions.unshift({
+        amount: -Number(transfer.amount || 0),
+        note: transfer.description || "Bank Transfer",
+        reference: transfer.reference,
+        type: "transfer",
+        date: new Date().toISOString()
+    });
+
+    await updateDoc(userRef,{
+        balance: newBalance,
+        transactions: transactions
+    });
+
+    await updateDoc(transferRef,{
+        status: "approved",
+        processed: true
+    });
+
+    alert("Transfer Approved");
+
+    loadPending();
+    loadDashboard();
+
+};
+
 // ======================================
 // APPROVE TRANSFER
 // ======================================
@@ -735,6 +802,26 @@ window.approveTransfer = async function(id){
     await deleteDoc(transferRef);
 
     alert("Transfer Approved");
+
+    loadPending();
+    loadDashboard();
+
+};
+
+// ======================================
+// REJECT TRANSFER
+// ======================================
+
+window.rejectTransfer = async function(id){
+
+    const transferRef = doc(db, "pendingTransfers", id);
+
+    await updateDoc(transferRef, {
+        status: "rejected",
+        processed: true
+    });
+
+    alert("Transfer Rejected");
 
     loadPending();
     loadDashboard();

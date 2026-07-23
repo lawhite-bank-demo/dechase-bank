@@ -59,17 +59,25 @@ function el(id){
 window.showSection = function(section){
 
     document.querySelectorAll("section").forEach(sec=>{
-
         sec.style.display="none";
-
     });
 
     const page = el(section);
 
     if(page){
-
         page.style.display="block";
+    }
 
+    if(section === "dashboard"){
+        loadDashboard();
+    }
+
+    if(section === "users"){
+        loadUsers();
+    }
+
+    if(section === "transfers"){
+        loadPending();
     }
 
 };

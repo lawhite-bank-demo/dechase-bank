@@ -2,28 +2,27 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  onSnapshot,
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc
+getFirestore,
+doc,
+getDoc,
+updateDoc,
+onSnapshot,
+collection,
+query,
+where,
+getDocs,
+addDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
 
-  apiKey: "AIzaSy...",
-  authDomain: "dechase-bank.firebaseapp.com",
-  projectId: "dechase-bank"
+apiKey: "AIzaSy...",
+authDomain: "dechase-bank.firebaseapp.com",
+projectId: "dechase-bank"
 
 });
 
 const db = getFirestore(app);
-
 
 // ===== GLOBAL =====
 let balance = 0;
@@ -52,676 +51,670 @@ let showFullCard = false;
 
 let logoutTimer;
 
-
 // ===== HELPERS =====
 function el(id){
-  return document.getElementById(id);
+return document.getElementById(id);
 }
 
 function setText(id,val){
 
-  const e = el(id);
+const e = el(id);
 
-  if(e){
-    e.innerText = val ?? "";
-  }
+if(e){
+e.innerText = val ?? "";
+}
 }
 
 function setAccountField(id, value){
 
-  const element = el(id);
+const element = el(id);
 
-  if(!element) return;
+if(!element) return;
 
-  if(!value){
+if(!value){
 
-    element.parentElement.style.display = "none";
+element.parentElement.style.display = "none";
 
-  }else{
+}else{
 
-    element.parentElement.style.display = "flex";
+element.parentElement.style.display = "flex";  
 
-    element.innerText = value;
-  }
+element.innerText = value;
+
+}
 }
 
 function genRef(){
 
-  const now = Date.now();
+const now = Date.now();
 
-  const random =
-  Math.floor(1000 + Math.random() * 9000);
+const random =
+Math.floor(1000 + Math.random() * 9000);
 
-  return "TRX-" + now + random;
+return "TRX-" + now + random;
 }
 
 function formatMoney(v){
 
-  return Number(v || 0).toLocaleString(undefined,{
+return Number(v || 0).toLocaleString(undefined,{
 
-    minimumFractionDigits:2,
-    maximumFractionDigits:2
+minimumFractionDigits:2,  
+maximumFractionDigits:2
 
-  });
+});
 }
-
 
 // ===== RECEIPT =====
 window.showReceipt = function(t){
 
-  setText(
-    "rAmount",
-    (t.amount < 0 ? "-€" : "+€") +
-    formatMoney(Math.abs(t.amount))
-  );
+setText(
+"rAmount",
+(t.amount < 0 ? "-€" : "+€") +
+formatMoney(Math.abs(t.amount))
+);
 
-  setText(
+setText(
 
-    "rType",
+"rType",  
 
-    t.type === "transfer"
-    ? "Transfer"
+t.type === "transfer"  
+? "Transfer"  
 
-    : t.type === "bill"
-    ? "Bill Payment"
+: t.type === "bill"  
+? "Bill Payment"  
 
-    : t.amount < 0
-    ? "Debit"
+: t.amount < 0  
+? "Debit"  
 
-    : "Credit"
-  );
+: "Credit"
 
-  setText("rNote", t.note || "Transaction");
+);
 
-  setText(
-    "rDate",
-    new Date(t.date).toLocaleString()
-  );
+setText("rNote", t.note || "Transaction");
 
-  setText(
-    "rRef",
-    t.reference || "N/A"
-  );
+setText(
+"rDate",
+new Date(t.date).toLocaleString()
+);
 
-  el("receiptModal")
-  ?.classList.remove("hidden");
+setText(
+"rRef",
+t.reference || "N/A"
+);
+
+el("receiptModal")
+?.classList.remove("hidden");
 };
 
 window.closeReceipt = function(){
 
-  el("receiptModal")
-  ?.classList.add("hidden");
+el("receiptModal")
+?.classList.add("hidden");
 };
-
 
 // ===== NOTIFY =====
 function notify(msg){
 
-  const n =
-  document.createElement("div");
+const n =
+document.createElement("div");
 
-  n.innerText = msg;
+n.innerText = msg;
 
-  n.style.position = "fixed";
+n.style.position = "fixed";
 
-  n.style.bottom = "100px";
+n.style.bottom = "100px";
 
-  n.style.left = "50%";
+n.style.left = "50%";
 
-  n.style.transform =
-  "translateX(-50%)";
+n.style.transform =
+"translateX(-50%)";
 
-  n.style.background = "#111827";
+n.style.background = "#111827";
 
-  n.style.padding = "12px 18px";
+n.style.padding = "12px 18px";
 
-  n.style.borderRadius = "10px";
+n.style.borderRadius = "10px";
 
-  n.style.zIndex = "9999";
+n.style.zIndex = "9999";
 
-  n.style.boxShadow =
-  "0 10px 30px rgba(0,0,0,0.3)";
+n.style.boxShadow =
+"0 10px 30px rgba(0,0,0,0.3)";
 
-  document.body.appendChild(n);
+document.body.appendChild(n);
 
-  setTimeout(()=>{
-    n.remove();
-  },2500);
+setTimeout(()=>{
+n.remove();
+},2500);
 }
-
 
 // ===== LOGOUT =====
 window.logoutUser = function(){
 
-  localStorage.removeItem("user");
+localStorage.removeItem("user");
 
-  notify("Logged out");
+notify("Logged out");
 
-  setTimeout(()=>{
+setTimeout(()=>{
 
-    window.location.href =
-    "index.html";
+window.location.href =  
+"index.html";
 
-  },500);
+},500);
 };
-
 
 // ===== AUTO LOGOUT =====
 function startAutoLogout(){
 
-  clearTimeout(logoutTimer);
+clearTimeout(logoutTimer);
 
-  logoutTimer = setTimeout(()=>{
+logoutTimer = setTimeout(()=>{
 
-    notify("Session expired");
+notify("Session expired");  
 
-    logoutUser();
+logoutUser();
 
-  },60000);
+},60000);
 }
 
 ["click","touchstart","keypress"]
 
 .forEach(evt=>{
 
-  document.addEventListener(
-    evt,
-    startAutoLogout
-  );
+document.addEventListener(
+evt,
+startAutoLogout
+);
 
 });
 
 document.addEventListener(
-  "visibilitychange",
-  ()=>{
+"visibilitychange",
+()=>{
 
-    if(document.hidden){
-      logoutUser();
-    }
-  }
+if(document.hidden){  
+  logoutUser();  
+}
+
+}
 );
-
 
 // ===== BALANCE =====
 function renderBalance(){
 
-  const bal = el("balance");
+const bal = el("balance");
 
-  if(!bal) return;
+if(!bal) return;
 
-  bal.innerText =
+bal.innerText =
 
-    hidden
-    ? "••••••"
+hidden  
+? "••••••"  
 
-    : "€" + formatMoney(balance);
+: "€" + formatMoney(balance);
 
-  setText(
+setText(
 
-    "toggleBalance",
+"toggleBalance",  
 
-    hidden
-    ? "👁 Show"
+hidden  
+? "👁 Show"  
 
-    : "🙈 Hide"
-  );
+: "🙈 Hide"
+
+);
 }
 
 window.toggleBalance = function(){
 
-  hidden = !hidden;
+hidden = !hidden;
 
-  renderBalance();
+renderBalance();
 };
-
 
 // ===== CARD =====
 window.toggleCardNumber = function(){
 
-  const elNum = el("cardNumber");
+const elNum = el("cardNumber");
 
-  if(!fullCardNumber) return;
+if(!fullCardNumber) return;
 
-  showFullCard = !showFullCard;
+showFullCard = !showFullCard;
 
-  elNum.innerText =
+elNum.innerText =
 
-    showFullCard
+showFullCard  
 
-    ? fullCardNumber
+? fullCardNumber  
 
-    : "**** **** **** " +
-      fullCardNumber.slice(-4);
+: "**** **** **** " +  
+  fullCardNumber.slice(-4);
+
 };
 window.flipCard = function(){
 
-    const card = document.getElementById("cardInner");
+const card = document.getElementById("cardInner");  
 
-    if(!card) return;
+if(!card) return;  
 
-    card.classList.toggle("flipped");
+card.classList.toggle("flipped");  
 
-    const cvv = document.getElementById("cardCVV");
+const cvv = document.getElementById("cardCVV");  
 
-    if(cvv){
+if(cvv){  
 
-        cvv.innerText =
+    cvv.innerText =  
 
-            card.classList.contains("flipped")
+        card.classList.contains("flipped")  
 
-            ? realCVV
+        ? realCVV  
 
-            : "***";
+        : "***";  
 
-    }
+}
 
 };
 
 // ===== FREEZE =====
 window.toggleCard = async function(){
 
-  if(!userRef) return;
+if(!userRef) return;
 
-  frozen = !frozen;
+frozen = !frozen;
 
-  await updateDoc(userRef,{
+await updateDoc(userRef,{
 
-    cardFrozen:frozen
+cardFrozen:frozen
 
-  });
+});
 
-  updateFreezeUI();
+updateFreezeUI();
 };
 
 function updateFreezeUI(){
 
-  const btn = el("cardBtn");
+const btn = el("cardBtn");
 
-  if(btn){
+if(btn){
 
-    btn.innerText =
+btn.innerText =  
 
-      frozen
-      ? "Unfreeze Card"
-      : "Freeze Card";
-  }
+  frozen  
+  ? "Unfreeze Card"  
+  : "Freeze Card";
+
 }
-
+}
 
 // ===== TRANSACTIONS =====
 function getTx(data){
 
-  if(!data?.transactions){
-    return [];
-  }
-
-  return Array.isArray(data.transactions)
-
-    ? data.transactions
-
-    : Object.values(data.transactions);
+if(!data?.transactions){
+return [];
 }
 
+return Array.isArray(data.transactions)
+
+? data.transactions  
+
+: Object.values(data.transactions);
+
+}
 
 function renderTransactions(){
 
-  const container =
-  el("transactions");
+const container =
+el("transactions");
 
-  if(!container) return;
+if(!container) return;
 
-  container.innerHTML = "";
+container.innerHTML = "";
 
-  const sortedTx = [...tx].sort(
+const sortedTx = [...tx].sort(
 
-    (a,b)=>{
+(a,b)=>{  
 
-      return new Date(b.date)
-      - new Date(a.date);
-    }
-  );
-
-  let currentGroup = "";
-
-  sortedTx.forEach(t=>{
-
-    const txDate =
-    new Date(t.date);
-
-    const today =
-    new Date();
-
-    const yesterday =
-    new Date();
-
-    yesterday.setDate(
-      today.getDate() - 1
-    );
-
-    let dateLabel =
-
-      txDate.toLocaleDateString(
-
-        "en-GB",
-
-        {
-          day:"2-digit",
-          month:"short",
-          year:"numeric"
-        }
-      );
-
-    if(
-
-      txDate.toDateString() ===
-      today.toDateString()
-
-    ){
-
-      dateLabel = "Today";
-    }
-
-    else if(
-
-      txDate.toDateString() ===
-      yesterday.toDateString()
-
-    ){
-
-      dateLabel = "Yesterday";
-    }
-
-    // DATE HEADER
-    if(currentGroup !== dateLabel){
-
-      currentGroup = dateLabel;
-
-      const header =
-      document.createElement("div");
-
-      header.className =
-      "tx-date-header";
-
-      header.innerText =
-      dateLabel;
-
-      container.appendChild(header);
-    }
-
-    const formattedTime =
-
-      txDate.toLocaleTimeString(
-
-        "en-GB",
-
-        {
-
-          hour:"2-digit",
-          minute:"2-digit",
-          second:"2-digit"
-
-        }
-      );
-
-    // TRANSACTION
-    const div =
-    document.createElement("div");
-
-    div.className = "tx";
-
-    div.onclick = ()=>showReceipt(t);
-
-    div.innerHTML = `
-
-      <div class="tx-left">
-
-      <div class="tx-title">
-
-  ${t.note || "Transaction"}
-
-  ${
-    t.status === "pending"
-      ? '<br><small style="color:#facc15;font-weight:bold;">🟡 Pending Approval</small>'
-      : ""
-  }
-
-</div>
-
-        <small class="tx-time">
-
-          ${formattedTime}
-
-        </small>
-
-        <small class="tx-ref">
-
-          Ref:
-          ${t.reference || genRef()}
-
-        </small>
-
-      </div>
-
-      <div class="
-tx-amount
-${
-    t.status === "pending"
-        ? ""
-        : t.amount < 0
-        ? "tx-negative"
-        : "tx-positive"
-}
-">
-
-        ${t.amount < 0
-        ? "-€"
-        : "+€"}
-
-        ${formatMoney(
-          Math.abs(t.amount)
-        )}
-
-      </div>
-    `;
-
-    container.appendChild(div);
-
-  });
+  return new Date(b.date)  
+  - new Date(a.date);  
 }
 
+);
+
+let currentGroup = "";
+
+sortedTx.forEach(t=>{
+
+const txDate =  
+new Date(t.date);  
+
+const today =  
+new Date();  
+
+const yesterday =  
+new Date();  
+
+yesterday.setDate(  
+  today.getDate() - 1  
+);  
+
+let dateLabel =  
+
+  txDate.toLocaleDateString(  
+
+    "en-GB",  
+
+    {  
+      day:"2-digit",  
+      month:"short",  
+      year:"numeric"  
+    }  
+  );  
+
+if(  
+
+  txDate.toDateString() ===  
+  today.toDateString()  
+
+){  
+
+  dateLabel = "Today";  
+}  
+
+else if(  
+
+  txDate.toDateString() ===  
+  yesterday.toDateString()  
+
+){  
+
+  dateLabel = "Yesterday";  
+}  
+
+// DATE HEADER  
+if(currentGroup !== dateLabel){  
+
+  currentGroup = dateLabel;  
+
+  const header =  
+  document.createElement("div");  
+
+  header.className =  
+  "tx-date-header";  
+
+  header.innerText =  
+  dateLabel;  
+
+  container.appendChild(header);  
+}  
+
+const formattedTime =  
+
+  txDate.toLocaleTimeString(  
+
+    "en-GB",  
+
+    {  
+
+      hour:"2-digit",  
+      minute:"2-digit",  
+      second:"2-digit"  
+
+    }  
+  );  
+
+// TRANSACTION  
+const div =  
+document.createElement("div");  
+
+div.className = "tx";  
+
+div.onclick = ()=>showReceipt(t);  
+
+div.innerHTML = `  
+
+  <div class="tx-left">  
+
+    <div class="tx-title">  
+
+      ${t.note || "Transaction"}  
+
+    </div>  
+
+    <small class="tx-time">  
+
+      ${formattedTime}  
+
+    </small>  
+
+    <small class="tx-ref">  
+
+      Ref:  
+      ${t.reference || genRef()}  
+
+    </small>  
+
+  </div>  
+
+  <div class="  
+    tx-amount  
+    ${t.amount < 0  
+    ? "tx-negative"  
+    : "tx-positive"}  
+  ">  
+
+    ${t.amount < 0  
+    ? "-€"  
+    : "+€"}  
+
+    ${formatMoney(  
+      Math.abs(t.amount)  
+    )}  
+
+  </div>  
+`;  
+
+container.appendChild(div);
+
+});
+}
 
 // ===== CURRENCY =====
 async function fetchRates(){
 
-  try{
+try{
 
-    const res = await fetch(
+const res = await fetch(  
 
-      "https://api.exchangerate-api.com/v4/latest/EUR"
-    );
+  "https://api.exchangerate-api.com/v4/latest/EUR"  
+);  
 
-    const data = await res.json();
+const data = await res.json();  
 
-    eurToUsd =
-    data.rates.USD || eurToUsd;
+eurToUsd =  
+data.rates.USD || eurToUsd;  
 
-    eurToGbp =
-    data.rates.GBP || eurToGbp;
+eurToGbp =  
+data.rates.GBP || eurToGbp;
 
-  }catch{
+}catch{
 
-    console.warn(
-      "Fallback rates used"
-    );
-  }
+console.warn(  
+  "Fallback rates used"  
+);
 
-  updateWallet();
+}
+
+updateWallet();
 }
 
 function updateWallet(){
 
-  const usd =
-  "$" + formatMoney(balance * eurToUsd);
+const usd =
+"$" + formatMoney(balance * eurToUsd);
 
-  const eur =
-  "€" + formatMoney(balance);
+const eur =
+"€" + formatMoney(balance);
 
-  const gbp =
-  "£" + formatMoney(balance * eurToGbp);
+const gbp =
+"£" + formatMoney(balance * eurToGbp);
 
-  setText("usdWallet", usd);
+setText("usdWallet", usd);
 
-  setText("eurWallet", eur);
+setText("eurWallet", eur);
 
-  setText("gbpWallet", gbp);
+setText("gbpWallet", gbp);
 
-  setText("convertedEUR", eur);
+setText("convertedEUR", eur);
 
-  setText("convertedUSD", usd);
+setText("convertedUSD", usd);
 
-  setText("convertedGBP", gbp);
+setText("convertedGBP", gbp);
 }
-
 
 // ===== BILLS =====
 window.payBill = async function(name, amount){
 
-  if(frozen){
+if(frozen){
 
-    return notify("Card is frozen");
-  }
+return notify("Card is frozen");
 
-  if(amount > balance){
+}
 
-    return notify(
-      "Insufficient balance"
-    );
-  }
+if(amount > balance){
 
-  const newTx = {
+return notify(  
+  "Insufficient balance"  
+);
 
-    note:name + " Bill",
+}
 
-    amount:-amount,
+const newTx = {
 
-    date:new Date().toISOString(),
+note:name + " Bill",  
 
-    reference:genRef(),
+amount:-amount,  
 
-    type:"bill"
-  };
+date:new Date().toISOString(),  
 
-  balance -= amount;
+reference:genRef(),  
 
-  await updateDoc(userRef,{
+type:"bill"
 
-    balance,
-
-    transactions:[...tx,newTx]
-
-  });
-
-  notify(name + " paid successfully");
 };
 
+balance -= amount;
+
+await updateDoc(userRef,{
+
+balance,  
+
+transactions:[...tx,newTx]
+
+});
+
+notify(name + " paid successfully");
+};
 
 // ===== ADD MONEY =====
 window.addMoney = async function(){
 
-  const amount = Number(
-    el("addMoneyAmount").value
-  );
+const amount = Number(
+el("addMoneyAmount").value
+);
 
-  if(!amount || amount <= 0){
+if(!amount || amount <= 0){
 
-    return notify("Invalid amount");
-  }
+return notify("Invalid amount");
 
-  const method =
-  el("fundMethod").value;
+}
 
-  const newTx = {
+const method =
+el("fundMethod").value;
 
-    note:"Deposit via " + method,
+const newTx = {
 
-    amount:amount,
+note:"Deposit via " + method,  
 
-    date:new Date().toISOString(),
+amount:amount,  
 
-    reference:genRef(),
+date:new Date().toISOString(),  
 
-    type:"deposit"
-  };
+reference:genRef(),  
 
-  balance += amount;
+type:"deposit"
 
-  await updateDoc(userRef,{
-
-    balance,
-
-    transactions:[...tx,newTx]
-  });
-
-  notify("Funds added successfully");
-
-  showReceipt(newTx);
-
-  el("addMoneyAmount").value = "";
 };
 
+balance += amount;
+
+await updateDoc(userRef,{
+
+balance,  
+
+transactions:[...tx,newTx]
+
+});
+
+notify("Funds added successfully");
+
+showReceipt(newTx);
+
+el("addMoneyAmount").value = "";
+};
 
 // ===== INIT =====
 async function init(){
 
-  el("receiptModal")
-  ?.classList.add("hidden");
+el("receiptModal")
+?.classList.add("hidden");
 
-  const username =
-  localStorage.getItem("user");
+const username =
+localStorage.getItem("user");
 
-  if(!username){
+if(!username){
 
-    return location.href =
-    "index.html";
-  }
+return location.href =  
+"index.html";
 
-  userRef =
-  doc(db,"users",username);
+}
 
-  const snap =
-  await getDoc(userRef);
+userRef =
+doc(db,"users",username);
 
-  if(!snap.exists()){
+const snap =
+await getDoc(userRef);
 
-    return location.href =
-    "index.html";
-  }
+if(!snap.exists()){
 
- const data = snap.data();
+return location.href =  
+"index.html";
+
+}
+
+const data = snap.data();
 
 balance = Number(data.balance || 0);
 
 tx = getTx(data);
 const pendingQuery = query(
-    collection(db, "pendingTransfers"),
-    where("sender", "==", username),
-    where("status", "==", "pending")
+collection(db, "pendingTransfers"),
+where("sender", "==", username),
+where("status", "==", "pending")
 );
 
 const pendingSnap = await getDocs(pendingQuery);
 
 pendingSnap.forEach(doc => {
 
-    const p = doc.data();
+const p = doc.data();  
 
-    tx.unshift({
-        amount: -Number(p.amount),
-        note: p.description + " (Pending)",
-        reference: p.reference,
-        type: "transfer",
-        date: p.date,
-        status: "pending"
-    });
+tx.unshift({  
+    amount: -Number(p.amount),  
+    note: p.description + " (Pending)",  
+    reference: p.reference,  
+    type: "transfer",  
+    date: p.date,  
+    status: "pending"  
+});
 
 });
 
@@ -732,8 +725,8 @@ setText("welcome", "Hi, " + (data.fullName || ""));
 setText("nameProfile", data.fullName || "");
 
 setText(
-    "emailProfile",
-    data.email || "dechasebank@gmail.com"
+"emailProfile",
+data.email || "dechasebank@gmail.com"
 );
 
 window._userEmail = data.email || "";
@@ -743,209 +736,147 @@ setAccountField("iban", data.iban);
 setAccountField("swift", data.swift);
 
 setAccountField(
-    "accountNumberDisplay",
-    data.accountNumber
+"accountNumberDisplay",
+data.accountNumber
 );
 
 setAccountField(
-    "routingDisplay",
-    data.routingNumber
+"routingDisplay",
+data.routingNumber
 );
 
 // CARD DETAILS
 fullCardNumber =
-    data.cardNumber ||
-    data.accountNumber ||
-    "";
+data.cardNumber ||
+data.accountNumber ||
+"";
 
 setText(
-    "cardNumber",
-    fullCardNumber
-        ? "**** **** **** " + fullCardNumber.slice(-4)
-        : "**** **** **** 0000"
+"cardNumber",
+fullCardNumber
+? "**** **** **** " + fullCardNumber.slice(-4)
+: "**** **** **** 0000"
 );
 
 setText(
-    "cardName",
-    data.fullName || ""
+"cardName",
+data.fullName || ""
 );
 
 setText(
-    "cardExpiry",
-    data.cardExpiry ||
-    data.card?.expiry ||
-    ""
+"cardExpiry",
+data.cardExpiry ||
+data.card?.expiry ||
+""
 );
 
 realCVV =
-    data.cardCVV ||
-    data.card?.cvv ||
-    "***";
+data.cardCVV ||
+data.card?.cvv ||
+"***";
 
 window._realCVV = realCVV;
 
-  updateFreezeUI();
+updateFreezeUI();
 
-  renderBalance();
+renderBalance();
 
-  updateWallet();
+updateWallet();
 
-  renderTransactions();
+renderTransactions();
 
-  fetchRates();
-// =======================
-// LIVE PENDING TRANSFERS
-// =======================
+fetchRates();
 
-const pendingQuery = query(
-    collection(db, "pendingTransfers"),
-    where("sender", "==", username)
-);
+startAutoLogout();
 
-onSnapshot(pendingQuery, (snapshot) => {
+onSnapshot(userRef,(snap)=>{
 
-    // Reset transactions to completed ones
-    tx = getTx(data);
+const d = snap.data();  
 
-    // Add pending transfers
-    snapshot.forEach(doc => {
+if(!d) return;  
 
-        const p = doc.data();
+balance =  
+Number(d.balance || 0);  
 
-        if (p.status === "pending") {
+tx = getTx(d);  
 
-            tx.unshift({
-                amount: -Number(p.amount),
-                note: (p.description || "Bank Transfer") + " (Pending)",
-                reference: p.reference,
-                type: "transfer",
-                date: p.date,
-                status: "pending"
-            });
+frozen =  
+d.cardFrozen || false;  
 
-        }
+setText(  
 
-    });
+  "emailProfile",  
 
-    renderTransactions();
+  d.email ||  
+
+  "dechasebank@gmail.com"  
+);  
+
+setText(  
+
+  "bankAddress",  
+
+  d.bankAddress ||  
+
+  "24 Bishopsgate, London"  
+);  
+
+setText(  
+
+  "addressProfile",  
+
+  d.address ||  
+
+  "Bucharest, Romania"  
+);  
+
+setText(  
+
+  "accountTier",  
+
+  d.accountTier ||  
+
+  "Premium Account"  
+);  
+
+setText(  
+
+  "accountLimit",  
+
+  d.accountLimit ||  
+
+  "Daily Limit: €250,000"  
+);  
+
+setAccountField(  
+  "iban",  
+  d.iban  
+);  
+
+setAccountField(  
+  "swift",  
+  d.swift  
+);  
+
+setAccountField(  
+  "accountNumberDisplay",  
+  d.accountNumber  
+);  
+
+setAccountField(  
+  "routingDisplay",  
+  d.routingNumber  
+);  
+
+renderBalance();  
+
+updateWallet();  
+
+renderTransactions();  
+
+updateFreezeUI();
 
 });
-
-  startAutoLogout();
-
-
-  onSnapshot(userRef, async (snap)=>{
-
-    const d = snap.data();
-
-    if(!d) return;
-
-    balance =
-    Number(d.balance || 0);
-
-    tx = getTx(d);
-const username = localStorage.getItem("user");
-
-const pendingQuery = query(
-    collection(db, "pendingTransfers"),
-    where("sender", "==", username),
-    where("status", "==", "pending")
-);
-
-const pendingSnap = await getDocs(pendingQuery);
-
-pendingSnap.forEach(doc => {
-
-    const p = doc.data();
-
-    tx.unshift({
-        amount: -Number(p.amount),
-        note: p.description + " (Pending)",
-        reference: p.reference,
-        type: "transfer",
-        date: p.date,
-        status: "pending"
-    });
-
-});
-
-    frozen =
-    d.cardFrozen || false;
-
-    setText(
-
-      "emailProfile",
-
-      d.email ||
-
-      "dechasebank@gmail.com"
-    );
-
-    setText(
-
-      "bankAddress",
-
-      d.bankAddress ||
-
-      "24 Bishopsgate, London"
-    );
-
-    setText(
-
-      "addressProfile",
-
-      d.address ||
-
-      "Bucharest, Romania"
-    );
-
-    setText(
-
-      "accountTier",
-
-      d.accountTier ||
-
-      "Premium Account"
-    );
-
-    setText(
-
-      "accountLimit",
-
-      d.accountLimit ||
-
-      "Daily Limit: €250,000"
-    );
-
-    setAccountField(
-      "iban",
-      d.iban
-    );
-
-    setAccountField(
-      "swift",
-      d.swift
-    );
-
-    setAccountField(
-      "accountNumberDisplay",
-      d.accountNumber
-    );
-
-    setAccountField(
-      "routingDisplay",
-      d.routingNumber
-    );
-
-    renderBalance();
-
-    updateWallet();
-
-    renderTransactions();
-
-    updateFreezeUI();
-
-  });
 }
 // =======================
 // OPEN PIN MODAL
@@ -953,47 +884,48 @@ pendingSnap.forEach(doc => {
 
 window.openPinModal = function () {
 
-    if (frozen) {
-        notify("Card is frozen");
-        return;
-    }
+if (frozen) {  
+    notify("Card is frozen");  
+    return;  
+}  
 
-    const type = el("transferType").value;
-    const amount = Number(el("amount").value);
+const type = el("transferType").value;  
+const amount = Number(el("amount").value);  
 
-    if (type === "wire") {
+if (type === "wire") {  
 
-        if (!el("accountNumber").value.trim()) {
-            notify("Enter recipient account number");
-            return;
-        }
+    if (!el("accountNumber").value.trim()) {  
+        notify("Enter recipient account number");  
+        return;  
+    }  
 
-    } else {
+} else {  
 
-        if (!el("ibanInput").value.trim()) {
-            notify("Enter recipient IBAN");
-            return;
-        }
+    if (!el("ibanInput").value.trim()) {  
+        notify("Enter recipient IBAN");  
+        return;  
+    }  
 
-        if (!el("swiftInput").value.trim()) {
-            notify("Enter SWIFT/BIC");
-            return;
-        }
+    if (!el("swiftInput").value.trim()) {  
+        notify("Enter SWIFT/BIC");  
+        return;  
+    }  
 
-    }
+}  
 
-    if (!amount || amount <= 0) {
-        notify("Enter a valid amount");
-        return;
-    }
+if (!amount || amount <= 0) {  
+    notify("Enter a valid amount");  
+    return;  
+}  
 
-    if (amount > balance) {
-        notify("Insufficient balance");
-        return;
-    }
+if (amount > balance) {  
+    notify("Insufficient balance");  
+    return;  
+}  
 
-    el("transferPin").value = "";
-    el("pinModal").classList.remove("hidden");
+el("transferPin").value = "";  
+el("pinModal").classList.remove("hidden");
+
 };
 
 // =======================
@@ -1002,10 +934,9 @@ window.openPinModal = function () {
 
 window.closePinModal = function () {
 
-    el("pinModal").classList.add("hidden");
+el("pinModal").classList.add("hidden");
 
 };
-
 
 // =======================
 // VERIFY PIN
@@ -1013,80 +944,80 @@ window.closePinModal = function () {
 
 window.verifyTransferPin = async function () {
 
-    const entered = el("transferPin").value.trim();
+const entered = el("transferPin").value.trim();  
 
-    if (!entered) {
-        notify("Enter your PIN");
-        return;
-    }
+if (!entered) {  
+    notify("Enter your PIN");  
+    return;  
+}  
 
-    const snap = await getDoc(userRef);
+const snap = await getDoc(userRef);  
 
-    if (!snap.exists()) {
-        notify("User not found");
-        return;
-    }
+if (!snap.exists()) {  
+    notify("User not found");  
+    return;  
+}  
 
-    const user = snap.data();
+const user = snap.data();  
 
-    if (String(user.pin) !== String(entered)) {
-        notify("Incorrect PIN");
-        return;
-    }
+if (String(user.pin) !== String(entered)) {  
+    notify("Incorrect PIN");  
+    return;  
+}  
 
-    closePinModal();
+closePinModal();  
 
-    processTransfer();
+processTransfer();
 
 };
-
 
 // =======================
 // PROCESS TRANSFER
 // =======================
 async function processTransfer() {
 
-    const amount = Number(el("amount").value);
-    const description = el("description").value.trim() || "Bank Transfer";
-    const reference = genRef();
+const amount = Number(el("amount").value);  
+const description = el("description").value.trim() || "Bank Transfer";  
+const reference = genRef();  
 
-    await addDoc(collection(db, "pendingTransfers"), {
+await addDoc(collection(db, "pendingTransfers"), {  
 
-        sender: localStorage.getItem("user"),
+    sender: localStorage.getItem("user"),  
 
-        amount: amount,
+    amount: amount,  
 
-        accountNumber: el("accountNumber")?.value || "",
+    accountNumber: el("accountNumber")?.value || "",  
 
-        routingNumber: el("routingNumber")?.value || "",
+    routingNumber: el("routingNumber")?.value || "",  
 
-        iban: el("ibanInput")?.value || "",
+    iban: el("ibanInput")?.value || "",  
 
-        swift: el("swiftInput")?.value || "",
+    swift: el("swiftInput")?.value || "",  
 
-        description: description,
+    description: description,  
 
-        status: "pending",
+    status: "pending",  
 
-        processed: false,
+    processed: false,  
 
-        reference: reference,
+    reference: reference,  
 
-        date: new Date().toISOString()
+    date: new Date().toISOString()  
 
-    });
+});  
 
-    notify("Transfer submitted for approval.");
+notify("Transfer submitted for approval.");  
 
-    el("amount").value = "";
-    el("description").value = "";
-    el("accountNumber").value = "";
-    el("routingNumber").value = "";
-    el("ibanInput").value = "";
-    el("swiftInput").value = "";
+el("amount").value = "";  
+el("description").value = "";  
+el("accountNumber").value = "";  
+el("routingNumber").value = "";  
+el("ibanInput").value = "";  
+el("swiftInput").value = "";  
 
-    openPage("homePage");
+openPage("homePage");
 
 }
 // START
 init();
+

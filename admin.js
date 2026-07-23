@@ -8,7 +8,6 @@
 
 import { initializeApp }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
 import {
     getFirestore,
     collection,
@@ -18,7 +17,9 @@ import {
     updateDoc,
     addDoc,
     deleteDoc,
-    onSnapshot
+    onSnapshot,
+    query,
+    where
 }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -618,11 +619,127 @@ window.loadPending = async function(){
 <p>Account: ${data.accountNumber || ""}</p>
 <p>Description: ${data.description || ""}</p>
 <p>Status: ${data.status || "pending"}</p>
+<button onclick="approveTransfer('${docSnap.id}')">
+✅ Approve
+</button>
+
+<button onclick="rejectTransfer('${docSnap.id}')">
+❌ Reject
+</button>
+
 </div>
 `;
 
 });
 
+};
+// ======================================
+// APPROVE TRANSFER
+// ======================================
+
+window.approveTransfer = async function(id){
+
+    const transferRef = doc(db,"pendingTransfers",id);
+
+    const transferSnap = await getDoc(transferRef);
+
+    if(!transferSnap.exists()){
+        alert("Transfer not found.");
+        return;
+    }
+
+    const transfer = transferSnap.data();
+
+    // Sender
+    const senderRef = doc(db,"users",transfer.sender);
+
+    const senderSnap = await getDoc(senderRef);
+
+    if(!senderSnap.exists()){
+        alert("Sender not found.");
+        return;
+    }
+
+    const sender = senderSnap.data();
+
+    // Receiver
+    let receiverSnap;
+
+    if(transfer.accountNumber){
+
+        const q = query(
+            collection(db,"users"),
+            where("accountNumber","==",transfer.accountNumber)
+        );
+
+        const result = await getDocs(q);
+
+        if(result.empty){
+            alert("Receiver not found.");
+            return;
+        }
+
+        receiverSnap = result.docs[0];
+
+    }else{
+
+        const q = query(
+            collection(db,"users"),
+            where("iban","==",transfer.iban)
+        );
+
+        const result = await getDocs(q);
+
+        if(result.empty){
+            alert("Receiver not found.");
+            return;
+        }
+
+        receiverSnap = result.docs[0];
+    }
+
+    const receiver = receiverSnap.data();
+
+    const senderTransactions =
+        sender.transactions || [];
+
+    const receiverTransactions =
+        receiver.transactions || [];
+
+    senderTransactions.unshift({
+        amount:-transfer.amount,
+        note:transfer.description,
+        type:"transfer",
+        reference:transfer.reference,
+        date:new Date().toISOString()
+    });
+
+    receiverTransactions.unshift({
+        amount:transfer.amount,
+        note:"Transfer from " + transfer.sender,
+        type:"transfer",
+        reference:transfer.reference,
+        date:new Date().toISOString()
+    });
+
+    await updateDoc(senderRef,{
+        balance:Number(sender.balance)-Number(transfer.amount),
+        transactions:senderTransactions
+    });
+
+    await updateDoc(receiverSnap.ref,{
+        balance:Number(receiver.balance)+Number(transfer.amount),
+        transactions:receiverTransactions
+    });
+
+    await deleteDoc(transferRef);
+
+    alert("Transfer Approved");
+
+    loadPending();
+    loadDashboard();
+
+};
 // ======================================
 // LOGOUT
 // ======================================

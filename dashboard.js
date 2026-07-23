@@ -473,11 +473,15 @@ div.innerHTML = `
 
   <div class="tx-left">  
 
-    <div class="tx-title">  
+    <div class="tx-title">
+    ${t.note || "Transaction"}
 
-      ${t.note || "Transaction"}  
-
-    </div>  
+    ${
+        t.status === "pending"
+            ? '<br><small style="color:#facc15;font-weight:bold;">🟡 Pending Approval</small>'
+            : ""
+    }
+</div>
 
     <small class="tx-time">  
 
@@ -789,7 +793,7 @@ fetchRates();
 
 startAutoLogout();
 
-onSnapshot(userRef,(snap)=>{
+onSnapshot(userRef, async (snap)=>{
 
 const d = snap.data();  
 
@@ -799,6 +803,28 @@ balance =
 Number(d.balance || 0);  
 
 tx = getTx(d);  
+const pendingQuery = query(
+    collection(db, "pendingTransfers"),
+    where("sender", "==", username),
+    where("status", "==", "pending")
+);
+
+const pendingSnap = await getDocs(pendingQuery);
+
+pendingSnap.forEach(doc => {
+
+    const p = doc.data();
+
+    tx.unshift({
+        amount: -Number(p.amount),
+        note: p.description + " (Pending)",
+        reference: p.reference,
+        type: "transfer",
+        date: p.date,
+        status: "pending"
+    });
+
+});
 
 frozen =  
 d.cardFrozen || false;  

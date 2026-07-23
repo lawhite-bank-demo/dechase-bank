@@ -475,11 +475,17 @@ function renderTransactions(){
 
       <div class="tx-left">
 
-        <div class="tx-title">
+      <div class="tx-title">
 
-          ${t.note || "Transaction"}
+  ${t.note || "Transaction"}
 
-        </div>
+  ${
+    t.status === "pending"
+      ? '<br><small style="color:#facc15;font-weight:bold;">🟡 Pending Approval</small>'
+      : ""
+  }
+
+</div>
 
         <small class="tx-time">
 
@@ -497,11 +503,15 @@ function renderTransactions(){
       </div>
 
       <div class="
-        tx-amount
-        ${t.amount < 0
+tx-amount
+${
+    t.status === "pending"
+        ? ""
+        : t.amount < 0
         ? "tx-negative"
-        : "tx-positive"}
-      ">
+        : "tx-positive"
+}
+">
 
         ${t.amount < 0
         ? "-€"

@@ -953,107 +953,47 @@ window.verifyTransferPin = async function () {
 // =======================
 async function processTransfer() {
 
-    const type = el("transferType").value;
     const amount = Number(el("amount").value);
     const description = el("description").value.trim() || "Bank Transfer";
-
-    let receiverDoc;
-    let receiver;
-
-    if(type === "wire"){
-
-        const accountNumber = el("accountNumber").value.trim();
-        const routingNumber = el("routingNumber").value.trim();
-
-        const q = query(
-            collection(db,"users"),
-            where("accountNumber","==",accountNumber)
-        );
-
-        const result = await getDocs(q);
-
-        if(result.empty){
-            notify("Recipient not found");
-            return;
-        }
-
-        receiverDoc = result.docs[0];
-        receiver = receiverDoc.data();
-
-        if(receiver.routingNumber !== routingNumber){
-            notify("Invalid Routing Number");
-            return;
-        }
-
-    }else{
-
-        const iban = el("ibanInput").value.trim();
-        const swift = el("swiftInput").value.trim();
-
-        const q = query(
-            collection(db,"users"),
-            where("iban","==",iban)
-        );
-
-        const result = await getDocs(q);
-
-        if(result.empty){
-            notify("Recipient not found");
-            return;
-        }
-
-        receiverDoc = result.docs[0];
-        receiver = receiverDoc.data();
-
-        if(receiver.swift !== swift){
-            notify("Invalid SWIFT/BIC");
-            return;
-        }
-
-    }
-
-    if(receiverDoc.id === localStorage.getItem("user")){
-        notify("Cannot transfer to yourself");
-        return;
-    }
-
     const reference = genRef();
 
-    await addDoc(collection(db,"pendingTransfers"),{
+    await addDoc(collection(db, "pendingTransfers"), {
 
-        senderId: localStorage.getItem("user"),
-        senderName: el("nameProfile").innerText,
-
-        receiverId: receiverDoc.id,
-        receiverName: receiver.fullName,
-
-        receiverAccount: receiver.accountNumber || "",
-        receiverIBAN: receiver.iban || "",
+        sender: localStorage.getItem("user"),
 
         amount: amount,
-        note: description,
-        type: type,
+
+        accountNumber: el("accountNumber")?.value || "",
+
+        routingNumber: el("routingNumber")?.value || "",
+
+        iban: el("ibanInput")?.value || "",
+
+        swift: el("swiftInput")?.value || "",
+
+        description: description,
+
+        status: "pending",
+
+        processed: false,
+
         reference: reference,
 
-        status: "Pending",
-
-        createdAt: new Date().toISOString()
+        date: new Date().toISOString()
 
     });
 
     notify("Transfer submitted for approval.");
 
-    el("amount").value="";
-    el("description").value="";
-    el("accountNumber").value="";
-    el("routingNumber").value="";
-    el("recipientName").value="";
-    el("bankName").value="";
-    el("bankAddressInput").value="";
-    el("ibanInput").value="";
-    el("swiftInput").value="";
+    el("amount").value = "";
+    el("description").value = "";
+    el("accountNumber").value = "";
+    el("routingNumber").value = "";
+    el("ibanInput").value = "";
+    el("swiftInput").value = "";
 
     openPage("homePage");
+
 }
 // START
 init();

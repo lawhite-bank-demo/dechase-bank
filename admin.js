@@ -15,24 +15,26 @@ import {
     doc,
     getDoc,
     getDocs,
-    updateDoc
+    updateDoc,
+    addDoc,
+    deleteDoc,
+    onSnapshot
 }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ---------- CONFIG ----------
 
 const firebaseConfig = {
-
-    apiKey: "AIzaSy
-
-    authDomain: "dechase-bank.firebaseapp.com",
-
-    projectId: "dechase-bank"
-
+  apiKey: "AIzaSyBDp6wmJMY8WPyKPNE-bvVSiz4AIUbn71U",
+  authDomain: "dechase-bank.firebaseapp.com",
+  projectId: "dechase-bank",
+  storageBucket: "dechase-bank.firebasestorage.app",
+  messagingSenderId: "44428081485",
+  appId: "1:44428081485:web:85d993a939d380336e1f04",
+  measurementId: "G-YP84F2GQ6Z"
 };
 
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
 
 // ---------- GLOBALS ----------
@@ -605,29 +607,21 @@ window.loadPending = async function(){
 
     }
 
-    snap.forEach(docSnap=>{
+    snap.forEach(docSnap => {
 
-        const data = docSnap.data();
+    const data = docSnap.data();
 
-        table.innerHTML += `
-
+    table.innerHTML += `
 <div class="userCard">
-
-<h3>${data.fullName || "Unknown User"}</h3>
-
-<p>€${Number(data.amount||0).toLocaleString()}</p>
-
-<p>${data.bankName || ""}</p>
-
-<p>${data.reference || ""}</p>
-
+<h3>${data.sender || "Unknown User"}</h3>
+<p>Amount: €${Number(data.amount || 0).toLocaleString()}</p>
+<p>Account: ${data.accountNumber || ""}</p>
+<p>Description: ${data.description || ""}</p>
+<p>Status: ${data.status || "pending"}</p>
 </div>
-
 `;
 
-    });
-
-};
+});
 
 // ======================================
 // LOGOUT

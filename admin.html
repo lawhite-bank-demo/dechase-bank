@@ -64,7 +64,6 @@
 
 <h1>Dashboard</h1>
 
-<div class="cards">
 
 <div class="card">
 <h3>Total Users</h3>
@@ -101,6 +100,13 @@
     type="text"
     placeholder="Search by Name, Email, Account Number or IBAN"
     oninput="filterUsers()">
+<p><b>SWIFT:</b>
+<span id="selectedSwift"></span>
+</p>
+
+<p><b>Routing Number:</b>
+<span id="selectedRouting"></span>
+</p>
 
 <button onclick="loadUsers()">
 🔄 Refresh Users
@@ -108,15 +114,12 @@
 
 <div id="usersTable"></div>
 
-</p>
-
-</div>
 
 <hr style="margin:25px 0;">
 
 <h2>Selected Customer</h2>
 
-<div class="card">
+<div id="customerPanel" class="card" style="display:none;">
 
     <p><b>Name:</b> <span id="selectedName">None</span></p>
 

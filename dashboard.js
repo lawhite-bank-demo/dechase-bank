@@ -692,6 +692,28 @@ async function init(){
 balance = Number(data.balance || 0);
 
 tx = getTx(data);
+const pendingQuery = query(
+    collection(db, "pendingTransfers"),
+    where("sender", "==", username),
+    where("status", "==", "pending")
+);
+
+const pendingSnap = await getDocs(pendingQuery);
+
+pendingSnap.forEach(doc => {
+
+    const p = doc.data();
+
+    tx.unshift({
+        amount: -Number(p.amount),
+        note: p.description + " (Pending)",
+        reference: p.reference,
+        type: "transfer",
+        date: p.date,
+        status: "pending"
+    });
+
+});
 
 frozen = data.cardFrozen || false;
 

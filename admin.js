@@ -626,7 +626,7 @@ snap.size;
 
 <p><b>Amount:</b> €${Number(data.amount || 0).toLocaleString()}</p>
 
-<p><b>Account:</b> ${data.accountNumber || ""}</p>
+<p><b>Status:</b> ${data.processed === true ? "approved" : "pending"}</p>
 
 <p><b>Description:</b> ${data.description || ""}</p>
 

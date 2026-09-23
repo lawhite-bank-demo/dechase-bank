@@ -626,13 +626,26 @@ snap.size;
 
 <p><b>Amount:</b> €${Number(data.amount || 0).toLocaleString()}</p>
 
-<p><b>Status:</b> ${
-    data.processed === true ? "Approved" : "Pending Approval"
-}</p>
+<p><b>Status:</b> 
+<span class="status-badge ${
+    data.status === "approved"
+        ? "status-approved"
+        : data.status === "rejected"
+        ? "status-rejected"
+        : "status-pending"
+}">
+    ${
+        data.status === "approved"
+            ? "Approved"
+            : data.status === "rejected"
+            ? "Rejected"
+            : "Pending Approval"
+    }
+</span>
+</p>
 
 <p><b>Description:</b> ${data.description || ""}</p>
 
-<p><b>Status:</b> ${data.status || "pending"}</p>
 
 <button onclick="approveTransfer('${docSnap.id}')">
 ✅ Approve

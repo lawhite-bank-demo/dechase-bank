@@ -605,10 +605,14 @@ window.loadPending = async function () {
     const table = el("pendingTable");
     table.innerHTML = "";
 
+    const q = query(
+        collection(db, "pendingTransfers"),
+        where("status", "==", "pending")
+    );
+
     const snap = await getDocs(q);
 
-el("pendingTransfers").innerText =
-snap.size;
+    el("pendingTransfers").innerText = snap.size;
 
     if (snap.empty) {
         table.innerHTML = "<h3>No Pending Transfers</h3>";
@@ -761,7 +765,10 @@ window.approveTransfer = async function(id){
         transactions:receiverTransactions
     });
 
-    await deleteDoc(transferRef);
+    await updateDoc(transferRef, {
+    status: "approved",
+    processed: true
+});
 
     alert("Transfer Approved");
 

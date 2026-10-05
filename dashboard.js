@@ -361,6 +361,7 @@ return Array.isArray(data.transactions)
 }
 
 function renderTransactions(){
+console.log("FINAL TRANSACTIONS:", tx);
 
 const container =
 el("transactions");

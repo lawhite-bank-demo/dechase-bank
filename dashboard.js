@@ -699,6 +699,7 @@ const data = snap.data();
 balance = Number(data.balance || 0);
 
 tx = getTx(data);
+console.log("TRANSACTIONS FROM USER DOCUMENT:", tx);
 const pendingQuery = query(
 collection(db, "pendingTransfers"),
 where("sender", "==", username),

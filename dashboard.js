@@ -1046,6 +1046,53 @@ el("swiftInput").value = "";
 openPage("homePage");
 
 }
+// ===== TEMPORARY CLEANUP =====
+
+window.removeOld66Transaction = async function () {
+
+    if (!userRef) {
+        console.log("User reference not loaded yet.");
+        return;
+    }
+
+    const snap = await getDoc(userRef);
+
+    if (!snap.exists()) {
+        console.log("User not found.");
+        return;
+    }
+
+    const data = snap.data();
+
+    const oldTransactions = getTx(data);
+
+    const filteredTransactions = oldTransactions.filter(t => {
+
+        return !(
+            Number(t.amount) === -66 &&
+            (
+                t.reference === "TRX-17901206497608888" ||
+                String(t.note || "").includes("Nicola")
+            )
+        );
+
+    });
+
+    console.log("Before:", oldTransactions);
+    console.log("After:", filteredTransactions);
+
+    await updateDoc(userRef, {
+        transactions: filteredTransactions
+    });
+
+    tx = filteredTransactions;
+
+    renderTransactions();
+
+    notify("Old €66 transaction removed.");
+};
+
+
 // START
 init();
 
